@@ -116,8 +116,8 @@ let constellations = {
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.toneMapping = THREE.ReinhardToneMapping;
-    renderer.toneMappingExposure = Math.pow(0.9, 2.0);
-    renderer.setClearColor( 0x000105, 0.5 )
+    renderer.toneMappingExposure = Math.pow(0.8, 2.0);
+    renderer.setClearColor( 0x000000, 0.5 )
     document.body.appendChild(renderer.domElement);
     
     // コントローラーの定義
@@ -143,31 +143,18 @@ let constellations = {
       scene.add(new THREE.GridHelper( 1000, 100, 0x5a0a0a, 0x0a0a0a))
       scene.add(new THREE.AxesHelper());
     }
-    
-    // エフェクト（BloomPath）の設定
-    const params = {
-      exposure: 2,
-      bloomStrength: 3,
-      bloomThreshold: 0,
-      bloomRadius: 1
-    };
-    const bloomPass = new THREE.UnrealBloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), 1.5, 0.4, 0.85 );
-    bloomPass.threshold = params.bloomThreshold;
-    bloomPass.strength = params.bloomStrength;
-    bloomPass.radius = params.bloomRadius;
-    
+
     // composer
     const renderScene = new THREE.RenderPass( scene, camera );
     let composer = new THREE.EffectComposer( renderer );
     let sg = new SelectiveGlow(scene, camera, renderer);
     composer.addPass( renderScene );
-    composer.addPass( bloomPass );
     
     // 恒星の描画
     stars.forEach((s,i) => {
       s.color = `#${('0'+parseInt(s.color.r).toString(16)).slice(-2)}${('0'+parseInt(s.color.g).toString(16)).slice(-2)}${('0'+parseInt(s.color.b).toString(16)).slice(-2)}`
       s.mesh = new THREE.Mesh(
-        new THREE.SphereGeometry(s.size.radius / 20, 10, 10 ),
+        new THREE.SphereGeometry(s.size.radius / 20),
         new THREE.MeshBasicMaterial({ color: s.color, opacity: 1, transparent: true })
       );
       s.mesh.position.set(s.coordinates.x, s.coordinates.y, s.coordinates.z);

@@ -4,8 +4,8 @@ class SelectiveGlow {
 
     const bloomPass1 = new THREE.UnrealBloomPass(
       new THREE.Vector2(window.innerWidth, window.innerHeight),
-      5,
-      1,
+      2.5,
+      0,
       0
     );
 
@@ -16,8 +16,8 @@ class SelectiveGlow {
 
     const bloomPass2 = new THREE.UnrealBloomPass(
       new THREE.Vector2(window.innerWidth, window.innerHeight),
-      2.5,
-      0,
+      0.5,
+      0.2,
       0
     );
 
