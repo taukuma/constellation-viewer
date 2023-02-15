@@ -108,11 +108,12 @@ let constellations = {
       999999
     );
     
-    let renderer = new THREE.WebGLRenderer({alpha: true});
+    let renderer = new THREE.WebGLRenderer({alpha: true, antialias: true});
     let orbit = new THREE.OrbitControls(camera, renderer.domElement);
     //scene.fog = new THREE.Fog(0x000000, 100, 500);
 
     // レンダラーとDOMの設定
+    renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.toneMapping = THREE.ReinhardToneMapping;
     renderer.toneMappingExposure = Math.pow(0.9, 2.0);
