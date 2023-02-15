@@ -1,0 +1,233 @@
+body {
+  font-family: 'Klee One';
+}
+#title-box-container {
+  width: 100vw;
+  height: 100vh;
+  display: table;
+}
+#title-box {
+  display: table-cell;
+  vertical-align: middle;
+  text-align: center;
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+#title-text {
+  color: white;
+  text-align: center;
+  font-size: 1.5em
+}
+#title-box-top-frame-container{
+  height: 100px;
+  overflow: hidden;
+  width: 360px;
+  margin: 0 calc((100% - 360px)/2);
+}
+#title-box-bottom-frame-container {
+  height: 100px;
+  overflow: hidden;
+  width: 360px;
+  margin: 0 calc((100% - 360px)/2);
+}
+svg#top-frame {
+  margin-top: -140px;
+}
+svg#bottom-frame {
+  margin-top: -270px;
+}
+body.black {
+  overflow: hidden;
+  margin: 0;
+  background: black;
+}
+body.black .play {
+  font-family: 'Klee One';
+  font-size: 1em;
+  cursor: pointer;
+  color: #ddd;
+  border: 1px solid #ddd;
+  border-radius: 100px;
+  margin-top: 20px;
+  padding: 4px 15px 5px 15px;
+  background: #555;
+}
+body.black .play:hover {
+  color: #fff;
+  border-color: #0af;
+  background-color: #00aaff85;
+  box-shadow: 0 0 10px #0af;
+}
+body.black .progress-bar-container {
+  height: 2px;
+  width: 80vw;
+  position: absolute;
+  left: 10vw;
+  top: calc(50% - 2px);
+  mix-blend-mode: screen;
+}
+body.black .progress-bar-container .loading-text {
+  color: white;
+  text-align:center;
+  display: none;
+}
+body.black .progress-bar-container .progress-bar {
+  height: 100%;
+  background: #fff;
+  width: 0%;
+  box-shadow: 0px 0px 2px #15eeff;
+}
+#param-list {
+  margin: 50px;
+}
+#param-list .param-items {
+  width: 15%;
+  display: inline-block;
+  margin: .5%;
+  padding: 10px;
+}
+
+#constellation_list ul.block > li {
+  position: relative;
+  display: inline-block;
+  margin: 5px;
+  border: 1px solid #efefef;
+  text-align: center;
+  text-decoration
+}
+#constellation_list ul.block > li > a {
+  position: relative;
+  display: block;
+  width: 12em;
+  padding: 2em 1em;
+  text-decoration: none;
+  color: #000;
+  -webkit-transition: all 0.3s ease-in-out;
+  -moz-transition: all 0.3s ease-in-out;
+  -ms-transition: all 0.3s ease-in-out;
+  -o-transition: all 0.3s ease-in-out;
+  transition: all 0.3s ease-in-out;
+}
+#constellation_list ul.block > li > a:hover {
+  background: #d9f1ff;
+  color: #000;
+  text-shadow: 0 0 5px #aaf, 0 0 2px #fff;
+  -webkit-transition: all 0.3s ease-in-out;
+  -moz-transition: all 0.3s ease-in-out;
+  -ms-transition: all 0.3s ease-in-out;
+  -o-transition: all 0.3s ease-in-out;
+  transition: all 0.3s ease-in-out;
+}
+.hide {
+  display: none;
+}
+
+
+.inline-radio {
+  display: flex;
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid #b6b6b6;
+}
+
+.inline-radio div {
+  position: relative;
+  flex: 1;
+}
+
+.inline-radio input {
+  width: 100%;
+  height: 60px;
+  opacity: 0;
+}
+
+.inline-radio label {
+  position: absolute;
+  top: 0; left: 0;
+  color: #b6b6b6;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  border-right: 1px solid #b6b6b6;
+}
+
+.inline-radio div:last-child label {
+  border-right: 0;
+}
+
+.inline-radio input:checked + label {
+  background: #00aaff;
+  font-weight: 500;
+  color: #fff;
+}
+
+.tgl {
+  display: none;
+}
+.tgl, .tgl:after, .tgl:before, .tgl *, .tgl *:after, .tgl *:before, .tgl + .tgl-btn {
+  box-sizing: border-box;
+}
+.tgl::selection, .tgl:after::selection, .tgl:before::selection, .tgl *::selection, .tgl *:after::selection, .tgl *:before::selection, .tgl + .tgl-btn::selection {
+  background: none;
+}
+.tgl + .tgl-btn {
+  outline: 0;
+  display: block;
+  width: 4em;
+  height: 2em;
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+}
+.tgl + .tgl-btn:after, .tgl + .tgl-btn:before {
+  position: relative;
+  display: block;
+  content: "";
+  width: 50%;
+  height: 100%;
+}
+.tgl + .tgl-btn:after {
+  left: 0;
+}
+.tgl + .tgl-btn:before {
+  display: none;
+}
+.tgl:checked + .tgl-btn:after {
+  left: 50%;
+}
+.tgl-ios + .tgl-btn {
+  background: #fbfbfb;
+  border-radius: 2em;
+  padding: 2px;
+  transition: all 0.4s ease;
+  border: 1px solid #e8eae9;
+}
+.tgl-ios + .tgl-btn:after {
+  border-radius: 2em;
+  background: #fbfbfb;
+  transition: left 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), padding 0.3s ease, margin 0.3s ease;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 4px 0 rgba(0, 0, 0, 0.08);
+}
+.tgl-ios + .tgl-btn:hover:after {
+  will-change: padding;
+}
+.tgl-ios + .tgl-btn:active {
+  box-shadow: inset 0 0 0 2em #e8eae9;
+}
+.tgl-ios + .tgl-btn:active:after {
+  padding-right: 0.8em;
+}
+.tgl-ios:checked + .tgl-btn {
+  background: #0af;
+}
+.tgl-ios:checked + .tgl-btn:active {
+  box-shadow: none;
+}
+.tgl-ios:checked + .tgl-btn:active:after {
+  margin-left: -0.8em;
+}
