@@ -116,7 +116,7 @@ let constellations = {
     
     let renderer = new THREE.WebGLRenderer({alpha: true, antialias: true});
     let orbit = new THREE.OrbitControls(camera, renderer.domElement);
-    scene.fog = new THREE.Fog(0x000000, 100, 50);
+    //scene.fog = new THREE.Fog(0x000000, 100, 50);
 
     // レンダラーとDOMの設定
     renderer.setPixelRatio(window.devicePixelRatio);
