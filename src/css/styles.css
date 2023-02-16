@@ -120,7 +120,7 @@ body.black .progress-bar-container .progress-bar {
   transition: all 0.3s ease-in-out;
 }
 .hide {
-  display: none;
+  display: none !important;
 }
 
 
