@@ -20,8 +20,7 @@ let scripts = [
   'src/js/three/RenderPass.js',
   'src/js/three/LuminosityHighPassShader.js',
   'src/js/three/CopyShader.js',
-  'src/js/three/UnrealBloomPass.js',
-  'src/js/three/SelectiveGlow.js'
+  'src/js/three/UnrealBloomPass.js'
 ];
 let updateProgressBar = () => {
   progress += progressAmount;
@@ -92,6 +91,7 @@ let init = () => {
     }
   } else {
     document.querySelector("#constellation_list").setAttribute("class", "");
+    document.querySelector("#constellation-link-container").innerHTML = Object.keys(constants.symbols).map(s => `<li><a class="constellation-link" href="#" title="${s}">${s} - ${constants.symbols[s].label}</a></li>`).join("")
     titleContainer.className = "hide"
     document.body.setAttribute("class", "");
     document.querySelectorAll(".constellation-link").forEach(v => v.onclick=()=>{window.location.href=updateLink(v.title)});

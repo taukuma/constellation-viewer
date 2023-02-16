@@ -96,6 +96,12 @@ let constellations = {
         },
       }
     });
+    let windowSize = {
+      height: (window.innerHeight < window.innerWidth)
+        ? window.innerHeight
+        : window.innerWidth * 16 / 9,
+      width: window.innerWidth
+    };
     let starPositionInfo = getCoordinateInfo(stars.map(s => s.coordinates));
     let linePositionInfo = getCoordinateInfo(linePaths.reduce((acc,curr) => acc.concat(curr)));
 
@@ -103,18 +109,18 @@ let constellations = {
     let scene = new THREE.Scene();
     let camera = new THREE.PerspectiveCamera(
       45,
-      window.innerWidth / window.innerHeight,
+      windowSize.width / windowSize.height,
       1,
       999999
     );
     
     let renderer = new THREE.WebGLRenderer({alpha: true, antialias: true});
     let orbit = new THREE.OrbitControls(camera, renderer.domElement);
-    //scene.fog = new THREE.Fog(0x000000, 100, 500);
+    scene.fog = new THREE.Fog(0x000000, 100, 50);
 
     // レンダラーとDOMの設定
     renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(windowSize.width, windowSize.height);
     renderer.toneMapping = THREE.ReinhardToneMapping;
     renderer.toneMappingExposure = Math.pow(0.8, 2.0);
     renderer.setClearColor( 0x000000, 0.5 )
@@ -144,17 +150,11 @@ let constellations = {
       scene.add(new THREE.AxesHelper());
     }
 
-    // composer
-    const renderScene = new THREE.RenderPass( scene, camera );
-    let composer = new THREE.EffectComposer( renderer );
-    let sg = new SelectiveGlow(scene, camera, renderer);
-    composer.addPass( renderScene );
-    
     // 恒星の描画
     stars.forEach((s,i) => {
       s.color = `#${('0'+parseInt(s.color.r).toString(16)).slice(-2)}${('0'+parseInt(s.color.g).toString(16)).slice(-2)}${('0'+parseInt(s.color.b).toString(16)).slice(-2)}`
       s.mesh = new THREE.Mesh(
-        new THREE.SphereGeometry(s.size.radius / 20),
+        new THREE.SphereGeometry(s.size.radius / 20, 50, 50),
         new THREE.MeshBasicMaterial({ color: s.color, opacity: 1, transparent: true })
       );
       s.mesh.position.set(s.coordinates.x, s.coordinates.y, s.coordinates.z);
@@ -162,8 +162,8 @@ let constellations = {
       scene.add(s.mesh);
     })
 
+    // 星座線の描画
     if (options.showLine) {
-      // 星座線の描画
       const material = new THREE.LineBasicMaterial({
         color: 0x0055ff
       });
@@ -175,12 +175,55 @@ let constellations = {
       });
     }
     
+    // composer setting
+    const renderScene   = new THREE.RenderPass( scene, camera );
+    const composer      = new THREE.EffectComposer( renderer );
+    const bloomComposer = new THREE.EffectComposer(renderer);
+    const finalComposer = new THREE.EffectComposer(renderer);
+    composer.setSize(windowSize.width, windowSize.height);
+    bloomComposer.renderToScreen = false;
+    bloomComposer.addPass(renderScene);
+    
+    // Bloom
+    const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(windowSize.width, windowSize.height), 5, 0, 0);
+    bloomComposer.addPass(bloomPass);
+    const finalPass = new THREE.ShaderPass(
+      new THREE.ShaderMaterial({
+        uniforms: {
+          baseTexture: { value: null },
+          bloomTexture: { value: bloomComposer.renderTarget2.texture },
+        },
+        vertexShader: `
+          varying vec2 vUv;
+          void main() {
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+          }
+          `,
+        fragmentShader: `
+          uniform sampler2D baseTexture;
+          uniform sampler2D bloomTexture;
+    
+          varying vec2 vUv;
+    
+          void main() {
+            gl_FragColor = texture2D( baseTexture, vUv );
+            gl_FragColor += vec4( 1.0 ) * texture2D( bloomTexture, vUv );
+          }
+          `,
+        defines: {}
+      }),
+      "baseTexture"
+    );
+    finalPass.needsSwap = true;
+    finalComposer.addPass(renderScene);
+    finalComposer.addPass(finalPass);
+    composer.addPass( renderScene );
     renderer.setAnimationLoop((_) => {
       renderer.render(scene, camera);
       composer.render();
-      sg.bloom1.render();
-      sg.bloom2.render();
-      sg.final.render();
+      bloomComposer.render();
+      finalComposer.render();
       if (options.autoRotate) {
         orbit.update();
       }
