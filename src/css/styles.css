@@ -85,12 +85,25 @@ body.black .progress-bar-container .progress-bar {
   box-shadow: 0px 0px 2px #15eeff;
 }
 #param-list {
-  box-shadow: 0 0 20px #aaa;
-  background: #fff;
   font-size: 0.8em;
-  border-radius: 15px;
-  padding: 15px 15px 120px 15px;
+  padding: 50px 15px 50px 15px;
+  text-align: center;
 }
+#param-list .settings {
+  text-align: left;
+  opacity: 0;
+  height: 0;
+}
+#param-list .menu-trigger.active + .settings {
+  opacity: 1;
+  height: auto;
+  -webkit-transition: all 0.3s ease-in-out;
+  -moz-transition: all 0.3s ease-in-out;
+  -ms-transition: all 0.3s ease-in-out;
+  -o-transition: all 0.3s ease-in-out;
+  transition: all 0.3s ease-in-out;
+}
+
 #draw-constellation {
   display: block;
   width: 50%;
@@ -117,8 +130,14 @@ body.black .progress-bar-container .progress-bar {
   margin: .5%;
   padding: 10px;
 }
+#constellation-link-filter {
+
+}
+#constellation-link-filter li {
+  display: inline-block;
+}
 #constellation-link-container {
-  margin-bottom: 50px;
+  margin-bottom: 120px;
   padding: 0;
   text-align: center;
 }
@@ -280,4 +299,53 @@ body.black .progress-bar-container .progress-bar {
 }
 .tgl-ios:checked + .tgl-btn:active:after {
   margin-left: -0.8em;
+}
+.menu-trigger,
+.menu-trigger span {
+  display: inline-block;
+  transition: all .4s;
+  box-sizing: border-box;
+}
+.menu-trigger {
+  position: relative;
+  width: 50px;
+  height: 44px;
+  background: none;
+  border: none;
+  appearance: none;
+  cursor: pointer;
+}
+.menu-trigger span {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background-color: #aaa;
+  border-radius: 4px;
+}
+.menu-trigger span:nth-of-type(1) {
+  top: 0;
+}
+.menu-trigger span:nth-of-type(2) {
+  top: 20px;
+}
+.menu-trigger span:nth-of-type(3) {
+  bottom: 0;
+}
+.menu-trigger:not(.active):hover span:nth-of-type(1) {
+  top: 6px;
+}
+.menu-trigger:not(.active):hover span:nth-of-type(3) {
+  bottom: 6px;
+}
+.menu-trigger.active span:nth-of-type(1) {
+  width: 45%;
+  transform: translate3d(2px, 10px, 0) rotate(45deg);
+}
+.menu-trigger.active span:nth-of-type(2) {
+  transform: translate3d(-1px, 0, 0) rotate(-45deg);
+}
+.menu-trigger.active span:nth-of-type(3) {
+  width: 45%;
+  transform: translate3d(23px, -9px, 0) rotate(45deg);
 }
