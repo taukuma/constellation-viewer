@@ -1,6 +1,12 @@
 body {
   font-family: 'Klee One';
 }
+#index-title {
+  font-size: 3em;
+  text-align: center;
+  color: #555;
+  margin: 0;
+}
 #title-box-container {
   width: 100vw;
   height: 100vh;
@@ -19,13 +25,13 @@ body {
   text-align: center;
   font-size: 1.5em
 }
-#title-box-top-frame-container{
+#title-box-top-frame-container, #index-title-frame-top{
   height: 100px;
   overflow: hidden;
   width: 360px;
   margin: 0 calc((100% - 360px)/2);
 }
-#title-box-bottom-frame-container {
+#title-box-bottom-frame-container, #index-title-frame-bottom {
   height: 100px;
   overflow: hidden;
   width: 360px;
@@ -79,7 +85,31 @@ body.black .progress-bar-container .progress-bar {
   box-shadow: 0px 0px 2px #15eeff;
 }
 #param-list {
-  margin: 50px;
+  box-shadow: 0 0 20px #aaa;
+  background: #fff;
+  font-size: 0.8em;
+  border-radius: 15px;
+  padding: 15px 15px 120px 15px;
+}
+#draw-constellation {
+  display: block;
+  width: 50%;
+  margin: 0 25%;
+  padding: 15px;
+  font-size: 1.5em;
+  font-family: 'Klee One';
+  border-radius: 15px;
+  border: none;
+  background: #0009;
+  color: #fff;
+  cursor: pointer;
+  position: fixed;
+  bottom: 30px;
+  box-shadow: 0 0 15px #555;
+}
+#draw-constellation:hover {
+  background: #0af;
+  color: #fff; 
 }
 #param-list .param-items {
   width: 15%;
@@ -87,14 +117,38 @@ body.black .progress-bar-container .progress-bar {
   margin: .5%;
   padding: 10px;
 }
-
+#constellation-link-container {
+  margin-bottom: 50px;
+  padding: 0;
+  text-align: center;
+}
+.constellation-item > input {
+  display: none;
+}
+.constellation-item label{
+  width: 13em;
+  padding: 2.5em 1em;
+  display: inline-block;
+  color: #000;
+  cursor: pointer;
+}
+.constellation-item input:not(:checked):hover + label {
+  background: #b9e8ff;
+  color: #000000;
+  border-radius: 5px;
+}
+.constellation-item input:checked + label{
+  background: #0af;
+  color: #fff;
+  border-radius: 5px;
+}
 #constellation_list ul.block > li {
   position: relative;
   display: inline-block;
   margin: 5px;
-  border: 1px solid #efefef;
+  box-shadow: 0 0 5px #ddd;
+  border-radius: 5px;
   text-align: center;
-  text-decoration
 }
 #constellation_list ul.block > li > a {
   position: relative;
@@ -126,9 +180,7 @@ body.black .progress-bar-container .progress-bar {
 
 .inline-radio {
   display: flex;
-  border-radius: 3px;
   overflow: hidden;
-  border: 1px solid #b6b6b6;
 }
 
 .inline-radio div {
@@ -148,12 +200,10 @@ body.black .progress-bar-container .progress-bar {
   color: #b6b6b6;
   width: 100%;
   height: 100%;
-  background: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   pointer-events: none;
-  border-right: 1px solid #b6b6b6;
 }
 
 .inline-radio div:last-child label {
