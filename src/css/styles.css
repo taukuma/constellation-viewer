@@ -50,14 +50,8 @@ body.black {
 }
 body.black .play {
   font-family: 'Klee One';
-  font-size: 1em;
   cursor: pointer;
-  color: #ddd;
-  border: 1px solid #ddd;
-  border-radius: 100px;
   margin-top: 20px;
-  padding: 4px 15px 5px 15px;
-  background: #555;
 }
 body.black .play:hover {
   color: #fff;
@@ -111,24 +105,17 @@ body.black .progress-bar-container .progress-bar {
 
 #draw-constellation {
   display: block;
-  width: 50%;
-  margin: 0 25%;
-  padding: 15px;
-  font-size: 1.5em;
+  width: 12em;
+  margin: 0 calc(50% - 6em - 8px);
   font-family: 'Klee One';
-  border-radius: 15px;
   border: none;
-  background: #0009;
   color: #fff;
   cursor: pointer;
   position: fixed;
   bottom: 30px;
-  box-shadow: 0 0 15px #555;
+  box-shadow: 0 0 5px #4481eb;
 }
-#draw-constellation:hover {
-  background: #0af;
-  color: #fff; 
-}
+
 #param-list .param-items {
   width: 15%;
   display: inline-block;
@@ -355,4 +342,45 @@ body.black .progress-bar-container .progress-bar {
 .menu-trigger.active span:nth-of-type(3) {
   width: 45%;
   transform: translate3d(23px, -9px, 0) rotate(45deg);
+}
+
+.bn632-hover {
+  width: 160px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  margin: 20px;
+  height: 55px;
+  text-align:center;
+  border: none;
+  background-size: 300% 100%;
+  border-radius: 50px;
+  moz-transition: all .4s ease-in-out;
+  -o-transition: all .4s ease-in-out;
+  -webkit-transition: all .4s ease-in-out;
+  transition: all .4s ease-in-out;
+}
+
+.bn632-hover:hover {
+  background-position: 100% 0;
+  moz-transition: all .4s ease-in-out;
+  -o-transition: all .4s ease-in-out;
+  -webkit-transition: all .4s ease-in-out;
+  transition: all .4s ease-in-out;
+}
+
+.bn632-hover:focus {
+  outline: none;
+}
+
+.bn632-hover.bn26 {
+  background-image: linear-gradient(
+    to right,
+    #25aae1,
+    #4481eb,
+    #04befe,
+    #3f86ed
+  );
+  box-shadow: 0 4px 15px 0 rgba(65, 132, 234, 0.75);
 }
