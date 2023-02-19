@@ -115,9 +115,8 @@ let init = () => {
       l.onclick = () => {
         document.querySelector("#draw-constellation").setAttribute("class", (document.querySelectorAll("input.constellation-link:checked").length) ? "" : "hide");
     });
+    document.querySelector("#draw-constellation").setAttribute("class", (document.querySelectorAll("input.constellation-link:checked").length) ? "" : "hide");
     document.querySelector("#draw-constellation").onclick = ()=>{window.location.href=updateLink()};
-    //document.querySelectorAll(".constellation-link").forEach(v => v.onclick=);
-    
   }
 };
 
