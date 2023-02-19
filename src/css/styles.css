@@ -4,8 +4,10 @@ body {
 #index-title {
   font-size: 3em;
   text-align: center;
-  color: #555;
+  color: #999898;
   margin: 0;
+  font-family: 'Yomogi';
+  font-weight: 100;
 }
 #title-box-container {
   width: 100vw;
@@ -146,12 +148,12 @@ body.black .progress-bar-container .progress-bar {
   cursor: pointer;
 }
 .constellation-item input:not(:checked):hover + label {
-  background: #b9e8ff;
-  color: #000000;
+  background: linear-gradient(45deg, #00aaff55,#0054df55);
+  color: #fff;
   border-radius: 5px;
 }
 .constellation-item input:checked + label{
-  background: #0af;
+  background: linear-gradient(45deg, #0af,#0054df);
   color: #fff;
   border-radius: 5px;
 }
@@ -224,7 +226,7 @@ body.black .progress-bar-container .progress-bar {
 }
 
 .inline-radio input:checked + label {
-  background: #00aaff;
+  background: linear-gradient(45deg, #0af,#0054df);
   font-weight: 500;
   color: #fff;
 }
@@ -286,7 +288,7 @@ body.black .progress-bar-container .progress-bar {
   padding-right: 0.8em;
 }
 .tgl-ios:checked + .tgl-btn {
-  background: #0af;
+  background: linear-gradient(45deg, #0af,#0054df);
 }
 .tgl-ios:checked + .tgl-btn:active {
   box-shadow: none;
@@ -313,9 +315,15 @@ body.black .progress-bar-container .progress-bar {
   position: absolute;
   left: 0;
   width: 100%;
-  height: 4px;
-  background-color: #aaa;
-  border-radius: 4px;
+  height: 2px;
+  background-image: linear-gradient(
+    to right,
+    #25aae1,
+    #4481eb,
+    #04befe,
+    #3f86ed
+  );
+  border-radius: 2px;
 }
 .menu-trigger span:nth-of-type(1) {
   top: 0;
