@@ -93,10 +93,15 @@ body.black .progress-bar-container .progress-bar {
   text-align: left;
   opacity: 0;
   height: 0;
+  -webkit-transition: all 0.3s ease-in-out;
+  -moz-transition: all 0.3s ease-in-out;
+  -ms-transition: all 0.3s ease-in-out;
+  -o-transition: all 0.3s ease-in-out;
+  transition: all 0.3s ease-in-out;
 }
 #param-list .menu-trigger.active + .settings {
   opacity: 1;
-  height: auto;
+  height: 300px;
   -webkit-transition: all 0.3s ease-in-out;
   -moz-transition: all 0.3s ease-in-out;
   -ms-transition: all 0.3s ease-in-out;
@@ -140,6 +145,8 @@ body.black .progress-bar-container .progress-bar {
   margin-bottom: 120px;
   padding: 0;
   text-align: center;
+  background: #fff;
+  position: relative;
 }
 .constellation-item > input {
   display: none;
