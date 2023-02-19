@@ -27,8 +27,22 @@
       <div id="index-title-frame-top"></div>
       <h1 id="index-title">星座</h1>
       <div id="index-title-frame-bottom"></div>
-      <ul id="constellation-link-container" class="block"></ul>
+      <ul id="constellation-link-filter" class="hide">
+        <li><button>12星座</button></li>
+        <li><button>春の星座</button></li>
+        <li><button>夏の星座</button></li>
+        <li><button>秋の星座</button></li>
+        <li><button>冬の星座</button></li>
+        <li><button>夏の大三角</button></li>
+        <li><button>冬の大三角</button></li>
+        <li><button>アルゴ4星座</button></li>
+      </ul>
       <div id="param-list">
+        <button class="menu-trigger" onclick="document.querySelector('.menu-trigger').classList.toggle('active')">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
         <div class="settings">
           <div class="param-items">焦点距離</div>
           <div class="inline-radio">
@@ -71,6 +85,7 @@
           <div class="param-items">グリッド表示<input class="tgl tgl-ios params" id="param-grid" type="checkbox" name="param-grid"/><label class="tgl-btn" for="param-grid"></label></div>
         </div>
       </div>
+      <ul id="constellation-link-container" class="block"></ul>
       <button id="draw-constellation" class="hide">スタート</button>
     </div>
     <script src="src/js/constants.js"></script>
