@@ -51,7 +51,7 @@ let constellations = {
      
       let size = converters.getStarRadiusFromStellarClassString(spectralClassString);
       let color = converters.getColorFromStellarClassString(spectralClassString);
-      let coordinates = converters.getCoordinates(s["赤経"], s["赤緯"], s["宇宙の距離梯子"], constellations.options.distance);
+      let coordinates = converters.getCoordinates(s["赤経"], s["赤緯"], distance, constellations.options.distance);
 
       if (coordinates == undefined || absoluteMagnitude == undefined || size == undefined || color == undefined) {
         return undefined;
@@ -74,11 +74,12 @@ let constellations = {
       return;
     }
     // 星座線を取得
-    let lines = (await constellations.loadJSON(constellations.path_lineDef))
+    let mitakaData = (await constellations.loadJSON(constellations.path_lineDef))
       .ConstellationLines
       .filter(l => l.Key === `CNST_${symbol}`)[0].Lines
+    let lines = mitakaData
       .map(l => l.map(hip => (stars.filter(s => s.id === hip)[0] ?? {}).coordinates).filter(s => s !== undefined))
-    console.log({stars: stars, lines: lines});
+    console.log(symbol, {stars: stars, lines: lines, originalLineData: {mitakaData: mitakaData, lineStarMap: mitakaData.map(l => l.map(hip => (stars.filter(s => s.id === hip)[0] ?? {})))}});
     
     return lines;
   },
