@@ -81,14 +81,20 @@ body.black .progress-bar-container .progress-bar {
   box-shadow: 0px 0px 2px #15eeff;
 }
 #param-list {
-  font-size: 0.8em;
   padding: 50px 15px 50px 15px;
   text-align: center;
+  display: grid;
+  justify-content: center;
+  align-content: center;
+  position: relative;
+  justify-items: center;
 }
 #param-list .settings {
   text-align: left;
   opacity: 0;
   height: 0;
+  max-width: 800px;
+  width: 80vw;
   -webkit-transition: all 0.3s ease-in-out;
   -moz-transition: all 0.3s ease-in-out;
   -ms-transition: all 0.3s ease-in-out;
@@ -125,11 +131,30 @@ body.black .progress-bar-container .progress-bar {
   padding: 10px;
 }
 #constellation-link-filter {
-
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
 }
 #constellation-link-filter li {
   display: inline-block;
+  margin: 5px;
 }
+#constellation-link-filter li button {
+cursor: pointer;
+  font-family: 'Klee One';
+  font-size: 1em;
+  padding: 1em 2em;
+  border-radius: 3em;
+  background: white;
+  border: 1px solid #4481eb;
+  position:relative;
+}
+#constellation-link-filter li button:hover {
+  background: linear-gradient(45deg, #00aaff,#0054df);
+  color: white;
+}
+
 #constellation-link-container {
   margin-bottom: 120px;
   padding: 0;
