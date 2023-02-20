@@ -50,7 +50,7 @@ let constellationList = (params.constellations !== undefined)
     ? Object.keys(constants.symbols)
     : params.constellations.split("+").map(c => decodeURI(c))
   : undefined;
-
+constellations.setOptions(params);
 //init
 let initApp = async () => {
   titleBox.style.display = "none";
@@ -63,8 +63,7 @@ let initApp = async () => {
   console.log(data);
   await constellations.render(
     data.stars,
-    data.lines,
-    params
+    data.lines
   )
   loadingContainer.style.display = "none";
 };
@@ -81,9 +80,21 @@ let updateLink = (target) => {
   let autoLoad = document.querySelector("input[name=param-autoLoad]").checked ? 1 : 0;
   let grid = document.querySelector("input[name=param-grid]").checked ? 1 : 0;
   let autoRotate = document.querySelector("input[name=param-autoRotate]").checked ? 1 : 0;
+  let distance = document.querySelector("input[name=param-distance]").checked ? 1 : 0;
   let cons = [];
   document.querySelectorAll("input.constellation-link:checked").forEach(v => cons.push(v.value))
-  return `index.html?constellations=${cons.join("+")}&focalLength=${focalLength}&rotate=${rotate}&showLine=${showLine}&autoLoad=${autoLoad}&grid=${grid}&autoRotate=${autoRotate}`;
+  return `index.html?constellations=${cons.join("+")}&focalLength=${focalLength}&rotate=${rotate}&showLine=${showLine}&autoLoad=${autoLoad}&grid=${grid}&autoRotate=${autoRotate}&distance=${distance}`;
+};
+
+let setFilter = (f) => {
+  document.querySelectorAll(".constellation-item")
+    .forEach(d => {
+      if (d.getAttribute("data-filter-list").includes(f) || f === undefined || f === "") {
+        d.parentElement.classList.remove("hide");
+      } else if (f !== undefined && f !== ""){
+        d.parentElement.classList.add("hide")
+      }
+    })
 };
 
 let init = () => {
@@ -107,10 +118,12 @@ let init = () => {
     document.querySelector("#constellation-link-container").innerHTML = 
       Object
         .keys(constants.symbols)
-        .map(s => `<li><div class="constellation-item"><input type="checkBox" class="constellation-link" id="constellation-${s}" name="constellation-link" value="${s}"/><label for="constellation-${s}">${s} - ${constants.symbols[s].label}</label></div></li>`)
+        .map(s => `<li><div class="constellation-item" data-filter-list="${constants.symbols[s].filters.join(",")}"><input type="checkBox" class="constellation-link" id="constellation-${s}" name="constellation-link" value="${s}"/><label for="constellation-${s}">${s} - ${constants.symbols[s].label}</label></div></li>`)
         .join("")
     titleContainer.className = "hide"
     document.body.setAttribute("class", "");
+    
+    //event
     document.querySelectorAll("input.constellation-link").forEach(l =>
       l.onclick = () => {
         document.querySelector("#draw-constellation").setAttribute("class", (document.querySelectorAll("input.constellation-link:checked").length) ? "bn632-hover bn26" : "hide");

@@ -27,16 +27,6 @@
       <div id="index-title-frame-top"></div>
       <h1 id="index-title">星座</h1>
       <div id="index-title-frame-bottom"></div>
-      <ul id="constellation-link-filter" class="hide">
-        <li><button>12星座</button></li>
-        <li><button>春の星座</button></li>
-        <li><button>夏の星座</button></li>
-        <li><button>秋の星座</button></li>
-        <li><button>冬の星座</button></li>
-        <li><button>夏の大三角</button></li>
-        <li><button>冬の大三角</button></li>
-        <li><button>アルゴ4星座</button></li>
-      </ul>
       <div id="param-list">
         <button class="menu-trigger" onclick="document.querySelector('.menu-trigger').classList.toggle('active')">
           <span></span>
@@ -83,8 +73,20 @@
           <div class="param-items">自動回転<input class="tgl tgl-ios params" id="param-autoRotate" type="checkbox" name="param-autoRotate" checked/><label class="tgl-btn" for="param-autoRotate"></label></div>
           <div class="param-items">オートロード<input class="tgl tgl-ios params" id="param-autoLoad" type="checkbox" name="param-autoLoad"/><label class="tgl-btn" for="param-autoLoad"></label></div>
           <div class="param-items">グリッド表示<input class="tgl tgl-ios params" id="param-grid" type="checkbox" name="param-grid"/><label class="tgl-btn" for="param-grid"></label></div>
+          <div class="param-items">距離<input class="tgl tgl-ios params" id="param-distance" type="checkbox" name="param-distance" checked/><label class="tgl-btn" for="param-distance"></label></div>
         </div>
       </div>
+      <ul id="constellation-link-filter">
+        <li><button class="filter-item" onclick="setFilter('十二星座')">十二星座</button></li>
+        <li><button class="filter-item" onclick="setFilter('春の星座')">春の星座</button></li>
+        <li><button class="filter-item" onclick="setFilter('夏の星座')">夏の星座</button></li>
+        <li><button class="filter-item" onclick="setFilter('秋の星座')">秋の星座</button></li>
+        <li><button class="filter-item" onclick="setFilter('冬の星座')">冬の星座</button></li>
+        <li><button class="filter-item" onclick="setFilter('北天の星座')">北天の星座</button></li>
+        <li><button class="filter-item" onclick="setFilter('南天の星座')">南天の星座</button></li>
+        <li><button class="filter-item" onclick="setFilter('アルゴ4星座')">アルゴ4星座</button></li>
+        <li><button class="filter-item" onclick="setFilter()">リセット</button></li>
+      </ul>
       <ul id="constellation-link-container" class="block"></ul>
       <button id="draw-constellation" class="hide bn632-hover bn26">スタート</button>
     </div>
