@@ -7,13 +7,16 @@ let constellations = {
   options: {},
   setOptions: (renderParams) => {
     constellations.options = {
-      focalLength: parseFloat(renderParams.focalLength ?? 45),
-      grid       : renderParams.grid == '1',
-      earthView  : renderParams.earthView == '1',
-      showLine   : (renderParams.showLine ?? true) != '0',
-      rotate     : parseFloat(renderParams.rotate ?? 0) * Math.PI / 180,
-      autoRotate : renderParams.autoRotate == '1',
-      distance   : (renderParams.distance ?? true) != '0'
+      focalLength : parseFloat(renderParams.focalLength ?? 45),
+      grid        : renderParams.grid == '1',
+      earthView   : renderParams.earthView == '1',
+      showLine    : (renderParams.showLine ?? true) != '0',
+      rotate      : parseFloat(renderParams.rotate ?? 0) * Math.PI / 180,
+      worldRotateX: parseFloat(renderParams.worldRotateX ?? 0) * Math.PI / 180,
+      worldRotateY: parseFloat(renderParams.worldRotateY ?? 0) * Math.PI / 180,
+      worldRotateZ: parseFloat(renderParams.worldRotateZ ?? 0) * Math.PI / 180,
+      autoRotate  : renderParams.autoRotate == '1',
+      distance    : (renderParams.distance ?? true) != '0'
     };
   },
   init: async (symbol, updateProgressBar) => {
@@ -144,7 +147,6 @@ let constellations = {
     camera.up = new THREE.Vector3(0,1,options.rotate);
     if (options.autoRotate) {
       orbit.autoRotate = true;
-      orbit.autoRotateSpeed *= -1;
     }
     orbit.update();
     tmp = {orbit:orbit, camera:camera, pos: linePositionInfo};
@@ -154,6 +156,8 @@ let constellations = {
       scene.add(new THREE.GridHelper( 1000, 100, 0x5a0a0a, 0x0a0a0a))
       scene.add(new THREE.AxesHelper());
     }
+    
+    let group = new THREE.Group();
 
     // 恒星の描画
     stars.forEach((s,i) => {
@@ -164,7 +168,7 @@ let constellations = {
       );
       s.mesh.position.set(s.coordinates.x, s.coordinates.y, s.coordinates.z);
       s.mesh.material.color.set(s.color);
-      scene.add(s.mesh);
+      group.add(s.mesh);
     })
 
     // 星座線の描画
@@ -176,9 +180,13 @@ let constellations = {
         let bufGeometry = new THREE.BufferGeometry();
         bufGeometry.setFromPoints(points.map(p => new THREE.Vector3(p.x, p.y, p.z)));
         let line = new THREE.Line(bufGeometry, material);
-        scene.add(line);
+        group.add(line);
       });
     }
+    group.rotation.x = options.worldRotateX;
+    group.rotation.y = options.worldRotateY;
+    group.rotation.z = options.worldRotateZ;
+    scene.add(group);
     
     // composer setting
     const renderScene   = new THREE.RenderPass( scene, camera );
