@@ -4,6 +4,18 @@ let constellations = {
   path_lineDef: './src/data/mitaka/constellation_lines.json',
   isInitialized: false,
   data: new Array(),
+  options: {},
+  setOptions: (renderParams) => {
+    constellations.options = {
+      focalLength: parseFloat(renderParams.focalLength ?? 45),
+      grid       : renderParams.grid == '1',
+      earthView  : renderParams.earthView == '1',
+      showLine   : (renderParams.showLine ?? true) != '0',
+      rotate     : parseFloat(renderParams.rotate ?? 0) * Math.PI / 180,
+      autoRotate : renderParams.autoRotate == '1',
+      distance   : (renderParams.distance ?? true) != '0'
+    };
+  },
   init: async (symbol, updateProgressBar) => {
     constellations.isInitialized = false;
     symbol = (Array.isArray(symbol)) ? symbol : [symbol];
@@ -36,7 +48,7 @@ let constellations = {
      
       let size = converters.getStarRadiusFromStellarClassString(spectralClassString);
       let color = converters.getColorFromStellarClassString(spectralClassString);
-      let coordinates = converters.getCoordinates(s["赤経"], s["赤緯"], distance);
+      let coordinates = converters.getCoordinates(s["赤経"], s["赤緯"], s["宇宙の距離梯子"], constellations.options.distance);
 
       if (coordinates == undefined || absoluteMagnitude == undefined || size == undefined || color == undefined) {
         return undefined;
@@ -67,16 +79,8 @@ let constellations = {
     
     return lines;
   },
-  render: async (stars, linePaths, renderParams) => {
-    let options = {
-      focalLength: parseFloat(renderParams.focalLength ?? 45),
-      grid       : renderParams.grid == '1',
-      earthView  : renderParams.earthView == '1',
-      showLine   : (renderParams.showLine ?? true) != '0',
-      rotate     : parseFloat(renderParams.rotate ?? 0) * Math.PI / 180,
-      autoRotate : renderParams.autoRotate == '1'
-    };
-    console.log(options)
+  render: async (stars, linePaths) => {
+    let options = constellations.options;
     // 中心座標の取得
     let getCoordinateInfo = (list) => list.reduce((acc,curr,i)=> {return {
         min: {
@@ -140,6 +144,7 @@ let constellations = {
     camera.up = new THREE.Vector3(0,1,options.rotate);
     if (options.autoRotate) {
       orbit.autoRotate = true;
+      orbit.autoRotateSpeed *= -1;
     }
     orbit.update();
     tmp = {orbit:orbit, camera:camera, pos: linePositionInfo};

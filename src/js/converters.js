@@ -7,12 +7,13 @@ converters = {
     y: d * Math.cos(converters.deg2rad(dec)) * Math.sin(converters.deg2rad(alpha)), 
     z: d * Math.sin(converters.deg2rad(dec))}
   },
-  getCoordinates: (alphaString, decString, distanceString) => {
+  getCoordinates: (alphaString, decString, distanceString, enableDistance) => {
+    enableDistance ??= true;
     if ((alphaString ?? '') == '' || (decString ?? '') == '' || (distanceString ?? '') == '') return undefined;
     let replaceHyphens = (str,replaceWith) => str.trim().replace(/[-－﹣−‐⁃‑‒–—﹘―⎯⏤ーｰ─━]/g, replaceWith);
     alphaArr = replaceHyphens(alphaString, "-").replace(/ s/g,'').replace(/h|m/g,";").split(";").map(v=>parseFloat(v));
     decArr   = replaceHyphens(decString, "-").replace(/″/g,'').replace(/°|′/g,';').split(";").map(v=>parseFloat(v));
-    dist     = parseFloat(replaceHyphens(distanceString, "-").replace(/^[^0-9\-\+]/g,'')) / 20 + 100;
+    dist     = parseFloat(replaceHyphens(distanceString, "-").replace(/^[^0-9\-\+]/g,'')) / (enableDistance ? 20 : Math.pow(10,24)) + 100;
     alpha    = converters.getThetaFromAlpha(alphaArr[0],alphaArr[1],alphaArr[2]);
     dec      = converters.getThetaFromDec(decArr[0],decArr[1],decArr[2]);
     return converters.getCoordinatesFromAlphaAndDec(dist,alpha,dec);
