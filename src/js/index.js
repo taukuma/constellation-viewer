@@ -10,7 +10,7 @@ let loadingText = document.querySelector(".loading-text");
 let progressBar = document.querySelector(".progress-bar");
 let titleBox = document.querySelector("#title-box-container");
 let titleContainer = document.querySelector("#title-container");
-let touchEvent = (window.ontouchstart === undefined) ? "click" : "touchstart"
+let touchEvent = "click"; //(window.ontouchstart === undefined) ? "click" : "touchstart"
 
 let scripts = [
   'src/js/three/three.min.js',
