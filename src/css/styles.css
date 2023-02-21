@@ -103,7 +103,7 @@ body.black .progress-bar-container .progress-bar {
 }
 #param-list .menu-trigger.active + .settings {
   opacity: 1;
-  height: 300px;
+  height: 400px;
   -webkit-transition: all 0.3s ease-in-out;
   -moz-transition: all 0.3s ease-in-out;
   -ms-transition: all 0.3s ease-in-out;
@@ -129,6 +129,17 @@ body.black .progress-bar-container .progress-bar {
   display: inline-block;
   margin: .5%;
   padding: 10px;
+}
+#param-list select {
+  font-family: 'Klee One';
+  width: 6em;
+  font-size: 1em;
+  display: block;
+  padding: 5px 15px;
+  border: none;
+  color: #555;
+  background: #fafafa;
+  text-align: center;
 }
 #constellation-link-filter {
   display: flex;

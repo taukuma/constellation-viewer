@@ -45,13 +45,13 @@ let constellations = {
     return data.stars.map((s) => {
       let isEmpty = (str) => str == undefined || str == null || str == "" || str == {} || str == [];
       let spectralClassString = ((!isEmpty(s["スペクトル分類"])  ? s["スペクトル分類"] : s["スペクトル型"]) ?? "").replace(/\-/g,'');
-      let absoluteMagnitude   =  !isEmpty(s["絶対等級"])         ? s["絶対等級"]       : s.additional_info["絶対等級 (MV)"];
+      let absoluteMagnitude   =  !isEmpty(s["絶対等級"])         ? s["絶対等級"]       : !isEmpty(s.additional_info["絶対等級 (MV)"]) ? s.additional_info["絶対等級 (MV)"] : 1;
       let distance            =  !isEmpty(s["宇宙の距離梯子"])   ? s["宇宙の距離梯子"] : s.additional_info["距離"];
       let hip                 =  !isEmpty(s["ヒッパルコス星表"]) ? `HIP_${s["ヒッパルコス星表"]}` : 'HIP_' + Object.keys(s.additional_info).map(k => (k.includes("HIP")?k:"").replace(/.*HIP ([0-9]+).*/g,'$1')).filter(f => f !== '')[0]
      
       let size = converters.getStarRadiusFromStellarClassString(spectralClassString);
       let color = converters.getColorFromStellarClassString(spectralClassString);
-      let coordinates = converters.getCoordinates(s["赤経"], s["赤緯"], s["宇宙の距離梯子"], constellations.options.distance);
+      let coordinates = converters.getCoordinates(s["赤経"], s["赤緯"], distance, constellations.options.distance);
 
       if (coordinates == undefined || absoluteMagnitude == undefined || size == undefined || color == undefined) {
         return undefined;
@@ -74,11 +74,12 @@ let constellations = {
       return;
     }
     // 星座線を取得
-    let lines = (await constellations.loadJSON(constellations.path_lineDef))
+    let mitakaData = (await constellations.loadJSON(constellations.path_lineDef))
       .ConstellationLines
       .filter(l => l.Key === `CNST_${symbol}`)[0].Lines
+    let lines = mitakaData
       .map(l => l.map(hip => (stars.filter(s => s.id === hip)[0] ?? {}).coordinates).filter(s => s !== undefined))
-    console.log({stars: stars, lines: lines});
+    console.log(symbol, {stars: stars, lines: lines, originalLineData: {mitakaData: mitakaData, lineStarMap: mitakaData.map(l => l.map(hip => (stars.filter(s => s.id === hip)[0] ?? {})))}});
     
     return lines;
   },
@@ -216,9 +217,7 @@ let constellations = {
         fragmentShader: `
           uniform sampler2D baseTexture;
           uniform sampler2D bloomTexture;
-    
           varying vec2 vUv;
-    
           void main() {
             gl_FragColor = texture2D( baseTexture, vUv );
             gl_FragColor += vec4( 1.0 ) * texture2D( bloomTexture, vUv );
