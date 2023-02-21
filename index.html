@@ -28,7 +28,7 @@
       <h1 id="index-title">星座</h1>
       <div id="index-title-frame-bottom"></div>
       <div id="param-list">
-        <button class="menu-trigger" onclick="document.querySelector('.menu-trigger').classList.toggle('active')">
+        <button class="menu-trigger">
           <span></span>
           <span></span>
           <span></span>
@@ -77,15 +77,15 @@
         </div>
       </div>
       <ul id="constellation-link-filter">
-        <li><button class="filter-item" onclick="setFilter('十二星座')">十二星座</button></li>
-        <li><button class="filter-item" onclick="setFilter('春の星座')">春の星座</button></li>
-        <li><button class="filter-item" onclick="setFilter('夏の星座')">夏の星座</button></li>
-        <li><button class="filter-item" onclick="setFilter('秋の星座')">秋の星座</button></li>
-        <li><button class="filter-item" onclick="setFilter('冬の星座')">冬の星座</button></li>
-        <li><button class="filter-item" onclick="setFilter('北天の星座')">北天の星座</button></li>
-        <li><button class="filter-item" onclick="setFilter('南天の星座')">南天の星座</button></li>
-        <li><button class="filter-item" onclick="setFilter('アルゴ4星座')">アルゴ4星座</button></li>
-        <li><button class="filter-item" onclick="setFilter()">リセット</button></li>
+        <li><button class="filter-item" data-filter-target="十二星座">十二星座</button></li>
+        <li><button class="filter-item" data-filter-target="春の星座">春の星座</button></li>
+        <li><button class="filter-item" data-filter-target="夏の星座">夏の星座</button></li>
+        <li><button class="filter-item" data-filter-target="秋の星座">秋の星座</button></li>
+        <li><button class="filter-item" data-filter-target="冬の星座">冬の星座</button></li>
+        <li><button class="filter-item" data-filter-target="北天の星座">北天の星座</button></li>
+        <li><button class="filter-item" data-filter-target="南天の星座">南天の星座</button></li>
+        <li><button class="filter-item" data-filter-target="アルゴ4星座">アルゴ4星座</button></li>
+        <li><button class="filter-item" data-filter-target="">リセット</button></li>
       </ul>
       <ul id="constellation-link-container" class="block"></ul>
       <button id="draw-constellation" class="hide bn632-hover bn26">スタート</button>

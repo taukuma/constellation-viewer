@@ -10,6 +10,7 @@ let loadingText = document.querySelector(".loading-text");
 let progressBar = document.querySelector(".progress-bar");
 let titleBox = document.querySelector("#title-box-container");
 let titleContainer = document.querySelector("#title-container");
+let touchEvent = (window.ontouchstart === undefined) ? "click" : "touchstart"
 
 let scripts = [
   'src/js/three/three.min.js',
@@ -86,7 +87,8 @@ let updateLink = (target) => {
   return `index.html?constellations=${cons.join("+")}&focalLength=${focalLength}&rotate=${rotate}&showLine=${showLine}&autoLoad=${autoLoad}&grid=${grid}&autoRotate=${autoRotate}&distance=${distance}`;
 };
 
-let setFilter = (f) => {
+let setFilter = (e) => {
+  f = e.target.getAttribute("data-filter-target");
   document.querySelectorAll(".constellation-item")
     .forEach(d => {
       if (d.getAttribute("data-filter-list").includes(f) || f === undefined || f === "") {
@@ -94,7 +96,10 @@ let setFilter = (f) => {
       } else if (f !== undefined && f !== ""){
         d.parentElement.classList.add("hide")
       }
-    })
+    });
+  if (f === "") {
+    document.querySelectorAll("input.constellation-link:checked").forEach(i => i.checked=false)
+  }
 };
 
 let init = () => {
@@ -108,10 +113,12 @@ let init = () => {
       document.querySelector("#title-box-top-frame-container").innerHTML = frame.top;
       document.querySelector("#title-box-bottom-frame-container").innerHTML = frame.bottom;
       document.querySelector("#title-text").innerHTML = targetConstellationLabels.filter((v,i) => i < 5).join("</br>") + ((targetConstellationLabels.length > 5) ? `<br>...他 ${targetConstellationLabels.length - 5} 星座` : "");
-      playButton.onclick = initApp;
+      playButton.addEventListener(touchEvent, initApp, false);
     }
   } else {
     let frame = getFrame("#aaa");
+    document.querySelector(".menu-trigger").addEventListener(touchEvent, () => {document.querySelector('.menu-trigger').classList.toggle('active')}, false);
+    document.querySelectorAll(".filter-item").forEach(f => f.addEventListener(touchEvent, setFilter, false));
     document.querySelector("#index-title-frame-top").innerHTML = frame.top;
     document.querySelector("#index-title-frame-bottom").innerHTML = frame.bottom;
     document.querySelector("#constellation_list").setAttribute("class", "");
@@ -124,11 +131,10 @@ let init = () => {
     document.body.setAttribute("class", "");
     
     //event
-    document.querySelectorAll("input.constellation-link").forEach(l =>
-      l.onclick = () => {
-        document.querySelector("#draw-constellation").setAttribute("class", (document.querySelectorAll("input.constellation-link:checked").length) ? "bn632-hover bn26" : "hide");
-    });
-    document.querySelector("#draw-constellation").onclick = ()=>{window.location.href=updateLink()};
+    document.querySelectorAll("input.constellation-link").forEach(l => {
+      let ev = () => {document.querySelector("#draw-constellation").setAttribute("class", (document.querySelectorAll("input.constellation-link:checked").length) ? "bn632-hover bn26" : "hide");}
+      l.addEventListener(touchEvent, ev, false)});
+    document.querySelector("#draw-constellation").addEventListener(touchEvent, ()=>{window.location.href=updateLink()}, false);
   }
 };
 
