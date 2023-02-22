@@ -122,6 +122,23 @@ body.black .progress-bar-container .progress-bar {
   position: fixed;
   bottom: 30px;
   box-shadow: 0 0 5px #4481eb;
+  -webkit-transition: all 0.3s ease-in-out;
+  -moz-transition: all 0.3s ease-in-out;
+  -ms-transition: all 0.3s ease-in-out;
+  -o-transition: all 0.3s ease-in-out;
+  transition: all 0.3s ease-in-out;
+}
+#draw-constellation::before {
+  width: 100vh;
+  margin: 0;
+  height: 100px;
+  background: linear-gradient(0deg, white, transparent);
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  content: "";
+  z-index: 0;
+  mix-blend-mode: color-burn;
 }
 
 #param-list .param-items {
