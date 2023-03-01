@@ -134,11 +134,11 @@ let init = () => {
     titleContainer.className = "hide"
     document.body.setAttribute("class", "");
     
-    //event
-    document.querySelectorAll("input.constellation-link").forEach(l => {
-      let ev = () => {document.querySelector("#draw-constellation").setAttribute("class", (document.querySelectorAll("input.constellation-link:checked").length) ? "bn632-hover bn26" : "hide");}
-      l.addEventListener(touchEvent, ev, false)});
+    // show start button
+    let showStartButton = () => {document.querySelector("#draw-constellation").setAttribute("class", (document.querySelectorAll("input.constellation-link:checked").length) ? "bn632-hover bn26" : "hide");}
+    document.querySelectorAll("input.constellation-link").forEach(l => l.addEventListener(touchEvent, showStartButton, false));
     document.querySelector("#draw-constellation").addEventListener(touchEvent, ()=>{window.location.href=updateLink()}, false);
+    setTimeout(showStartButton, 1000);
   }
 };
 
