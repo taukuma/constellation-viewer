@@ -124,7 +124,7 @@ let constellations = {
     
     let renderer = new THREE.WebGLRenderer({alpha: true, antialias: true});
     let orbit = new THREE.OrbitControls(camera, renderer.domElement);
-    //scene.fog = new THREE.Fog(0x000000, 100, 50);
+    scene.fog = new THREE.Fog(0x000000, 100, 50);
 
     // レンダラーとDOMの設定
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -138,6 +138,11 @@ let constellations = {
     orbit.target = (options.earthView)
       ? new THREE.Vector3(1, 1, 1)
       : new THREE.Vector3(linePositionInfo.center.x, linePositionInfo.center.y, linePositionInfo.center.z);
+
+    // Fix camera to origin
+    orbit.minDistance = 0.001;
+    orbit.maxDistance = 0.001;
+
     // カメラ位置
     camera.setFocalLength(options.focalLength ?? 45);
     camera.position.set(0, 0, 0);
