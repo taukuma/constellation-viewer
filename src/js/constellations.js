@@ -140,8 +140,14 @@ let constellations = {
       : new THREE.Vector3(linePositionInfo.center.x, linePositionInfo.center.y, linePositionInfo.center.z);
 
     // Fix camera to origin
-    orbit.minDistance = 0.001;
-    orbit.maxDistance = 0.001;
+    orbit.enableZoom = false;
+    orbit.enablePan = false;
+    orbit.enableDamping = true;
+    orbit.dampingFactor = 0.05;
+    orbit.minPolarAngle = 0; // Allow rotation across the x-axis
+    orbit.maxPolarAngle = Math.PI; // Allow rotation across the x-axis
+    orbit.minAzimuthAngle = -Infinity; // Allow rotation across the y-axis
+    orbit.maxAzimuthAngle = Infinity; // Allow rotation across the y-axis
 
     // カメラ位置
     camera.setFocalLength(options.focalLength ?? 45);
