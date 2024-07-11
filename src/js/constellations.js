@@ -138,17 +138,18 @@ let constellations = {
     orbit.target = (options.earthView)
       ? new THREE.Vector3(1, 1, 1)
       : new THREE.Vector3(linePositionInfo.center.x, linePositionInfo.center.y, linePositionInfo.center.z);
-    // カメラ位置
-    camera.setFocalLength(options.focalLength ?? 45);
-    camera.position.set(0, 0, 0);
-    camera.rotation.order = "XYZ";
-    camera.lookAt((options.earthView) 
-      ? new THREE.Vector3(0,0,0)
-      : new THREE.Vector3(linePositionInfo.center.x, linePositionInfo.center.y, linePositionInfo.center.z));
-    camera.up = new THREE.Vector3(0,1,options.rotate);
-    if (options.autoRotate) {
-      orbit.autoRotate = true;
-    }
+    // Enable infinite orbiting
+    orbit.maxPolarAngle = Infinity;
+    orbit.minPolarAngle = -Infinity;
+    orbit.maxAzimuthAngle = Infinity;
+    orbit.minAzimuthAngle = -Infinity;
+    orbit.enableDamping = true;
+    orbit.dampingFactor = 0.05;
+    orbit.enablePan = true;
+    orbit.enableZoom = true;
+    orbit.enableRotate = true;
+    orbit.autoRotate = options.autoRotate;
+    orbit.autoRotateSpeed = 1.0;
     orbit.update();
     tmp = {orbit:orbit, camera:camera, pos: linePositionInfo};
     
@@ -160,17 +161,21 @@ let constellations = {
     
     let group = new THREE.Group();
 
-    // 恒星の描画
-    stars.forEach((s,i) => {
-      s.color = `#${('0'+parseInt(s.color.r).toString(16)).slice(-2)}${('0'+parseInt(s.color.g).toString(16)).slice(-2)}${('0'+parseInt(s.color.b).toString(16)).slice(-2)}`
-      s.mesh = new THREE.Mesh(
-        new THREE.SphereGeometry(s.size.radius / 20, 50, 50),
-        new THREE.MeshBasicMaterial({ color: s.color, opacity: 1, transparent: true })
-      );
-      s.mesh.position.set(s.coordinates.x, s.coordinates.y, s.coordinates.z);
-      s.mesh.material.color.set(s.color);
-      group.add(s.mesh);
-    })
+    // 恒星の描画 using InstancedMesh
+    const starGeometry = new THREE.SphereGeometry(1, 12, 12); // Higher resolution geometry
+    const starMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const starMesh = new THREE.InstancedMesh(starGeometry, starMaterial, stars.length);
+    const dummy = new THREE.Object3D();
+
+    stars.forEach((s, i) => {
+      dummy.position.set(s.coordinates.x, s.coordinates.y, s.coordinates.z);
+      dummy.scale.setScalar(s.size.radius / 20);
+      dummy.updateMatrix();
+      starMesh.setMatrixAt(i, dummy.matrix);
+      starMesh.setColorAt(i, new THREE.Color(s.color));
+    });
+
+    group.add(starMesh);
 
     // 星座線の描画
     if (options.showLine) {
@@ -230,6 +235,53 @@ let constellations = {
     finalPass.needsSwap = true;
     finalComposer.addPass(renderScene);
     finalComposer.addPass(finalPass);
+
+    // Add diffraction spike pass
+    const DiffractionSpikeShader = {
+        uniforms: {
+            'tDiffuse': { value: null },
+            'resolution': { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+            'spikeIntensity': { value: 5.0 }, // Increased intensity
+            'spikeLength': { value: 3.0 } // Increased length
+        },
+        vertexShader: `
+            varying vec2 vUv;
+            void main() {
+                vUv = uv;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `,
+        fragmentShader: `
+            uniform sampler2D tDiffuse;
+            uniform vec2 resolution;
+            uniform float spikeIntensity;
+            uniform float spikeLength;
+            varying vec2 vUv;
+
+            void main() {
+                vec2 uv = vUv;
+                vec4 color = texture2D(tDiffuse, uv);
+
+                // Simulate diffraction spikes
+                float spike = 0.0;
+                for (float i = 0.0; i < 8.0; i++) {
+                    float angle = i * 3.14159 / 4.0;
+                    vec2 offset = vec2(cos(angle), sin(angle)) * spikeLength / resolution;
+                    spike += texture2D(tDiffuse, uv + offset).r;
+                    spike += texture2D(tDiffuse, uv - offset).r;
+                }
+                spike = spike * spikeIntensity / 8.0;
+
+                color.rgb += spike;
+
+                gl_FragColor = color;
+            }
+        `
+    };
+
+    const diffractionSpikePass = new THREE.ShaderPass(DiffractionSpikeShader);
+    composer.addPass(diffractionSpikePass);
+
     composer.addPass( renderScene );
     renderer.setAnimationLoop((_) => {
       renderer.render(scene, camera);
