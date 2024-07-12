@@ -174,7 +174,8 @@ let constellations = {
       starMesh.setMatrixAt(i, dummy.matrix);
 
       // Initial twinkle effect (if needed)
-      const twinkleFactor = Math.sin(Date.now() * 0.001 + i) * 0.8 + 1.2; // Initial twinkle effect
+      const twinkleFactor = Math.sin(Date.now() * 0.005 + i) * 0.8 + 2; // Initial twinkle effect
+      s.color = `#${('0'+parseInt(s.color.r).toString(16)).slice(-2)}${('0'+parseInt(s.color.g).toString(16)).slice(-2)}${('0'+parseInt(s.color.b).toString(16)).slice(-2)}`;
       const twinkleColor = new THREE.Color(s.color).multiplyScalar(twinkleFactor);
 
       starMesh.setColorAt(i, twinkleColor);
@@ -290,8 +291,8 @@ let constellations = {
     renderer.setAnimationLoop((_) => {
       stars.forEach((s, i) => {
         // Update twinkle effect in each frame
-        const twinkleFactor = Math.sin(Date.now() * 0.004 + i) * 0.8 + 2; // More pronounced and slower twinkle effect
-        const randomFactor = Math.random() * 0.3 + 0.7; // Add some randomness
+        const twinkleFactor = Math.sin(Date.now() * 0.005 + i) * 0.4 + 2; // More pronounced and slower twinkle effect
+        const randomFactor = Math.random() * 0.3 + 0.8; // Add some randomness
         const finalTwinkleFactor = twinkleFactor * randomFactor;
     
         const twinkleColor = new THREE.Color(s.color).multiplyScalar(finalTwinkleFactor);
