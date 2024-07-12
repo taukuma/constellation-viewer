@@ -116,7 +116,7 @@ let constellations = {
     // シーンとカメラ
     let scene = new THREE.Scene();
     let camera = new THREE.PerspectiveCamera(
-      45,
+      options.focalLength ?? 45,
       windowSize.width / windowSize.height,
       1,
       999999
@@ -153,6 +153,15 @@ let constellations = {
     orbit.update();
     tmp = {orbit:orbit, camera:camera, pos: linePositionInfo};
     
+    // カメラ位置
+    camera.setFocalLength(options.focalLength ?? 45);
+    camera.position.set(0, 0, 0);
+    camera.rotation.order = "XYZ";
+    camera.lookAt((options.earthView) 
+      ? new THREE.Vector3(0,0,0)
+      : new THREE.Vector3(linePositionInfo.center.x, linePositionInfo.center.y, linePositionInfo.center.z));
+    camera.up = new THREE.Vector3(0,1,options.rotate);
+
     // グリッド
     if (options.grid == true) {
       scene.add(new THREE.GridHelper( 1000, 100, 0x5a0a0a, 0x0a0a0a))
