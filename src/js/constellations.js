@@ -172,7 +172,12 @@ let constellations = {
       dummy.scale.setScalar(s.size.radius / 20);
       dummy.updateMatrix();
       starMesh.setMatrixAt(i, dummy.matrix);
-      starMesh.setColorAt(i, new THREE.Color(s.color));
+
+      // Initial twinkle effect (if needed)
+      const twinkleFactor = Math.sin(Date.now() * 0.001 + i) * 0.8 + 1.2; // Initial twinkle effect
+      const twinkleColor = new THREE.Color(s.color).multiplyScalar(twinkleFactor);
+
+      starMesh.setColorAt(i, twinkleColor);
     });
 
     group.add(starMesh);
@@ -204,7 +209,7 @@ let constellations = {
     bloomComposer.addPass(renderScene);
     
     // Bloom
-    const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(windowSize.width, windowSize.height), 5, 0, 0);
+    const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(windowSize.width, windowSize.height), 3, 0.5, 0.2);
     bloomComposer.addPass(bloomPass);
     const finalPass = new THREE.ShaderPass(
       new THREE.ShaderMaterial({
@@ -281,9 +286,22 @@ let constellations = {
 
     const diffractionSpikePass = new THREE.ShaderPass(DiffractionSpikeShader);
     composer.addPass(diffractionSpikePass);
-
     composer.addPass( renderScene );
     renderer.setAnimationLoop((_) => {
+      stars.forEach((s, i) => {
+        // Update twinkle effect in each frame
+        const twinkleFactor = Math.sin(Date.now() * 0.004 + i) * 0.8 + 2; // More pronounced and slower twinkle effect
+        const randomFactor = Math.random() * 0.3 + 0.7; // Add some randomness
+        const finalTwinkleFactor = twinkleFactor * randomFactor;
+    
+        const twinkleColor = new THREE.Color(s.color).multiplyScalar(finalTwinkleFactor);
+    
+        starMesh.setColorAt(i, twinkleColor);
+      });
+    
+      starMesh.instanceMatrix.needsUpdate = true; // Ensure updates are reflected
+      starMesh.instanceColor.needsUpdate = true; // Ensure color updates are reflected
+    
       renderer.render(scene, camera);
       composer.render();
       bloomComposer.render();
