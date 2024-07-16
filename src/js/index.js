@@ -13,15 +13,16 @@ let titleContainer = document.querySelector("#title-container");
 let touchEvent = "click"; //(window.ontouchstart === undefined) ? "click" : "touchstart"
 
 let scripts = [
-  'src/js/three/three.min.js',
-  'src/js/three/OrbitControls.js',
-  'src/js/three/Pass.js',
-  'src/js/three/ShaderPass.js',
-  'src/js/three/EffectComposer.js',
-  'src/js/three/RenderPass.js',
-  'src/js/three/LuminosityHighPassShader.js',
-  'src/js/three/CopyShader.js',
-  'src/js/three/UnrealBloomPass.js'
+  './src/js/three/three.min.js',
+  './src/js/three/OrbitControls.js',
+  './src/js/three/Pass.js',
+  './src/js/three/ShaderPass.js',
+  './src/js/three/EffectComposer.js',
+  './src/js/three/RenderPass.js',
+  './src/js/three/LuminosityHighPassShader.js',
+  './src/js/three/CopyShader.js',
+  './src/js/three/UnrealBloomPass.js',
+  './src/js/three/TrackballControls.js',
 ];
 let updateProgressBar = () => {
   progress += progressAmount;
@@ -37,6 +38,7 @@ let loadScripts = async () => {
       document.body.appendChild(script);
       script.onload = res;
       script.onerror = rej;
+      script.type = "module";
       script.src = path;
     }));
     updateProgressBar();
@@ -129,7 +131,7 @@ let init = () => {
     document.querySelector("#constellation-link-container").innerHTML = 
       Object
         .keys(constants.symbols)
-        .map(s => `<li><div class="constellation-item" data-filter-list="${constants.symbols[s].filters.join(",")}"><input type="checkBox" class="constellation-link" id="constellation-${s}" name="constellation-link" value="${s}"/><label for="constellation-${s}">${s} - ${constants.symbols[s].label}</label></div></li>`)
+        .map(s => `<li><div class="constellation-item" data-filter-list="${constants.symbols[s].filters.join(",")}"><input type="checkBox" class="constellation-link" id="constellation-${s}" name="constellation-link" value="${s}"/><label for="constellation-${s}">${constants.symbols[s].english || s}<br>${constants.symbols[s].label}</label></div></li>`)
         .join("")
     titleContainer.className = "hide"
     document.body.setAttribute("class", "");
