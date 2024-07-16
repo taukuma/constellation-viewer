@@ -27,7 +27,7 @@ constants = {
     'Ia0': {radius: 100, label:'極超巨星'},
   },
   symbols: {
-    'And': {label: 'アンドロメダ座'    ,english: "Andromeda", filters:['秋の星座']},
+    'And': {label: 'アンドロメダ座'    , filters:['秋の星座']},
     'Mon': {label: 'いっかくじゅう座'  , filters:['冬の星座']},
     'Sgr': {label: 'いて座'            , filters:['十二星座', '夏の星座']},
     'Del': {label: 'いるか座'          , filters:['夏の星座']},
