@@ -1,4 +1,4 @@
-let tmp;
+//let tmp;
 let constellations = {
   path: './src/data/constellations',
   path_lineDef: './src/data/mitaka/constellation_lines.json',
@@ -114,17 +114,17 @@ let constellations = {
     let linePositionInfo = getCoordinateInfo(linePaths.reduce((acc,curr) => acc.concat(curr)));
 
     // シーンとカメラ
+    const ASPECT = windowSize.width / windowSize.height;
     let scene = new THREE.Scene();
-    let camera = new THREE.PerspectiveCamera(
+    let perspectiveCamera = new THREE.PerspectiveCamera(
       options.focalLength ?? 45,
-      windowSize.width / windowSize.height,
+      ASPECT,
       1,
       999999
     );
-    
+
     let renderer = new THREE.WebGLRenderer({alpha: true, antialias: true});
-    let orbit = new THREE.OrbitControls(camera, renderer.domElement);
-    //scene.fog = new THREE.Fog(0x000000, 100, 50);
+    scene.fog = new THREE.Fog(0x0000000, 0, 1500);
 
     // レンダラーとDOMの設定
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -135,33 +135,50 @@ let constellations = {
     document.body.appendChild(renderer.domElement);
     
     // コントローラーの定義
-    orbit.target = (options.earthView)
-      ? new THREE.Vector3(1, 1, 1)
-      : new THREE.Vector3(linePositionInfo.center.x, linePositionInfo.center.y, linePositionInfo.center.z);
-    // Enable infinite orbiting
-    orbit.maxPolarAngle = Infinity;
-    orbit.minPolarAngle = -Infinity;
-    orbit.maxAzimuthAngle = Infinity;
-    orbit.minAzimuthAngle = -Infinity;
-    orbit.enableDamping = true;
-    orbit.dampingFactor = 0.05;
-    orbit.enablePan = true;
-    orbit.enableZoom = true;
-    orbit.enableRotate = true;
-    orbit.autoRotate = options.autoRotate;
-    orbit.autoRotateSpeed = 1.0;
-    orbit.update();
-    tmp = {orbit:orbit, camera:camera, pos: linePositionInfo};
-    
+    let controls, orbit;
+    // Trackball Controls
+    controls = new THREE.TrackballControls(perspectiveCamera, renderer.domElement);
+    controls.target = (options.earthView) ? new THREE.Vector3(1, 1, 1) : new THREE.Vector3(linePositionInfo.center.x, linePositionInfo.center.y, linePositionInfo.center.z);
+    controls.rotateSpeed = 2.0;
+    controls.zoomSpeed = 1.2;
+    controls.panSpeed = 0.8;
+    controls.noRotate = false;
+    controls.noZoom = true;
+    controls.noPan = true;
+    controls.staticMoving = false;
+    controls.dynamicDampingFactor = 0.3;
+    controls.keys = [ 'KeyA', 'KeyS', 'KeyD' ]; // [ rotateKey, zoomKey, panKey ]
+    controls.rotateSpeed = 1.0;
+    controls.update();
+    // Orbit Controls
+    if (options.autoRotate) {
+      orbit = new THREE.OrbitControls(perspectiveCamera, renderer.domElement);
+      orbit.target = (options.earthView)
+        ? new THREE.Vector3(1, 1, 1)
+        : new THREE.Vector3(linePositionInfo.center.x, linePositionInfo.center.y, linePositionInfo.center.z);
+      orbit.maxPolarAngle = Infinity;
+      orbit.minPolarAngle = -Infinity;
+      orbit.maxAzimuthAngle = Infinity;
+      orbit.minAzimuthAngle = -Infinity;
+      orbit.enableDamping = true;
+      orbit.dampingFactor = 0.05;
+      orbit.enablePan = true;
+      orbit.enableZoom = true;
+      orbit.enableRotate = false;
+      orbit.autoRotate = options.autoRotate;
+      orbit.autoRotateSpeed = 1.0;
+      orbit.update();
+      //tmp = {orbit:orbit, camera:perspectiveCamera, pos: linePositionInfo};
+    }
     // カメラ位置
-    camera.setFocalLength(options.focalLength ?? 45);
-    camera.position.set(0, 0, 0);
-    camera.rotation.order = "XYZ";
-    camera.lookAt((options.earthView) 
+    perspectiveCamera.setFocalLength(options.focalLength ?? 45);
+    perspectiveCamera.position.set(0, 0, 0);
+    perspectiveCamera.rotation.order = "XYZ";
+    perspectiveCamera.lookAt((options.earthView)
       ? new THREE.Vector3(0,0,0)
       : new THREE.Vector3(linePositionInfo.center.x, linePositionInfo.center.y, linePositionInfo.center.z));
-    camera.up = new THREE.Vector3(0,1,options.rotate);
-
+    perspectiveCamera.up = new THREE.Vector3(0,1,options.rotate);
+    
     // グリッド
     if (options.grid == true) {
       scene.add(new THREE.GridHelper( 1000, 100, 0x5a0a0a, 0x0a0a0a))
@@ -175,12 +192,18 @@ let constellations = {
     const starMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
     const starMesh = new THREE.InstancedMesh(starGeometry, starMaterial, stars.length);
     const dummy = new THREE.Object3D();
+    const starLabels = [];
 
     stars.forEach((s, i) => {
       dummy.position.set(s.coordinates.x, s.coordinates.y, s.coordinates.z);
       dummy.scale.setScalar(s.size.radius / 20);
       dummy.updateMatrix();
       starMesh.setMatrixAt(i, dummy.matrix);
+      
+      // Create text label for each star
+      const label = createLabel(s.name);
+      label.position.copy(dummy.position);
+      starLabels.push(label);
 
       // Initial twinkle effect (if needed)
       const twinkleFactor = Math.sin(Date.now() * 0.005 + i) * 0.8 + 2; // Initial twinkle effect
@@ -191,6 +214,7 @@ let constellations = {
     });
 
     group.add(starMesh);
+    //starLabels.forEach(label => group.add(label));
 
     // 星座線の描画
     if (options.showLine) {
@@ -210,7 +234,7 @@ let constellations = {
     scene.add(group);
     
     // composer setting
-    const renderScene   = new THREE.RenderPass( scene, camera );
+    const renderScene   = new THREE.RenderPass( scene, perspectiveCamera );
     const composer      = new THREE.EffectComposer( renderer );
     const bloomComposer = new THREE.EffectComposer(renderer);
     const finalComposer = new THREE.EffectComposer(renderer);
@@ -293,6 +317,24 @@ let constellations = {
             }
         `
     };
+    function createLabel(text) {
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      context.font = '8px Arial';
+      context.fillStyle = 'rgba(255, 255, 255, 1)';
+      context.fillText(text, 0, 20);
+    
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.minFilter = THREE.LinearFilter;
+      texture.wrapS = THREE.ClampToEdgeWrapping;
+      texture.wrapT = THREE.ClampToEdgeWrapping;
+    
+      const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
+      const sprite = new THREE.Sprite(spriteMaterial);
+      sprite.scale.set(40, 20, 1);
+    
+      return sprite;
+    }
 
     const diffractionSpikePass = new THREE.ShaderPass(DiffractionSpikeShader);
     composer.addPass(diffractionSpikePass);
@@ -311,11 +353,11 @@ let constellations = {
     
       starMesh.instanceMatrix.needsUpdate = true; // Ensure updates are reflected
       starMesh.instanceColor.needsUpdate = true; // Ensure color updates are reflected
-    
-      renderer.render(scene, camera);
+      renderer.render(scene, perspectiveCamera);
       composer.render();
       bloomComposer.render();
       finalComposer.render();
+      controls.update();
       if (options.autoRotate) {
         orbit.update();
       }
