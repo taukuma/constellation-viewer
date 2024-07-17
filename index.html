@@ -3,9 +3,10 @@
   <head>
     <title>Constellations</title>
     <meta charset="UTF-8" />
+    <meta name="theme-color" content="#000000" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Yomogi&family=Klee+One&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Yomogi&family=Klee+One&family=Noto+Sans+JP:wght@100..900&family=Zen+Maru+Gothic&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="src/css/styles.css">
   </head>
   <body class="black">
@@ -25,7 +26,7 @@
     </div>
     <div id="constellation_list" class="hide">
       <div id="index-title-frame-top"></div>
-      <h1 id="index-title">星座</h1>
+      <h1 id="index-title">星座<br><span style="font-size:0.5em;display: block;line-height: 14px;">Constellation</span></h1>
       <div id="index-title-frame-bottom"></div>
       <div id="param-list">
         <button class="menu-trigger">
@@ -69,98 +70,105 @@
             <div><input class="params" type="radio" name="rotate" value=330><label>330°</label></div>
             <div><input class="params" type="radio" name="rotate" value=360><label>360°</label></div>
           </div>
-          <div class="param-items">星座線を表示<input class="tgl tgl-ios params" id="param-showLine" type="checkbox" name="param-showLine" checked/><label class="tgl-btn" for="param-showLine"></label></div>
-          <div class="param-items">自動回転<input class="tgl tgl-ios params" id="param-autoRotate" type="checkbox" name="param-autoRotate" checked/><label class="tgl-btn" for="param-autoRotate"></label></div>
-          <div class="param-items">オートロード<input class="tgl tgl-ios params" id="param-autoLoad" type="checkbox" name="param-autoLoad"/><label class="tgl-btn" for="param-autoLoad"></label></div>
-          <div class="param-items">グリッド表示<input class="tgl tgl-ios params" id="param-grid" type="checkbox" name="param-grid"/><label class="tgl-btn" for="param-grid"></label></div>
-          <div class="param-items">距離<input class="tgl tgl-ios params" id="param-distance" type="checkbox" name="param-distance" checked/><label class="tgl-btn" for="param-distance"></label></div>
-          
-          <div class="param-items">X軸回転
-            <select class="params" name="worldRotateX" value="0">
-              <option value="360">360°</option>
-              <option value="330">330°</option>
-              <option value="300">300°</option>
-              <option value="270">270°</option>
-              <option value="240">240°</option>
-              <option value="210">210°</option>
-              <option value="180">180°</option>
-              <option value="150">150°</option>
-              <option value="120">120°</option>
-              <option value="90">90°</option>
-              <option value="60">60°</option>
-              <option value="30">30°</option>
-              <option value="0" selected>0°</option>
-              <option value="-30">-30°</option>
-              <option value="-60">-60°</option>
-              <option value="-90">-90°</option>
-              <option value="-120">-120°</option>
-              <option value="-150">-150°</option>
-              <option value="-180">-180°</option>
-              <option value="-210">-210°</option>
-              <option value="-240">-240°</option>
-              <option value="-270">-270°</option>
-              <option value="-300">-300°</option>
-              <option value="-330">-330°</option>
-              <option value="-360">-360°</option>
-            </select>
+          <div>
+            <div class="param-items">星座線を表示<input class="tgl tgl-ios params" id="param-showLine" type="checkbox" name="param-showLine" checked/><label class="tgl-btn" for="param-showLine"></label></div>
+            <div class="param-items">星座名を表示<input class="tgl tgl-ios params" id="param-showConstellationName" type="checkbox" name="param-showConstellationName"/><label class="tgl-btn" for="param-showConstellationName"></label></div>
+            <div class="param-items">星名を表示<input class="tgl tgl-ios params" id="param-showStarName" type="checkbox" name="param-showStarName"/><label class="tgl-btn" for="param-showStarName"></label></div>
+            <div class="param-items">グリッド表示<input class="tgl tgl-ios params" id="param-grid" type="checkbox" name="param-grid"/><label class="tgl-btn" for="param-grid"></label></div>
           </div>
-          <div class="param-items">Y軸回転
-            <select class="params" name="worldRotateY" value="0">
-              <option value="360">360°</option>
-              <option value="330">330°</option>
-              <option value="300">300°</option>
-              <option value="270">270°</option>
-              <option value="240">240°</option>
-              <option value="210">210°</option>
-              <option value="180">180°</option>
-              <option value="150">150°</option>
-              <option value="120">120°</option>
-              <option value="90">90°</option>
-              <option value="60">60°</option>
-              <option value="30">30°</option>
-              <option value="0" selected>0°</option>
-              <option value="-30">-30°</option>
-              <option value="-60">-60°</option>
-              <option value="-90">-90°</option>
-              <option value="-120">-120°</option>
-              <option value="-150">-150°</option>
-              <option value="-180">-180°</option>
-              <option value="-210">-210°</option>
-              <option value="-240">-240°</option>
-              <option value="-270">-270°</option>
-              <option value="-300">-300°</option>
-              <option value="-330">-330°</option>
-              <option value="-360">-360°</option>
-            </select>
+          <div>
+            <div class="param-items">自動回転<input class="tgl tgl-ios params" id="param-autoRotate" type="checkbox" name="param-autoRotate" checked/><label class="tgl-btn" for="param-autoRotate"></label></div>
+            <div class="param-items">オートロード<input class="tgl tgl-ios params" id="param-autoLoad" type="checkbox" name="param-autoLoad"/><label class="tgl-btn" for="param-autoLoad"></label></div>
+            <div class="param-items">距離<input class="tgl tgl-ios params" id="param-distance" type="checkbox" name="param-distance" checked/><label class="tgl-btn" for="param-distance"></label></div>
           </div>
-          <div class="param-items">Z軸回転
-            <select class="params" name="worldRotateZ" value="0">
-              <option value="360">360°</option>
-              <option value="330">330°</option>
-              <option value="300">300°</option>
-              <option value="270">270°</option>
-              <option value="240">240°</option>
-              <option value="210">210°</option>
-              <option value="180">180°</option>
-              <option value="150">150°</option>
-              <option value="120">120°</option>
-              <option value="90">90°</option>
-              <option value="60">60°</option>
-              <option value="30">30°</option>
-              <option value="0" selected>0°</option>
-              <option value="-30">-30°</option>
-              <option value="-60">-60°</option>
-              <option value="-90">-90°</option>
-              <option value="-120">-120°</option>
-              <option value="-150">-150°</option>
-              <option value="-180">-180°</option>
-              <option value="-210">-210°</option>
-              <option value="-240">-240°</option>
-              <option value="-270">-270°</option>
-              <option value="-300">-300°</option>
-              <option value="-330">-330°</option>
-              <option value="-360">-360°</option>
-            </select>
+          <div>
+            <div class="param-items">X軸回転
+              <select class="params" name="worldRotateX" value="0">
+                <option value="360">360°</option>
+                <option value="330">330°</option>
+                <option value="300">300°</option>
+                <option value="270">270°</option>
+                <option value="240">240°</option>
+                <option value="210">210°</option>
+                <option value="180">180°</option>
+                <option value="150">150°</option>
+                <option value="120">120°</option>
+                <option value="90">90°</option>
+                <option value="60">60°</option>
+                <option value="30">30°</option>
+                <option value="0" selected>0°</option>
+                <option value="-30">-30°</option>
+                <option value="-60">-60°</option>
+                <option value="-90">-90°</option>
+                <option value="-120">-120°</option>
+                <option value="-150">-150°</option>
+                <option value="-180">-180°</option>
+                <option value="-210">-210°</option>
+                <option value="-240">-240°</option>
+                <option value="-270">-270°</option>
+                <option value="-300">-300°</option>
+                <option value="-330">-330°</option>
+                <option value="-360">-360°</option>
+              </select>
+            </div>
+            <div class="param-items">Y軸回転
+              <select class="params" name="worldRotateY" value="0">
+                <option value="360">360°</option>
+                <option value="330">330°</option>
+                <option value="300">300°</option>
+                <option value="270">270°</option>
+                <option value="240">240°</option>
+                <option value="210">210°</option>
+                <option value="180">180°</option>
+                <option value="150">150°</option>
+                <option value="120">120°</option>
+                <option value="90">90°</option>
+                <option value="60">60°</option>
+                <option value="30">30°</option>
+                <option value="0" selected>0°</option>
+                <option value="-30">-30°</option>
+                <option value="-60">-60°</option>
+                <option value="-90">-90°</option>
+                <option value="-120">-120°</option>
+                <option value="-150">-150°</option>
+                <option value="-180">-180°</option>
+                <option value="-210">-210°</option>
+                <option value="-240">-240°</option>
+                <option value="-270">-270°</option>
+                <option value="-300">-300°</option>
+                <option value="-330">-330°</option>
+                <option value="-360">-360°</option>
+              </select>
+            </div>
+            <div class="param-items">Z軸回転
+              <select class="params" name="worldRotateZ" value="0">
+                <option value="360">360°</option>
+                <option value="330">330°</option>
+                <option value="300">300°</option>
+                <option value="270">270°</option>
+                <option value="240">240°</option>
+                <option value="210">210°</option>
+                <option value="180">180°</option>
+                <option value="150">150°</option>
+                <option value="120">120°</option>
+                <option value="90">90°</option>
+                <option value="60">60°</option>
+                <option value="30">30°</option>
+                <option value="0" selected>0°</option>
+                <option value="-30">-30°</option>
+                <option value="-60">-60°</option>
+                <option value="-90">-90°</option>
+                <option value="-120">-120°</option>
+                <option value="-150">-150°</option>
+                <option value="-180">-180°</option>
+                <option value="-210">-210°</option>
+                <option value="-240">-240°</option>
+                <option value="-270">-270°</option>
+                <option value="-300">-300°</option>
+                <option value="-330">-330°</option>
+                <option value="-360">-360°</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
