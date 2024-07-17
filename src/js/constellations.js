@@ -11,6 +11,8 @@ let constellations = {
       grid        : renderParams.grid == '1',
       earthView   : renderParams.earthView == '1',
       showLine    : (renderParams.showLine ?? true) != '0',
+      showStarName: renderParams.showStarName == '1',
+      showConstellationName: renderParams.showConstellationName == '1',
       rotate      : parseFloat(renderParams.rotate ?? 0) * Math.PI / 180,
       worldRotateX: parseFloat(renderParams.worldRotateX ?? 0) * Math.PI / 180,
       worldRotateY: parseFloat(renderParams.worldRotateY ?? 0) * Math.PI / 180,
@@ -147,30 +149,28 @@ let constellations = {
     controls.noZoom = true;
     controls.noPan = true;
     controls.staticMoving = false;
-    controls.dynamicDampingFactor = 0.3;
+    controls.dynamicDampingFactor = 0.05;
     controls.keys = [ 'KeyA', 'KeyS', 'KeyD' ]; // [ rotateKey, zoomKey, panKey ]
-    controls.rotateSpeed = 1.0;
+    controls.rotateSpeed = 0.5;
     controls.update();
     // Orbit Controls
-    if (options.autoRotate) {
-      orbit = new THREE.OrbitControls(perspectiveCamera, renderer.domElement);
-      orbit.target = (options.earthView)
-        ? new THREE.Vector3(1, 1, 1)
-        : new THREE.Vector3(linePositionInfo.center.x, linePositionInfo.center.y, linePositionInfo.center.z);
-      orbit.maxPolarAngle = Infinity;
-      orbit.minPolarAngle = -Infinity;
-      orbit.maxAzimuthAngle = Infinity;
-      orbit.minAzimuthAngle = -Infinity;
-      orbit.enableDamping = true;
-      orbit.dampingFactor = 0.05;
-      orbit.enablePan = true;
-      orbit.enableZoom = true;
-      orbit.enableRotate = false;
-      orbit.autoRotate = options.autoRotate;
-      orbit.autoRotateSpeed = 1.0;
-      orbit.update();
-      //tmp = {orbit:orbit, camera:perspectiveCamera, pos: linePositionInfo};
-    }
+    orbit = new THREE.OrbitControls(perspectiveCamera, renderer.domElement);
+    orbit.target = (options.earthView)
+      ? new THREE.Vector3(1, 1, 1)
+      : new THREE.Vector3(linePositionInfo.center.x, linePositionInfo.center.y, linePositionInfo.center.z);
+    orbit.maxPolarAngle = Infinity;
+    orbit.minPolarAngle = -Infinity;
+    orbit.maxAzimuthAngle = Infinity;
+    orbit.minAzimuthAngle = -Infinity;
+    orbit.enableDamping = false;
+    orbit.dampingFactor = 0.05;
+    orbit.enablePan = true;
+    orbit.enableZoom = true;
+    orbit.enableRotate = false;
+    orbit.autoRotate = options.autoRotate;
+    orbit.autoRotateSpeed = 1.0;
+    orbit.update();
+
     // カメラ位置
     perspectiveCamera.setFocalLength(options.focalLength ?? 45);
     perspectiveCamera.position.set(0, 0, 0);
@@ -193,7 +193,6 @@ let constellations = {
     const starMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
     const starMesh = new THREE.InstancedMesh(starGeometry, starMaterial, stars.length);
     const dummy = new THREE.Object3D();
-    const starLabels = [];
 
     stars.forEach((s, i) => {
       dummy.position.set(s.coordinates.x, s.coordinates.y, s.coordinates.z);
@@ -201,10 +200,12 @@ let constellations = {
       dummy.updateMatrix();
       starMesh.setMatrixAt(i, dummy.matrix);
       
-      // Create text label for each star
-      const label = createLabel(s.name);
-      label.position.copy(dummy.position);
-      starLabels.push(label);
+      // 星名の表示
+      if (options.showStarName) {
+        let label = createLabel(s.name, s.color);
+        label.position.copy(dummy.position);
+        group.add(label)
+      }
 
       // Initial twinkle effect (if needed)
       const twinkleFactor = Math.sin(Date.now() * 0.005 + i) * 0.8 + 2; // Initial twinkle effect
@@ -215,7 +216,6 @@ let constellations = {
     });
 
     group.add(starMesh);
-    //starLabels.forEach(label => group.add(label));
 
     // 星座線の描画
     if (options.showLine) {
@@ -229,6 +229,8 @@ let constellations = {
         group.add(line);
       });
     }
+    //星座名の表示
+
     group.rotation.x = options.worldRotateX;
     group.rotation.y = options.worldRotateY;
     group.rotation.z = options.worldRotateZ;
@@ -244,7 +246,15 @@ let constellations = {
     bloomComposer.addPass(renderScene);
     
     // Bloom
-    const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(windowSize.width, windowSize.height), 3, 0.5, 0.2);
+    const bloomParams = {
+      exposure: 1.0,
+      bloomStrength: 3.0,
+      bloomRadius: 0.5,
+      bloomThreshold: 0.2,
+    };
+    renderer.toneMapping = THREE.ReinhardToneMapping;
+    renderer.toneMappingExposure = bloomParams.exposure;
+    const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(windowSize.width, windowSize.height), bloomParams.bloomStrength, bloomParams.bloomRadius, bloomParams.bloomThreshold);
     bloomComposer.addPass(bloomPass);
     const finalPass = new THREE.ShaderPass(
       new THREE.ShaderMaterial({
@@ -276,69 +286,25 @@ let constellations = {
     finalComposer.addPass(renderScene);
     finalComposer.addPass(finalPass);
 
-    // Add diffraction spike pass
-    const DiffractionSpikeShader = {
-        uniforms: {
-            'tDiffuse': { value: null },
-            'resolution': { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
-            'spikeIntensity': { value: 5.0 }, // Increased intensity
-            'spikeLength': { value: 3.0 } // Increased length
-        },
-        vertexShader: `
-            varying vec2 vUv;
-            void main() {
-                vUv = uv;
-                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-            }
-        `,
-        fragmentShader: `
-            uniform sampler2D tDiffuse;
-            uniform vec2 resolution;
-            uniform float spikeIntensity;
-            uniform float spikeLength;
-            varying vec2 vUv;
-
-            void main() {
-                vec2 uv = vUv;
-                vec4 color = texture2D(tDiffuse, uv);
-
-                // Simulate diffraction spikes
-                float spike = 0.0;
-                for (float i = 0.0; i < 8.0; i++) {
-                    float angle = i * 3.14159 / 4.0;
-                    vec2 offset = vec2(cos(angle), sin(angle)) * spikeLength / resolution;
-                    spike += texture2D(tDiffuse, uv + offset).r;
-                    spike += texture2D(tDiffuse, uv - offset).r;
-                }
-                spike = spike * spikeIntensity / 8.0;
-
-                color.rgb += spike;
-
-                gl_FragColor = color;
-            }
-        `
-    };
-    function createLabel(text) {
+    function createLabel(text, color) {
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
-      context.font = '8px Arial';
-      context.fillStyle = 'rgba(255, 255, 255, 1)';
-      context.fillText(text, 0, 20);
+      context.font = "24px 'Zen Maru Gothic', 'Noto Sans JP', san-serif"
+      context.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, 0.4)`;
+      context.fillText(text, 0, 30);
     
       const texture = new THREE.CanvasTexture(canvas);
-      texture.minFilter = THREE.LinearFilter;
-      texture.wrapS = THREE.ClampToEdgeWrapping;
-      texture.wrapT = THREE.ClampToEdgeWrapping;
+      //texture.minFilter = THREE.LinearFilter;
+      //texture.wrapS = THREE.ClampToEdgeWrapping;
+      //texture.wrapT = THREE.ClampToEdgeWrapping;
     
       const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
       const sprite = new THREE.Sprite(spriteMaterial);
-      sprite.scale.set(40, 20, 1);
+      sprite.scale.set(8, 4, 1);
     
       return sprite;
     }
 
-    const diffractionSpikePass = new THREE.ShaderPass(DiffractionSpikeShader);
-    composer.addPass(diffractionSpikePass);
     composer.addPass( renderScene );
     renderer.setAnimationLoop((_) => {
       stars.forEach((s, i) => {
@@ -359,9 +325,7 @@ let constellations = {
       bloomComposer.render();
       finalComposer.render();
       controls.update();
-      if (options.autoRotate) {
-        orbit.update();
-      }
+      orbit.update();
     });
   },
   reset: () => {

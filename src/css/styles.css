@@ -117,7 +117,7 @@ body.black .progress-bar-container .progress-bar {
 }
 #param-list .menu-trigger.active + .settings {
   opacity: 1;
-  height: 400px;
+  height: 550px;
   -webkit-transition: all 0.3s ease-in-out;
   -moz-transition: all 0.3s ease-in-out;
   -ms-transition: all 0.3s ease-in-out;
@@ -180,6 +180,7 @@ body.black .progress-bar-container .progress-bar {
   justify-content: center;
   align-items: center;
   flex-wrap: wrap;
+  padding: 10px 0px;
 }
 #constellation-link-filter li {
   display: inline-block;
