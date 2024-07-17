@@ -311,7 +311,7 @@ let constellations = {
       context.canvas.width = width;
       context.canvas.height = height;
       context.fillStyle = 'rgba(0, 0, 255, 0.5)'
-      context.font = `${size}px 'Zen Maru Gothic', 'Noto Sans JP', san-serif`
+      context.font = `${size}px 'Klee One', 'Zen Maru Gothic', 'Noto Sans JP', san-serif`
       context.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${opacity})`;
       context.fillText(text, width / 2 - (text.length / 2 * size), height / 2 - size);
     
@@ -322,7 +322,7 @@ let constellations = {
     
       const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
       const sprite = new THREE.Sprite(spriteMaterial);
-      sprite.scale.set(width / 20, height / 20, 1);
+      sprite.scale.set(width / 25, height / 25, 1);
     
       return sprite;
     }
