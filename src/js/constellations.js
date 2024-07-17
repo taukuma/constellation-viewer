@@ -132,6 +132,7 @@ let constellations = {
     renderer.toneMapping = THREE.ReinhardToneMapping;
     renderer.toneMappingExposure = Math.pow(0.8, 2.0);
     renderer.setClearColor( 0x000000, 0.5 )
+    //renderer.domElement.style.setProperty("mix-blend-mode", "color-burn")
     document.body.appendChild(renderer.domElement);
     
     // コントローラーの定義
