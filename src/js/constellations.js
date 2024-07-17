@@ -24,12 +24,13 @@ let constellations = {
   init: async (symbol, updateProgressBar) => {
     constellations.isInitialized = false;
     symbol = (Array.isArray(symbol)) ? symbol : [symbol];
-    let stars = (await Promise.all(symbol.map(s => constellations.loadStarData(s, updateProgressBar))))
+    let starData = (await Promise.all(symbol.map(s => constellations.loadStarData(s, updateProgressBar))));
+    let stars = starData.map(s => s.stars)
       .reduce((acc,curr) => acc.concat(curr));
     let lines = (await Promise.all(symbol.map(s => constellations.loadLineData(s, stars, updateProgressBar))))
       .reduce((acc,curr) => acc.concat(curr));
     constellations.isInitialized = true;
-    return {stars: stars, lines: lines};
+    return {stars: stars, lines: lines, constellation: starData.map(s => s.constellation)};
   },
   loadStarData: async (symbol, updateProgressBar) => {
     symbol ??= "";
@@ -44,7 +45,7 @@ let constellations = {
     updateProgressBar();
     
     // 恒星情報を取得
-    return data.stars.map((s) => {
+    let starData = data.stars.map((s) => {
       let isEmpty = (str) => str == undefined || str == null || str == "" || str == {} || str == [];
       let spectralClassString = ((!isEmpty(s["スペクトル分類"])  ? s["スペクトル分類"] : s["スペクトル型"]) ?? "").replace(/\-/g,'');
       let absoluteMagnitude   =  !isEmpty(s["絶対等級"])         ? s["絶対等級"]       : !isEmpty(s.additional_info["絶対等級 (MV)"]) ? s.additional_info["絶対等級 (MV)"] : 1;
@@ -69,6 +70,13 @@ let constellations = {
         id: hip
       }
     }).filter(s => s !== undefined);
+    return {
+      constellation: {
+        label: constants.symbols[symbol].label,
+        coordinates: starData[0].coordinates
+      },
+      stars: starData
+    }
   },
   loadLineData: async (symbol, stars) => {
     symbol ??= "";
@@ -85,7 +93,7 @@ let constellations = {
     
     return lines;
   },
-  render: async (stars, linePaths) => {
+  render: async (stars, linePaths, constellationInfo) => {
     let options = constellations.options;
     // 中心座標の取得
     let getCoordinateInfo = (list) => list.reduce((acc,curr,i)=> {return {
@@ -230,6 +238,15 @@ let constellations = {
       });
     }
     //星座名の表示
+    if (options.showConstellationName) {
+      console.log("show name", constellationInfo)
+      constellationInfo.forEach(c => {
+        let label = createLabel(c.label, {r:0, g:125, b:255}, 38, 1)
+        label.position.set(c.coordinates.x, c.coordinates.y, c.coordinates.z);
+        console.log(label,c);
+        group.add(label);
+      })
+    }
 
     group.rotation.x = options.worldRotateX;
     group.rotation.y = options.worldRotateY;
@@ -286,12 +303,17 @@ let constellations = {
     finalComposer.addPass(renderScene);
     finalComposer.addPass(finalPass);
 
-    function createLabel(text, color) {
+    function createLabel(text, color, size = 16, opacity = 0.4) {
+      const width = size * 15;
+      const height = size * 6;
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
-      context.font = "24px 'Zen Maru Gothic', 'Noto Sans JP', san-serif"
-      context.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, 0.4)`;
-      context.fillText(text, 0, 30);
+      context.canvas.width = width;
+      context.canvas.height = height;
+      context.fillStyle = 'rgba(0, 0, 255, 0.5)'
+      context.font = `${size}px 'Zen Maru Gothic', 'Noto Sans JP', san-serif`
+      context.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${opacity})`;
+      context.fillText(text, width / 2 - (text.length / 2 * size), height / 2 - size);
     
       const texture = new THREE.CanvasTexture(canvas);
       //texture.minFilter = THREE.LinearFilter;
@@ -300,7 +322,7 @@ let constellations = {
     
       const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
       const sprite = new THREE.Sprite(spriteMaterial);
-      sprite.scale.set(8, 4, 1);
+      sprite.scale.set(width / 20, height / 20, 1);
     
       return sprite;
     }

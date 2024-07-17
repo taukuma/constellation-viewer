@@ -63,10 +63,10 @@ let initApp = async () => {
   
   await loadScripts();
   data = await constellations.init(constellationList, updateProgressBar);
-  console.log(data);
   await constellations.render(
     data.stars,
-    data.lines
+    data.lines,
+    data.constellation
   )
   loadingContainer.style.display = "none";
 };
