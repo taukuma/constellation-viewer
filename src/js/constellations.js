@@ -134,7 +134,7 @@ let constellations = {
     );
 
     let renderer = new THREE.WebGLRenderer({alpha: true, antialias: true});
-    scene.fog = new THREE.Fog(0x0000000, 0, 1500);
+    //scene.fog = new THREE.Fog(0x0000000, 0, 1500);
 
     // レンダラーとDOMの設定
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -204,7 +204,7 @@ let constellations = {
 
     stars.forEach((s, i) => {
       dummy.position.set(s.coordinates.x, s.coordinates.y, s.coordinates.z);
-      dummy.scale.setScalar(s.size.radius / 20);
+      dummy.scale.setScalar(s.size.radius / 50);
       dummy.updateMatrix();
       starMesh.setMatrixAt(i, dummy.matrix);
       
@@ -264,10 +264,10 @@ let constellations = {
     
     // Bloom
     const bloomParams = {
-      exposure: 1.0,
-      bloomStrength: 3.0,
-      bloomRadius: 0.5,
-      bloomThreshold: 0.2,
+      exposure: 0.7,
+      bloomStrength: 2.5,
+      bloomRadius: 0.25,
+      bloomThreshold: 0.1,
     };
     renderer.toneMapping = THREE.ReinhardToneMapping;
     renderer.toneMappingExposure = bloomParams.exposure;
