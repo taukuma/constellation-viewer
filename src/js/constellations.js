@@ -39,7 +39,8 @@ class Constellations {
       worldRotateY: parseFloat(renderParams.worldRotateY ?? 0) * Math.PI / 180,
       worldRotateZ: parseFloat(renderParams.worldRotateZ ?? 0) * Math.PI / 180,
       autoRotate  : renderParams.autoRotate == '1',
-      distance    : (renderParams.distance ?? true) != '0'
+      distance    : (renderParams.distance ?? true) != '0',
+      renderMode  : renderParams.renderMode
     };
   };
 
@@ -235,40 +236,9 @@ class Constellations {
     }
 
     // 恒星の描画
-    let starRenderType = "original"; // original | updated
-    switch (starRenderType) {
-      //using InstancedMesh
-      case 'original': {
-        const starGeometry = new THREE.SphereGeometry(1, 8, 8); // Higher resolution geometry
-        const starMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-        const starMesh = new THREE.InstancedMesh(starGeometry, starMaterial, stars.length);
-        const dummy = new THREE.Object3D();
-    
-        stars.forEach((s, i) => {
-          dummy.position.set(s.coordinates.x, s.coordinates.y, s.coordinates.z);
-          dummy.scale.setScalar(s.size.radius / 25);
-          dummy.updateMatrix();
-          starMesh.setMatrixAt(i, dummy.matrix);
-          
-          // 星名の表示
-          if (options.showStarName) {
-            let label = createLabel(s.name, s.color);
-            label.position.copy(dummy.position);
-            group.add(label)
-          }
-    
-          // Initial twinkle effect (if needed)
-          const twinkleFactor = Math.sin(Date.now() * 0.005 + i) * 0.8 + 2; // Initial twinkle effect
-          s.color = `#${('0'+parseInt(s.color.r).toString(16)).slice(-2)}${('0'+parseInt(s.color.g).toString(16)).slice(-2)}${('0'+parseInt(s.color.b).toString(16)).slice(-2)}`;
-          const twinkleColor = new THREE.Color(s.color).multiplyScalar(twinkleFactor);
-    
-          starMesh.setColorAt(i, twinkleColor);
-        });
-    
-        group.add(starMesh);        
-      } break;
+    switch (options.renderMode) {
       //using point light and lensflare
-      case 'updated': {
+      case 'PointLight': {
         let isStarFormsConstellationLine = (s) => linePaths.reduce((acc,curr) => acc.concat(curr)).filter(l => l.x === s.x && l.y === s.y && l.z === s.z).length > 0;
         const textureLoader = new THREE.TextureLoader();
         const textureFlare0 = textureLoader.load( "./src/img/textures/lensflare/lensflare0_alpha.png" );
@@ -304,8 +274,37 @@ class Constellations {
           light.color.set(twinkleColor);
         });
       } break;
-      default:
-        break;
+      //using InstancedMesh
+      case 'InstancedMesh':
+      default: {
+        const starGeometry = new THREE.SphereGeometry(1, 6, 6); // Higher resolution geometry
+        const starMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        const starMesh = new THREE.InstancedMesh(starGeometry, starMaterial, stars.length);
+        const dummy = new THREE.Object3D();
+    
+        stars.forEach((s, i) => {
+          dummy.position.set(s.coordinates.x, s.coordinates.y, s.coordinates.z);
+          dummy.scale.setScalar(s.size.radius / 25);
+          dummy.updateMatrix();
+          starMesh.setMatrixAt(i, dummy.matrix);
+          
+          // 星名の表示
+          if (options.showStarName) {
+            let label = createLabel(s.name, s.color);
+            label.position.copy(dummy.position);
+            group.add(label)
+          }
+    
+          // Initial twinkle effect (if needed)
+          const twinkleFactor = Math.sin(Date.now() * 0.005 + i) * 0.8 + 2; // Initial twinkle effect
+          s.color = `#${('0'+parseInt(s.color.r).toString(16)).slice(-2)}${('0'+parseInt(s.color.g).toString(16)).slice(-2)}${('0'+parseInt(s.color.b).toString(16)).slice(-2)}`;
+          const twinkleColor = new THREE.Color(s.color).multiplyScalar(twinkleFactor);
+    
+          starMesh.setColorAt(i, twinkleColor);
+        });
+    
+        group.add(starMesh);        
+      } break;
     }
 
     //星座名の表示
@@ -337,7 +336,7 @@ class Constellations {
       exposure: 5,
       bloomStrength: .75,
       bloomRadius: 1,
-      bloomThreshold: 0.01,
+      bloomThreshold: 0,
     };
     renderer.toneMapping = THREE.ReinhardToneMapping;
     renderer.toneMappingExposure = bloomParams.exposure;
