@@ -1,7 +1,9 @@
 /* アクセス
    ../index.html?constellations=Ori+And+Tau&grid=1
  */
+import Constellations from 'constellations';
 
+let constellations = new Constellations();
 let progress = 0;
 let progressAmount = 0;
 let playButton = document.querySelector(".play");
@@ -13,17 +15,19 @@ let titleContainer = document.querySelector("#title-container");
 let touchEvent = "click"; //(window.ontouchstart === undefined) ? "click" : "touchstart"
 
 let scripts = [
-  './src/js/three/three.min.js',
-  './src/js/three/OrbitControls.js',
-  './src/js/three/Pass.js',
-  './src/js/three/ShaderPass.js',
-  './src/js/three/EffectComposer.js',
-  './src/js/three/RenderPass.js',
-  './src/js/three/LuminosityHighPassShader.js',
-  './src/js/three/CopyShader.js',
-  './src/js/three/UnrealBloomPass.js',
-  './src/js/three/TrackballControls.js',
+//  './src/js/three/three.min.js',
+//  './src/js/three/OrbitControls.js',
+//  './src/js/three/Pass.js',
+//  './src/js/three/ShaderPass.js',
+//  './src/js/three/EffectComposer.js',
+//  './src/js/three/RenderPass.js',
+//  './src/js/three/LuminosityHighPassShader.js',
+//  './src/js/three/CopyShader.js',
+//  './src/js/three/UnrealBloomPass.js',
+//  './src/js/three/TrackballControls.js',
+//  './src/js/three/Lensflare.js',
 ];
+
 let updateProgressBar = () => {
   progress += progressAmount;
   console.log(progress)
@@ -47,7 +51,8 @@ let loadScripts = async () => {
 
 //get url params
 let params={};
-location.search.replace(/^\?/g,'').split('&').map(s => p=s.split("=")).forEach(p=>{params[p[0]]=p[1]});
+let data;
+location.search.replace(/^\?/g,'').split('&').map(s => s.split("=")).forEach(p=>{params[p[0]]=p[1]});
 let constellationList = (params.constellations !== undefined)
   ? (params.constellations == "ALL") 
     ? Object.keys(constants.symbols)
@@ -95,7 +100,7 @@ let updateLink = (target) => {
 };
 
 let setFilter = (e) => {
-  f = e.target.getAttribute("data-filter-target");
+  let f = e.target.getAttribute("data-filter-target");
   document.querySelectorAll(".constellation-item")
     .forEach(d => {
       if (d.getAttribute("data-filter-list").includes(f) || f === undefined || f === "") {
