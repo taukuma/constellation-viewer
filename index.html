@@ -186,9 +186,18 @@
       <ul id="constellation-link-container" class="block"></ul>
       <button id="draw-constellation" class="hide bn632-hover bn26">スタート</button>
     </div>
+    <script type="importMap">
+			{
+				"imports": {
+					"three": "./src/js/three.js-dev/build/three.module.js",
+					"three/addons/": "./src/js/three.js-dev/examples/jsm/",
+          "constellations": "./src/js/constellations.js"
+				}
+			}
+    </script>
     <script src="src/js/constants.js"></script>
     <script src="src/js/converters.js"></script>
-    <script src="src/js/constellations.js"></script>
-    <script src="src/js/index.js"></script>
+    <script src="src/js/constellations.js" type="module"></script>
+    <script src="src/js/index.js" type="module"></script>
   </body>
 </html>

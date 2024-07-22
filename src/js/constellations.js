@@ -1,12 +1,33 @@
-//let tmp;
-let constellations = {
-  path: './src/data/constellations',
-  path_lineDef: './src/data/mitaka/constellation_lines.json',
-  isInitialized: false,
-  data: new Array(),
-  options: {},
-  setOptions: (renderParams) => {
-    constellations.options = {
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {TrackballControls} from 'three/addons/controls/TrackballControls.js';
+import {RenderPass} from 'three/addons/postprocessing/RenderPass.js';
+import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
+import {UnrealBloomPass} from 'three/addons/postprocessing/UnrealBloomPass.js';
+import {ShaderPass} from 'three/addons/postprocessing/ShaderPass.js';
+import {Lensflare, LensflareElement} from 'three/addons/objects/Lensflare.js';
+
+//  './src/js/three/OrbitControls.js',
+//  './src/js/three/Pass.js',
+//  './src/js/three/ShaderPass.js',
+//  './src/js/three/EffectComposer.js',
+//  './src/js/three/RenderPass.js',
+//  './src/js/three/LuminosityHighPassShader.js',
+//  './src/js/three/CopyShader.js',
+//  './src/js/three/UnrealBloomPass.js',
+//  './src/js/three/TrackballControls.js',
+//  './src/js/three/Lensflare.js',
+class Constellations {
+  constructor() {
+    this.path = './src/data/constellations';
+    this.path_lineDef = './src/data/mitaka/constellation_lines.json';
+    this.isInitialized = false;
+    this.data = new Array();
+    this.options = {}
+  };
+
+  setOptions = (renderParams) => {
+    this.options = {
       focalLength : parseFloat(renderParams.focalLength ?? 45),
       grid        : renderParams.grid == '1',
       earthView   : renderParams.earthView == '1',
@@ -20,24 +41,26 @@ let constellations = {
       autoRotate  : renderParams.autoRotate == '1',
       distance    : (renderParams.distance ?? true) != '0'
     };
-  },
-  init: async (symbol, updateProgressBar) => {
-    constellations.isInitialized = false;
+  };
+
+  init = async (symbol, updateProgressBar) => {
+    this.isInitialized = false;
     symbol = (Array.isArray(symbol)) ? symbol : [symbol];
-    let starData = (await Promise.all(symbol.map(s => constellations.loadStarData(s, updateProgressBar))));
+    let starData = (await Promise.all(symbol.map(s => this.loadStarData(s, updateProgressBar))));
     let stars = starData.map(s => s.stars)
       .reduce((acc,curr) => acc.concat(curr));
-    let lines = (await Promise.all(symbol.map(s => constellations.loadLineData(s, stars, updateProgressBar))))
+    let lines = (await Promise.all(symbol.map(s => this.loadLineData(s, stars, updateProgressBar))))
       .reduce((acc,curr) => acc.concat(curr));
-    constellations.isInitialized = true;
+      this.isInitialized = true;
     return {stars: stars, lines: lines, constellation: starData.map(s => s.constellation)};
-  },
-  loadStarData: async (symbol, updateProgressBar) => {
+  };
+
+  loadStarData = async (symbol, updateProgressBar) => {
     symbol ??= "";
     if (!Object.keys(constants.symbols).includes(symbol)) {
       return;
     }
-    let data = await constellations.loadData(symbol);
+    let data = await this.loadData(symbol);
     if (data.length === 0) {
       return;
     }
@@ -54,7 +77,7 @@ let constellations = {
      
       let size = converters.getStarRadiusFromStellarClassString(spectralClassString);
       let color = converters.getColorFromStellarClassString(spectralClassString);
-      let coordinates = converters.getCoordinates(s["赤経"], s["赤緯"], distance, constellations.options.distance);
+      let coordinates = converters.getCoordinates(s["赤経"], s["赤緯"], distance, this.options.distance);
 
       if (coordinates == undefined || absoluteMagnitude == undefined || size == undefined || color == undefined) {
         return undefined;
@@ -77,14 +100,15 @@ let constellations = {
       },
       stars: starData
     }
-  },
-  loadLineData: async (symbol, stars) => {
+  }
+
+  loadLineData = async (symbol, stars) => {
     symbol ??= "";
     if (!Object.keys(constants.symbols).includes(symbol)) {
       return;
     }
     // 星座線を取得
-    let mitakaData = (await constellations.loadJSON(constellations.path_lineDef))
+    let mitakaData = (await this.loadJSON(this.path_lineDef))
       .ConstellationLines
       .filter(l => l.Key === `CNST_${symbol}`)[0].Lines
     let lines = mitakaData
@@ -92,9 +116,10 @@ let constellations = {
     console.log(symbol, {stars: stars, lines: lines, originalLineData: {mitakaData: mitakaData, lineStarMap: mitakaData.map(l => l.map(hip => (stars.filter(s => s.id === hip)[0] ?? {})))}});
     
     return lines;
-  },
-  render: async (stars, linePaths, constellationInfo) => {
-    let options = constellations.options;
+  };
+
+  render = async (stars, linePaths, constellationInfo) => {
+    let options = this.options;
     // 中心座標の取得
     let getCoordinateInfo = (list) => list.reduce((acc,curr,i)=> {return {
         min: {
@@ -148,7 +173,7 @@ let constellations = {
     // コントローラーの定義
     let controls, orbit;
     // Trackball Controls
-    controls = new THREE.TrackballControls(perspectiveCamera, renderer.domElement);
+    controls = new TrackballControls(perspectiveCamera, renderer.domElement);
     controls.target = (options.earthView) ? new THREE.Vector3(1, 1, 1) : new THREE.Vector3(linePositionInfo.center.x, linePositionInfo.center.y, linePositionInfo.center.z);
     controls.rotateSpeed = 2.0;
     controls.zoomSpeed = 1.2;
@@ -162,7 +187,7 @@ let constellations = {
     controls.rotateSpeed = 0.5;
     controls.update();
     // Orbit Controls
-    orbit = new THREE.OrbitControls(perspectiveCamera, renderer.domElement);
+    orbit = new OrbitControls(perspectiveCamera, renderer.domElement);
     orbit.target = (options.earthView)
       ? new THREE.Vector3(1, 1, 1)
       : new THREE.Vector3(linePositionInfo.center.x, linePositionInfo.center.y, linePositionInfo.center.z);
@@ -196,35 +221,6 @@ let constellations = {
     
     let group = new THREE.Group();
 
-    // 恒星の描画 using InstancedMesh
-    const starGeometry = new THREE.SphereGeometry(1, 12, 12); // Higher resolution geometry
-    const starMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    const starMesh = new THREE.InstancedMesh(starGeometry, starMaterial, stars.length);
-    const dummy = new THREE.Object3D();
-
-    stars.forEach((s, i) => {
-      dummy.position.set(s.coordinates.x, s.coordinates.y, s.coordinates.z);
-      dummy.scale.setScalar(s.size.radius / 50);
-      dummy.updateMatrix();
-      starMesh.setMatrixAt(i, dummy.matrix);
-      
-      // 星名の表示
-      if (options.showStarName) {
-        let label = createLabel(s.name, s.color);
-        label.position.copy(dummy.position);
-        group.add(label)
-      }
-
-      // Initial twinkle effect (if needed)
-      const twinkleFactor = Math.sin(Date.now() * 0.005 + i) * 0.8 + 2; // Initial twinkle effect
-      s.color = `#${('0'+parseInt(s.color.r).toString(16)).slice(-2)}${('0'+parseInt(s.color.g).toString(16)).slice(-2)}${('0'+parseInt(s.color.b).toString(16)).slice(-2)}`;
-      const twinkleColor = new THREE.Color(s.color).multiplyScalar(twinkleFactor);
-
-      starMesh.setColorAt(i, twinkleColor);
-    });
-
-    group.add(starMesh);
-
     // 星座線の描画
     if (options.showLine) {
       const material = new THREE.LineBasicMaterial({
@@ -237,13 +233,87 @@ let constellations = {
         group.add(line);
       });
     }
+
+    // 恒星の描画
+    let starRenderType = "original"; // original | updated
+    switch (starRenderType) {
+      //using InstancedMesh
+      case 'original': {
+        const starGeometry = new THREE.SphereGeometry(1, 8, 8); // Higher resolution geometry
+        const starMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        const starMesh = new THREE.InstancedMesh(starGeometry, starMaterial, stars.length);
+        const dummy = new THREE.Object3D();
+    
+        stars.forEach((s, i) => {
+          dummy.position.set(s.coordinates.x, s.coordinates.y, s.coordinates.z);
+          dummy.scale.setScalar(s.size.radius / 25);
+          dummy.updateMatrix();
+          starMesh.setMatrixAt(i, dummy.matrix);
+          
+          // 星名の表示
+          if (options.showStarName) {
+            let label = createLabel(s.name, s.color);
+            label.position.copy(dummy.position);
+            group.add(label)
+          }
+    
+          // Initial twinkle effect (if needed)
+          const twinkleFactor = Math.sin(Date.now() * 0.005 + i) * 0.8 + 2; // Initial twinkle effect
+          s.color = `#${('0'+parseInt(s.color.r).toString(16)).slice(-2)}${('0'+parseInt(s.color.g).toString(16)).slice(-2)}${('0'+parseInt(s.color.b).toString(16)).slice(-2)}`;
+          const twinkleColor = new THREE.Color(s.color).multiplyScalar(twinkleFactor);
+    
+          starMesh.setColorAt(i, twinkleColor);
+        });
+    
+        group.add(starMesh);        
+      } break;
+      //using point light and lensflare
+      case 'updated': {
+        let isStarFormsConstellationLine = (s) => linePaths.reduce((acc,curr) => acc.concat(curr)).filter(l => l.x === s.x && l.y === s.y && l.z === s.z).length > 0;
+        const textureLoader = new THREE.TextureLoader();
+        const textureFlare0 = textureLoader.load( "./src/img/textures/lensflare/lensflare0_alpha.png" );
+        stars.forEach((s, i) => {
+          let color = new THREE.Color(`#${('0'+parseInt(s.color.r).toString(16)).slice(-2)}${('0'+parseInt(s.color.g).toString(16)).slice(-2)}${('0'+parseInt(s.color.b).toString(16)).slice(-2)}`);
+          let light = new THREE.PointLight(color, 1.5, 1000); // Create PointLight with star color and intensity
+          let mesh = new THREE.Mesh(
+            new THREE.SphereGeometry(3),
+            new THREE.MeshBasicMaterial({color: color, transparent: true, opacity: 1})
+          );
+          mesh.scale.setScalar(s.size.radius / 50)
+          light.add(mesh);
+          light.position.set(s.coordinates.x, s.coordinates.y, s.coordinates.z);
+          group.add(light);
+    
+          //flare
+          const lensflare = new Lensflare();
+          lensflare.addElement( new LensflareElement( textureFlare0, 48, 0) );
+          if (isStarFormsConstellationLine(s.coordinates)) light.add( lensflare );
+          
+          // 星名の表示
+          if (options.showStarName) {
+            let label = createLabel(s.name, s.color);
+            label.position.copy(light.position);
+            group.add(label);
+          }
+    
+          // Initial twinkle effect (if needed)
+          const twinkleFactor = Math.sin(Date.now() * 0.005 + i) * 0.8 + 2; // Initial twinkle effect
+          s.color = `#${('0'+parseInt(s.color.r).toString(16)).slice(-2)}${('0'+parseInt(s.color.g).toString(16)).slice(-2)}${('0'+parseInt(s.color.b).toString(16)).slice(-2)}`;
+          const twinkleColor = new THREE.Color(s.color.r, s.color.g, s.color.b).multiplyScalar(twinkleFactor);
+    
+          light.color.set(twinkleColor);
+        });
+      } break;
+      default:
+        break;
+    }
+
     //星座名の表示
     if (options.showConstellationName) {
       console.log("show name", constellationInfo)
       constellationInfo.forEach(c => {
         let label = createLabel(c.label, {r:0, g:125, b:255}, 38, 1)
         label.position.set(c.coordinates.x, c.coordinates.y, c.coordinates.z);
-        console.log(label,c);
         group.add(label);
       })
     }
@@ -254,26 +324,26 @@ let constellations = {
     scene.add(group);
     
     // composer setting
-    const renderScene   = new THREE.RenderPass( scene, perspectiveCamera );
-    const composer      = new THREE.EffectComposer( renderer );
-    const bloomComposer = new THREE.EffectComposer(renderer);
-    const finalComposer = new THREE.EffectComposer(renderer);
+    const renderScene   = new RenderPass( scene, perspectiveCamera );
+    const composer      = new EffectComposer( renderer );
+    const bloomComposer = new EffectComposer(renderer);
+    const finalComposer = new EffectComposer(renderer);
     composer.setSize(windowSize.width, windowSize.height);
     bloomComposer.renderToScreen = false;
     bloomComposer.addPass(renderScene);
     
     // Bloom
     const bloomParams = {
-      exposure: 0.7,
-      bloomStrength: 2.5,
-      bloomRadius: 0.25,
-      bloomThreshold: 0.1,
+      exposure: 5,
+      bloomStrength: .75,
+      bloomRadius: 1,
+      bloomThreshold: 0.01,
     };
     renderer.toneMapping = THREE.ReinhardToneMapping;
     renderer.toneMappingExposure = bloomParams.exposure;
-    const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(windowSize.width, windowSize.height), bloomParams.bloomStrength, bloomParams.bloomRadius, bloomParams.bloomThreshold);
+    const bloomPass = new UnrealBloomPass(new THREE.Vector2(windowSize.width, windowSize.height), bloomParams.bloomStrength, bloomParams.bloomRadius, bloomParams.bloomThreshold);
     bloomComposer.addPass(bloomPass);
-    const finalPass = new THREE.ShaderPass(
+    const finalPass = new ShaderPass(
       new THREE.ShaderMaterial({
         uniforms: {
           baseTexture: { value: null },
@@ -329,6 +399,7 @@ let constellations = {
 
     composer.addPass( renderScene );
     renderer.setAnimationLoop((_) => {
+/*
       stars.forEach((s, i) => {
         // Update twinkle effect in each frame
         const twinkleFactor = Math.sin(Date.now() * 0.005 + i) * 0.4 + 2; // More pronounced and slower twinkle effect
@@ -342,6 +413,8 @@ let constellations = {
     
       starMesh.instanceMatrix.needsUpdate = true; // Ensure updates are reflected
       starMesh.instanceColor.needsUpdate = true; // Ensure color updates are reflected
+*/
+
       renderer.render(scene, perspectiveCamera);
       composer.render();
       bloomComposer.render();
@@ -349,11 +422,15 @@ let constellations = {
       controls.update();
       orbit.update();
     });
-  },
-  reset: () => {
-    constellations.data = new Array();
-    constellations.isInitialized = false;
-  },
-  loadData: async (symbol) => await constellations.loadJSON(`${constellations.path}/${symbol}.json`),
-  loadJSON: async (path) => await fetch(path).then((res) => res.json()),
+  }
+
+  reset =  () => {
+    this.data = new Array();
+    this.isInitialized = false;
+  }
+
+  loadData = async (symbol) => await this.loadJSON(`${this.path}/${symbol}.json`)
+  loadJSON = async (path) => await fetch(path).then((res) => res.json())
 }
+
+export default Constellations;
