@@ -39,8 +39,9 @@ class Constellations {
       worldRotateY: parseFloat(renderParams.worldRotateY ?? 0) * Math.PI / 180,
       worldRotateZ: parseFloat(renderParams.worldRotateZ ?? 0) * Math.PI / 180,
       autoRotate  : renderParams.autoRotate == '1',
+      autoRotateSpeed: renderParams.autoRotateSpeed,
       distance    : (renderParams.distance ?? true) != '0',
-      renderMode  : renderParams.renderMode
+      renderMode  : renderParams.renderMode,
     };
   };
 
@@ -202,7 +203,7 @@ class Constellations {
     orbit.enableZoom = true;
     orbit.enableRotate = false;
     orbit.autoRotate = options.autoRotate;
-    orbit.autoRotateSpeed = 1.0;
+    orbit.autoRotateSpeed = options.autoRotateSpeed || 1.0;
     orbit.update();
 
     // カメラ位置
