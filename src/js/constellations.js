@@ -241,7 +241,8 @@ class Constellations {
       case 'PointLight': {
         let isStarFormsConstellationLine = (s) => linePaths.reduce((acc,curr) => acc.concat(curr)).filter(l => l.x === s.x && l.y === s.y && l.z === s.z).length > 0;
         const textureLoader = new THREE.TextureLoader();
-        const textureFlare0 = textureLoader.load( "./src/img/textures/lensflare/lensflare0_alpha.png" );
+        const textureFlare0 = textureLoader.load( "./src/img/textures/lensflare/lensflare0_mono.png" );
+
         stars.forEach((s, i) => {
           let color = new THREE.Color(`#${('0'+parseInt(s.color.r).toString(16)).slice(-2)}${('0'+parseInt(s.color.g).toString(16)).slice(-2)}${('0'+parseInt(s.color.b).toString(16)).slice(-2)}`);
           let light = new THREE.PointLight(color, 1.5, 1000); // Create PointLight with star color and intensity
@@ -256,7 +257,7 @@ class Constellations {
     
           //flare
           const lensflare = new Lensflare();
-          lensflare.addElement( new LensflareElement( textureFlare0, 48, 0) );
+          lensflare.addElement( new LensflareElement( textureFlare0, 128, 0, color) );
           if (isStarFormsConstellationLine(s.coordinates)) light.add( lensflare );
           
           // 星名の表示
@@ -273,11 +274,12 @@ class Constellations {
     
           light.color.set(twinkleColor);
         });
+        console.log("render with PointLight");
       } break;
       //using InstancedMesh
       case 'InstancedMesh':
       default: {
-        const starGeometry = new THREE.SphereGeometry(1, 6, 6); // Higher resolution geometry
+        const starGeometry = new THREE.SphereGeometry(1, 12, 12); // Higher resolution geometry
         const starMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
         const starMesh = new THREE.InstancedMesh(starGeometry, starMaterial, stars.length);
         const dummy = new THREE.Object3D();
@@ -303,7 +305,8 @@ class Constellations {
           starMesh.setColorAt(i, twinkleColor);
         });
     
-        group.add(starMesh);        
+        group.add(starMesh);
+        console.log("render with InstancedMesh");
       } break;
     }
 
@@ -333,10 +336,10 @@ class Constellations {
     
     // Bloom
     const bloomParams = {
-      exposure: 5,
-      bloomStrength: .75,
-      bloomRadius: 1,
-      bloomThreshold: 0,
+      exposure: 0.1,
+      bloomStrength: .85,
+      bloomRadius: 1.1,
+      bloomThreshold: 0.5,
     };
     renderer.toneMapping = THREE.ReinhardToneMapping;
     renderer.toneMappingExposure = bloomParams.exposure;
