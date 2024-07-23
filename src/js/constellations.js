@@ -69,21 +69,26 @@ class Constellations {
     updateProgressBar ?? (()=>{});
     updateProgressBar();
     
+    window.starDistance = [];
     // 恒星情報を取得
     let starData = data.stars.map((s) => {
       let isEmpty = (str) => str == undefined || str == null || str == "" || str == {} || str == [];
       let spectralClassString = ((!isEmpty(s["スペクトル分類"])  ? s["スペクトル分類"] : s["スペクトル型"]) ?? "").replace(/\-/g,'');
       let absoluteMagnitude   =  !isEmpty(s["絶対等級"])         ? s["絶対等級"]       : !isEmpty(s.additional_info["絶対等級 (MV)"]) ? s.additional_info["絶対等級 (MV)"] : 1;
+      let magnitude           =  !isEmpty(s["見かけの等級"])     ? s["見かけの等級"]   : !isEmpty(s.additional_info["見かけの等級 (MV)"]) ? s.additional_info["見かけの等級 (MV)"] : !isEmpty(s.additional_info["等級 (天文)"]) ? s.additional_info["等級 (天文)"] : 1;
       let distance            =  !isEmpty(s["宇宙の距離梯子"])   ? s["宇宙の距離梯子"] : s.additional_info["距離"];
       let hip                 =  !isEmpty(s["ヒッパルコス星表"]) ? `HIP_${s["ヒッパルコス星表"]}` : 'HIP_' + Object.keys(s.additional_info).map(k => (k.includes("HIP")?k:"").replace(/.*HIP ([0-9]+).*/g,'$1')).filter(f => f !== '')[0]
      
       let size = converters.getStarRadiusFromStellarClassString(spectralClassString);
       let color = converters.getColorFromStellarClassString(spectralClassString);
       let coordinates = converters.getCoordinates(s["赤経"], s["赤緯"], distance, this.options.distance);
+      
 
-      if (coordinates == undefined || absoluteMagnitude == undefined || size == undefined || color == undefined) {
+      if (coordinates == undefined || absoluteMagnitude == undefined || distance == undefined || size == undefined || color == undefined) {
         return undefined;
       }
+
+      window.starDistance.push([s["名前"], distance, s["宇宙の距離梯子"], s.additional_info["距離"]])
 
       return {
         name:s["名前"],
@@ -91,7 +96,7 @@ class Constellations {
         size: size,
         color: color,
         "スペクトル分類": spectralClassString, 
-        brightness: absoluteMagnitude * size.brightness,
+        brightness: absoluteMagnitude,
         id: hip
       }
     }).filter(s => s !== undefined);

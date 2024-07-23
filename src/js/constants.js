@@ -1,4 +1,6 @@
 constants = {
+  SUN_DIAMETER: 1392700,
+  LIGHT_YEAR: 9460730472580.8, 
   SPECT_CLASS: { //for mapping from spect class to kelvin
     O: {min:30000, step:2000, radius:10}, 
     B: {min:10000, step:2000, radius: 5}, 
