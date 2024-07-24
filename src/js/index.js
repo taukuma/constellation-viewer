@@ -13,7 +13,7 @@ let progressBar = document.querySelector(".progress-bar");
 let titleBox = document.querySelector("#title-box-container");
 let titleContainer = document.querySelector("#title-container");
 let touchEvent = "click"; //(window.ontouchstart === undefined) ? "click" : "touchstart"
-
+window.constellations = constellations;
 let scripts = [
 //  './src/js/three/three.min.js',
 //  './src/js/three/OrbitControls.js',

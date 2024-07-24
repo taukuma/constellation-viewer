@@ -21,6 +21,7 @@ class Constellations {
   constructor() {
     this.path = './src/data/constellations';
     this.path_lineDef = './src/data/mitaka/constellation_lines.json';
+    this.path_lineDef_custom = './src/data/mitaka/constelation_lines_custom.json';
     this.isInitialized = false;
     this.data = new Array();
     this.options = {}
@@ -115,12 +116,27 @@ class Constellations {
       return;
     }
     // 星座線を取得
-    let mitakaData = (await this.loadJSON(this.path_lineDef))
+    let lineData = (await this.loadJSON(this.path_lineDef))
       .ConstellationLines
       .filter(l => l.Key === `CNST_${symbol}`)[0].Lines
-    let lines = mitakaData
+    let lines = lineData
       .map(l => l.map(hip => (stars.filter(s => s.id === hip)[0] ?? {}).coordinates).filter(s => s !== undefined))
-    console.log(symbol, {stars: stars, lines: lines, originalLineData: {mitakaData: mitakaData, lineStarMap: mitakaData.map(l => l.map(hip => (stars.filter(s => s.id === hip)[0] ?? {})))}});
+    console.log(symbol, {stars: stars, lines: lines, originalLineData: {lineData: lineData, lineStarMap: lineData.map(l => l.map(hip => (stars.filter(s => s.id === hip)[0] ?? {})))}});
+    
+    return lines;
+  };
+  loadCustomeLineData = async (symbol, stars) => {
+    symbol ??= "";
+    if (!Object.keys(constants.additionalConstellations).includes(symbol)) {
+      return;
+    }
+    // 星座線を取得
+    let lineData = (await this.loadJSON(this.path_lineDef_custom))
+      .custom.ConstellationLines
+      .filter(l => l.Key === symbol)[0].Lines
+    let lines = lineData
+      .map(l => l.map(hip => (stars.filter(s => s.id === hip)[0] ?? {}).coordinates).filter(s => s !== undefined))
+    console.log(symbol, {stars: stars, lines: lines, originalLineData: {lineData: lineData, lineStarMap: lineData.map(l => l.map(hip => (stars.filter(s => s.id === hip)[0] ?? {})))}});
     
     return lines;
   };
