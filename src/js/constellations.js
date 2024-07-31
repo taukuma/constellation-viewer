@@ -125,20 +125,31 @@ class Constellations {
     
     return lines;
   };
-  loadCustomeLineData = async (symbol, stars) => {
+  loadCustomeLineData = async (symbol, target = "custom") => {
+    // usage: await constellations.loadCustomeLineData("Summer Triangle", (await Promise.all(["Lyr", "Cyg", "Aql"].map(s => constellations.loadStarData(s,()=>{})))).map(s => s.stars).reduce((a,c) => a.concat(c)))
     symbol ??= "";
     if (!Object.keys(constants.additionalConstellations).includes(symbol)) {
       return;
     }
+    // get stars
+    let stars = (await Promise.all(constants.additionalConstellations[symbol].NearBy.map(s => constellations.loadStarData(s,()=>{})))).map(s => s.stars).reduce((a,c) => a.concat(c))
     // 星座線を取得
-    let lineData = (await this.loadJSON(this.path_lineDef_custom))
-      .custom.ConstellationLines
-      .filter(l => l.Key === symbol)[0].Lines
-    let lines = lineData
-      .map(l => l.map(hip => (stars.filter(s => s.id === hip)[0] ?? {}).coordinates).filter(s => s !== undefined))
-    console.log(symbol, {stars: stars, lines: lines, originalLineData: {lineData: lineData, lineStarMap: lineData.map(l => l.map(hip => (stars.filter(s => s.id === hip)[0] ?? {})))}});
-    
-    return lines;
+    switch (target) {
+      case "custom":
+      case "obsolete":
+        let lineData = (await this.loadJSON(this.path_lineDef_custom))
+          .custom.ConstellationLines
+          .filter(l => l.Key === symbol)[0].Lines
+        let lines = lineData
+          .map(l => l.map(hip => (stars.filter(s => s.id === hip)[0] ?? {}).coordinates).filter(s => s !== undefined))
+        console.log(symbol, {stars: stars, lines: lines, originalLineData: {lineData: lineData, lineStarMap: lineData.map(l => l.map(hip => (stars.filter(s => s.id === hip)[0] ?? {})))}});
+        
+        return lines;
+      case "domestic":
+        return undefined;
+      default:
+        return undefined;
+    }
   };
 
   render = async (stars, linePaths, constellationInfo) => {
@@ -257,6 +268,47 @@ class Constellations {
       });
     }
 
+    //星座名の表示
+    if (options.showConstellationName) {
+      console.log("show name", constellationInfo)
+      constellationInfo.forEach(c => {
+        let label = createLabel(c.label, {r:0, g:125, b:255}, 38, 1)
+        label.position.set(c.coordinates.x, c.coordinates.y, c.coordinates.z);
+        group.add(label);
+      })
+    }
+
+    // 特殊星座の描画
+    options.customLine = true;
+    if (options.customLine) {
+
+      const customMaterial = new THREE.LineBasicMaterial({color: 0xffdd00});
+      const customConstellationList = Object.keys(constants.additionalConstellations);
+      customConstellationList.forEach(async c => {
+        let customData = await this.loadCustomeLineData(c);
+        customData.forEach((points,i) => {
+          // 星座線
+          let bufGeometry = new THREE.BufferGeometry();
+          bufGeometry.setFromPoints(points.map(p => new THREE.Vector3(p.x, p.y, p.z)));
+          let line = new THREE.Line(bufGeometry, customMaterial);
+          group.add(line);
+
+          // 星座名
+          if (options.showConstellationName) {
+            let centerCoordinate = points.reduce((acc, curr, i) => {return {
+              x: (((acc.center ?? {}).x ?? acc.x) * i + curr.x)/(i + 1),
+              y: (((acc.center ?? {}).y ?? acc.y) * i + curr.y)/(i + 1),
+              z: (((acc.center ?? {}).z ?? acc.z) * i + curr.z)/(i + 1),
+            }});
+            console.log(constants.additionalConstellations[c].label, centerCoordinate)
+            let label = createLabel(constants.additionalConstellations[c].label, {r:0xff, g:0xdd, b:0x00}, 38, 0.5);
+            label.position.set(centerCoordinate.x, centerCoordinate.y, centerCoordinate.z);
+            group.add(label);
+          }
+        });
+      })
+    }
+
     // 恒星の描画
     switch (options.renderMode) {
       //using point light and lensflare
@@ -332,16 +384,6 @@ class Constellations {
       } break;
     }
 
-    //星座名の表示
-    if (options.showConstellationName) {
-      console.log("show name", constellationInfo)
-      constellationInfo.forEach(c => {
-        let label = createLabel(c.label, {r:0, g:125, b:255}, 38, 1)
-        label.position.set(c.coordinates.x, c.coordinates.y, c.coordinates.z);
-        group.add(label);
-      })
-    }
-
     group.rotation.x = options.worldRotateX;
     group.rotation.y = options.worldRotateY;
     group.rotation.z = options.worldRotateZ;
@@ -358,10 +400,10 @@ class Constellations {
     
     // Bloom
     const bloomParams = {
-      exposure: 0.1,
+      exposure: 2.1,
       bloomStrength: .85,
       bloomRadius: 1.1,
-      bloomThreshold: 0.5,
+      bloomThreshold: 0,
     };
     renderer.toneMapping = THREE.ReinhardToneMapping;
     renderer.toneMappingExposure = bloomParams.exposure;

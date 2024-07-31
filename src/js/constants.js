@@ -119,6 +119,8 @@ constants = {
     'Aql': {label: 'わし座'            , filters:['夏の星座']},
   },
   additionalConstellations: {
-    "Summer Triangle": {label: "夏の大三角", filters: [], "NearBy": ["Lyr", "Cyg", "Aql"]}
+    "Summer Triangle": {label: "夏の大三角", filters: [], "NearBy": ["Lyr", "Cyg", "Aql"]},
+    "Winter Triangle": {label: "冬の大三角", filters: [], "NearBy": ["CMa", "CMi", "Ori"]},
+    "Big Dipper": {label: "北斗七星", filters: [], "NearBy": ["UMa"]},
   }
 };
