@@ -19,19 +19,50 @@
     "custom": {
         "ConstellationLines": [
             {
-                "Key": "Summer Triangle",
+                "Key": "春の大三角",
+                "Lines": [
+                    ["HIP_69673", "HIP_65474", "HIP_57632", "HIP_69673"]
+                ]
+            },
+            {
+                "Key": "春の大曲線",
+                "Lines": [
+                    ["HIP_67301", "HIP_69673", "HIP_65474"]
+                ],
+                "LineStyle": {"type": "CatmullRomCurve", "style": "dashed"}
+            },
+            {
+                "Key": "春の大四辺形",
+                "Lines": [
+                    ["HIP_69673", "HIP_65474", "HIP_57632", "HIP_63125", "HIP_69673"]
+                ]
+            },
+            {
+                "Key": "夏の大三角",
                 "Lines": [
                     ["HIP_97649", "HIP_102098", "HIP_91262", "HIP_97649"]
                 ]
             },
             {
-                "Key": "Winter Triangle",
+                "Key": "秋の四辺形",
+                "Lines": [
+                    ["HIP_113963", "HIP_113881", "HIP_677", "HIP_1067", "HIP_113963"]
+                ]
+            },
+            {
+                "Key": "冬の大三角",
                 "Lines": [
                     ["HIP_32349", "HIP_37279", "HIP_27989", "HIP_32349"]
                 ]
             },
             {
-                "Key": "Big Dipper",
+                "Key": "冬のダイヤモンド",
+                "Lines": [
+                    ["HIP_32349", "HIP_37279", "HIP_24436", "HIP_21421"]
+                ]
+            },
+            {
+                "Key": "北斗七星",
                 "Lines": [
                     ["HIP_54061", "HIP_53910", "HIP_58001", "HIP_59774", "HIP_62956", "HIP_65378", "HIP_67301"]
                 ]

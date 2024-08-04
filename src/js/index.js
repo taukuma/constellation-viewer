@@ -30,7 +30,6 @@ let scripts = [
 
 let updateProgressBar = () => {
   progress += progressAmount;
-  console.log(progress)
   progressBar.style.width = `${progress}%`
 }
 

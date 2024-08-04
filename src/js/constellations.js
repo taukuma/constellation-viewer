@@ -49,6 +49,7 @@ class Constellations {
   init = async (symbol, updateProgressBar) => {
     this.isInitialized = false;
     symbol = (Array.isArray(symbol)) ? symbol : [symbol];
+    this.symbol = symbol;
     let starData = (await Promise.all(symbol.map(s => this.loadStarData(s, updateProgressBar))));
     let stars = starData.map(s => s.stars)
       .reduce((acc,curr) => acc.concat(curr));
@@ -121,12 +122,10 @@ class Constellations {
       .filter(l => l.Key === `CNST_${symbol}`)[0].Lines
     let lines = lineData
       .map(l => l.map(hip => (stars.filter(s => s.id === hip)[0] ?? {}).coordinates).filter(s => s !== undefined))
-    console.log(symbol, {stars: stars, lines: lines, originalLineData: {lineData: lineData, lineStarMap: lineData.map(l => l.map(hip => (stars.filter(s => s.id === hip)[0] ?? {})))}});
-    
     return lines;
   };
-  loadCustomeLineData = async (symbol, target = "custom") => {
-    // usage: await constellations.loadCustomeLineData("Summer Triangle", (await Promise.all(["Lyr", "Cyg", "Aql"].map(s => constellations.loadStarData(s,()=>{})))).map(s => s.stars).reduce((a,c) => a.concat(c)))
+  loadCustomLineData = async (symbol, target = "custom") => {
+    // usage: await constellations.loadCustomLineData("Summer Triangle", (await Promise.all(["Lyr", "Cyg", "Aql"].map(s => constellations.loadStarData(s,()=>{})))).map(s => s.stars).reduce((a,c) => a.concat(c)))
     symbol ??= "";
     if (!Object.keys(constants.additionalConstellations).includes(symbol)) {
       return;
@@ -139,12 +138,10 @@ class Constellations {
       case "obsolete":
         let lineData = (await this.loadJSON(this.path_lineDef_custom))
           .custom.ConstellationLines
-          .filter(l => l.Key === symbol)[0].Lines
-        let lines = lineData
+          .filter(l => l.Key === symbol)[0]
+        let lines = lineData.Lines
           .map(l => l.map(hip => (stars.filter(s => s.id === hip)[0] ?? {}).coordinates).filter(s => s !== undefined))
-        console.log(symbol, {stars: stars, lines: lines, originalLineData: {lineData: lineData, lineStarMap: lineData.map(l => l.map(hip => (stars.filter(s => s.id === hip)[0] ?? {})))}});
-        
-        return lines;
+        return {lines: lines, LineStyle: lineData.LineStyle};
       case "domestic":
         return undefined;
       default:
@@ -270,7 +267,6 @@ class Constellations {
 
     //星座名の表示
     if (options.showConstellationName) {
-      console.log("show name", constellationInfo)
       constellationInfo.forEach(c => {
         let label = createLabel(c.label, {r:0, g:125, b:255}, 38, 1)
         label.position.set(c.coordinates.x, c.coordinates.y, c.coordinates.z);
@@ -282,30 +278,53 @@ class Constellations {
     options.customLine = true;
     if (options.customLine) {
 
-      const customMaterial = new THREE.LineBasicMaterial({color: 0xffdd00});
+      const customMaterial = new THREE.LineBasicMaterial({color: 0xffaa00});
+      const customMaterial_dashed = new THREE.LineDashedMaterial({color: 0xff5500, dashSize: 1, gapSize: 1});
       const customConstellationList = Object.keys(constants.additionalConstellations);
       customConstellationList.forEach(async c => {
-        let customData = await this.loadCustomeLineData(c);
-        customData.forEach((points,i) => {
-          // 星座線
-          let bufGeometry = new THREE.BufferGeometry();
-          bufGeometry.setFromPoints(points.map(p => new THREE.Vector3(p.x, p.y, p.z)));
-          let line = new THREE.Line(bufGeometry, customMaterial);
-          group.add(line);
+        if (!(constants.additionalConstellations[c].NearBy.map(n => this.symbol.includes(n)).reduce((a,c) => a || c))) return;
+        let customData = await this.loadCustomLineData(c);
+        customData.lines.forEach((points, i) => {
+          if (customData.LineStyle !== undefined && customData.LineStyle.type === "CatmullRomCurve") {
+            // 星座線
+            let curve = new THREE.CatmullRomCurve3( points.map(p => new THREE.Vector3(p.x, p.y, p.z)));
+            let curvePoints = curve.getPoints( 60 );
+            let bufGeometry = new THREE.BufferGeometry().setFromPoints( curvePoints );
+            let line = new THREE.Line( bufGeometry, customData.LineStyle.style === "dashed" ? customMaterial_dashed : customMaterial );
+            line.computeLineDistances();
+            group.add(line)
+            // 星座名
+            if (options.showConstellationName) {
+              let centerCoordinate = points.filter((v,i) => i < points.length - 1).reduce((acc, curr, i) => {return {
+                x: (((acc.center ?? {}).x ?? acc.x) * i + curr.x)/(i + 1),
+                y: (((acc.center ?? {}).y ?? acc.y) * i + curr.y)/(i + 1),
+                z: (((acc.center ?? {}).z ?? acc.z) * i + curr.z)/(i + 1),
+              }});
+              let label = createLabel(constants.additionalConstellations[c].label, {r:0xff, g:0x55, b:0x00}, 38, 0.5);
+              label.position.set(centerCoordinate.x, centerCoordinate.y, centerCoordinate.z);
+              group.add(label);
+            }
+          } else {
+            // 星座線
+            let bufGeometry = new THREE.BufferGeometry();
+            bufGeometry.setFromPoints(points.map(p => new THREE.Vector3(p.x, p.y, p.z)));
+            let line = new THREE.Line(bufGeometry, customMaterial);
+            group.add(line);
 
-          // 星座名
-          if (options.showConstellationName) {
-            let centerCoordinate = points.reduce((acc, curr, i) => {return {
-              x: (((acc.center ?? {}).x ?? acc.x) * i + curr.x)/(i + 1),
-              y: (((acc.center ?? {}).y ?? acc.y) * i + curr.y)/(i + 1),
-              z: (((acc.center ?? {}).z ?? acc.z) * i + curr.z)/(i + 1),
-            }});
-            console.log(constants.additionalConstellations[c].label, centerCoordinate)
-            let label = createLabel(constants.additionalConstellations[c].label, {r:0xff, g:0xdd, b:0x00}, 38, 0.5);
-            label.position.set(centerCoordinate.x, centerCoordinate.y, centerCoordinate.z);
-            group.add(label);
+            // 星座名
+            if (options.showConstellationName) {
+              let centerCoordinate = points.reduce((acc, curr, i) => {return {
+                x: (((acc.center ?? {}).x ?? acc.x) * i + curr.x)/(i + 1),
+                y: (((acc.center ?? {}).y ?? acc.y) * i + curr.y)/(i + 1),
+                z: (((acc.center ?? {}).z ?? acc.z) * i + curr.z)/(i + 1),
+              }});
+              let label = createLabel(constants.additionalConstellations[c].label, {r:0xff, g:0xaa, b:0x00}, 38, 0.5);
+              label.position.set(centerCoordinate.x, centerCoordinate.y, centerCoordinate.z);
+              group.add(label);
+            }
           }
         });
+
       })
     }
 
@@ -380,7 +399,6 @@ class Constellations {
         });
     
         group.add(starMesh);
-        console.log("render with InstancedMesh");
       } break;
     }
 

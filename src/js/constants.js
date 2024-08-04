@@ -119,8 +119,13 @@ constants = {
     'Aql': {label: 'わし座'            , filters:['夏の星座']},
   },
   additionalConstellations: {
-    "Summer Triangle": {label: "夏の大三角", filters: [], "NearBy": ["Lyr", "Cyg", "Aql"]},
-    "Winter Triangle": {label: "冬の大三角", filters: [], "NearBy": ["CMa", "CMi", "Ori"]},
-    "Big Dipper": {label: "北斗七星", filters: [], "NearBy": ["UMa"]},
+    "春の大三角": {label: "春の大三角", filters:[], "NearBy": ["Boö", "Vir", "Leo"]},
+    "春の大曲線": {label: "春の大曲線", filters:[], "NearBy": ["Boö", "Vir", "UMa"]},
+    //"春の大四辺形": {label: "春の大四辺形", filters:[], "NearBy": ["Boö", "Vir", "Leo", "CVn"]},
+    "夏の大三角": {label: "夏の大三角", filters: [], "NearBy": ["Lyr", "Cyg", "Aql"]},
+    "秋の四辺形": {label: "秋の四辺形", filters:[], "NearBy": ["And", "Peg"]},
+    "冬の大三角": {label: "冬の大三角", filters: [], "NearBy": ["CMa", "CMi", "Ori"]},
+    //"冬のダイヤモンド":{label: "冬のダイヤモンド", filters: [], "NearBy": ["CMa", "CMi", "Ori", "Tau"]},
+    "北斗七星": {label: "北斗七星", filters: [], "NearBy": ["UMa"]},
   }
 };
