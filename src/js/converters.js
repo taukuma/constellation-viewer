@@ -3,9 +3,16 @@ converters = {
   getThetaFromDec: (d,m,s) => Math.round((d+m/60+s/3600)*1000000)/1000000,
   deg2rad: (v) => v * Math.PI / 180,
   getCoordinatesFromAlphaAndDec: (d,alpha,dec) => {return {
+/* original
     x: d * Math.cos(converters.deg2rad(dec)) * Math.cos(converters.deg2rad(alpha)), 
     y: d * Math.cos(converters.deg2rad(dec)) * Math.sin(converters.deg2rad(alpha)), 
     z: d * Math.sin(converters.deg2rad(dec))}
+*  original */ 
+
+    x: d * Math.cos(converters.deg2rad(dec)) * Math.cos(converters.deg2rad(alpha)), 
+    z: -d * Math.cos(converters.deg2rad(dec)) * Math.sin(converters.deg2rad(alpha)), 
+    y: d * Math.sin(converters.deg2rad(dec))}
+
   },
   getCoordinates: (alphaString, decString, distanceString, enableDistance) => {
     enableDistance ??= true;
@@ -15,6 +22,10 @@ converters = {
     decArr   = replaceHyphens(decString, "-").replace(/″/g,'').replace(/°|′/g,';').split(";").map(v=>parseFloat(v));
     dist     = parseFloat(replaceHyphens(distanceString.replace(/[,]/,""), "-").replace(/^[^0-9\-\+]/g,''));
     dist     = (enableDistance) ? dist / 20 + 100 : 100;
+/* ###### tmp realistic change ######
+    dist     = ((enableDistance) ? dist : 100);
+
+*/
     alpha    = converters.getThetaFromAlpha(alphaArr[0],alphaArr[1],alphaArr[2]);
     dec      = converters.getThetaFromDec(decArr[0],decArr[1],decArr[2]);
     return converters.getCoordinatesFromAlphaAndDec(dist,alpha,dec);
@@ -28,6 +39,11 @@ converters = {
       b: (temp > 66) ? 255 : (temp <= 19) ? 0 : 138.5177312231 * Math.log(temp - 10) - 305.0447927307
     }
   },
+  getRomanNumberFromStellarClassString: (stellarClassStr) => {
+    let luminosityClassExtractPattern = new RegExp(`^[${Object.keys(constants.SPECT_CLASS).join('')}][0-9.]+(${Object.keys(constants.LUMINOSITY_CLASS).join("|").replace(/\+/g,"\\+")}).*`)
+    let romanNo = stellarClassStr.replace(luminosityClassExtractPattern,"$1");
+    return romanNo;
+  },  
   getColorFromStellarClassString: (stellarClassStr) => {
     stellarClassStr ??= "";
     if (stellarClassStr === "") {
@@ -39,6 +55,17 @@ converters = {
     return (SPECT_MAP[spectClass] === undefined || isNaN(spectStrength))
       ? undefined
       : converters.kelvin2rgb(SPECT_MAP[spectClass].min + SPECT_MAP[spectClass].step * spectStrength)
+/* ###### tmp realistic change ######
+    let rgba = (SPECT_MAP[spectClass] === undefined || isNaN(spectStrength))
+      ? undefined
+      : converters.kelvin2rgb(SPECT_MAP[spectClass].min + SPECT_MAP[spectClass].step * spectStrength);
+    if (rgba) {
+      let romanNo = converters.getRomanNumberFromStellarClassString(stellarClassStr);
+      rgba.a = (constants.LUMINOSITY_CLASS[romanNo] ?? constants.LUMINOSITY_CLASS["V"]).brightness;
+    }
+    return rgba;
+
+*/
   },
   getStarRadiusFromStellarClassString: (stellarClassStr) => {
     stellarClassStr ??= "";
@@ -52,5 +79,14 @@ converters = {
     return constants.LUMINOSITY_CLASS[romanNo]
         ?? {radius: (constants.SPECT_CLASS[stellarClassStr.charAt(0)] ?? {}).radius ?? 1, brightness: 1};
         // Luminosityクラスが必ずしもスペクトル分類に含まれないので、その場合はStellarClassから取得
+/* ###### tmp realistic change ######
+    let romanNo = converters.getRomanNumberFromStellarClassString(stellarClassStr);
+    //let radiusParam = (constants.SPECT_CLASS[stellarClassStr.charAt(0)] ?? {}).radius ?? 1;
+    let radius = (constants.LUMINOSITY_CLASS[romanNo] ?? constants.LUMINOSITY_CLASS['V']).radius;
+    if (window.sample === undefined) window.sample = new Array();
+    window.sample.push({radius:radius, spect: constants.SPECT_CLASS[stellarClassStr.charAt(0)], lumi: constants.LUMINOSITY_CLASS[romanNo]})
+     return constants.LUMINOSITY_CLASS[romanNo]
+        ?? {radius: radius, brightness: 1};
+*/
   },
 };

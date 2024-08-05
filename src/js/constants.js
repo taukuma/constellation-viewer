@@ -27,6 +27,22 @@ constants = {
     'Ia' : {radius: 10,  label:'明るい超巨星'},
     'Ia+': {radius: 100, label:'極超巨星'},
     'Ia0': {radius: 100, label:'極超巨星'},
+/*  ###### tmp realistic change ######
+    'D'  : {radius: 0.1, label:'白色矮星', brightness: 0.8},
+    'VII': {radius: 0.1, label:'白色矮星', brightness: 0.8},
+    'VI' : {radius: 0.5, label:'準矮星', brightness: 0.8},
+    'sd' : {radius: 0.5, label:'準矮星', brightness: 0.8},
+    'V'  : {radius: 1,   label:'主系列星（矮星）', brightness: 0.8},
+    'IV' : {radius: 10,   label:'準巨星', brightness: 0.8},
+    'III': {radius: 20,   label:'通常の巨星', brightness: 0.8},
+    'II' : {radius: 20,   label:'輝巨星', brightness: 1.0},
+    'Ib' : {radius: 50,  label:'暗い超巨星', brightness: 0.5},
+    'Iab': {radius: 50,  label:'超巨星', brightness: 0.8},
+    'Ia' : {radius: 100,  label:'明るい超巨星'}, brightness: 1.0,
+    'Ia+': {radius: 700, label:'極超巨星', brightness: 0.8},
+    'Ia0': {radius: 800, label:'極超巨星', brightness: 0.8},
+
+ */
   },
   symbols: {
     'And': {label: 'アンドロメダ座'    , filters:['秋の星座']},

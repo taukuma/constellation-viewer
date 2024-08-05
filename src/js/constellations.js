@@ -7,16 +7,6 @@ import {UnrealBloomPass} from 'three/addons/postprocessing/UnrealBloomPass.js';
 import {ShaderPass} from 'three/addons/postprocessing/ShaderPass.js';
 import {Lensflare, LensflareElement} from 'three/addons/objects/Lensflare.js';
 
-//  './src/js/three/OrbitControls.js',
-//  './src/js/three/Pass.js',
-//  './src/js/three/ShaderPass.js',
-//  './src/js/three/EffectComposer.js',
-//  './src/js/three/RenderPass.js',
-//  './src/js/three/LuminosityHighPassShader.js',
-//  './src/js/three/CopyShader.js',
-//  './src/js/three/UnrealBloomPass.js',
-//  './src/js/three/TrackballControls.js',
-//  './src/js/three/Lensflare.js',
 class Constellations {
   constructor() {
     this.path = './src/data/constellations';
@@ -82,6 +72,10 @@ class Constellations {
       let hip                 =  !isEmpty(s["ヒッパルコス星表"]) ? `HIP_${s["ヒッパルコス星表"]}` : 'HIP_' + Object.keys(s.additional_info).map(k => (k.includes("HIP")?k:"").replace(/.*HIP ([0-9]+).*/g,'$1')).filter(f => f !== '')[0]
      
       let size = converters.getStarRadiusFromStellarClassString(spectralClassString);
+/*  ###### tmp realistic change ######
+      let radiusOnAdditionalInfo = (s.additional_info["半径"]) ? s.additional_info["半径"].replace(/\([0-9]+\)|\[[0-9]+\]/g,"").replace(/^[^0-9]+/,"") : undefined;
+      (size||{}).defined_radius = (radiusOnAdditionalInfo) ? (radiusOnAdditionalInfo.includes("km")) ? parseFloat(radiusOnAdditionalInfo) / constants.SUN_DIAMETER * 2 : parseFloat(radiusOnAdditionalInfo) : undefined; 
+*/
       let color = converters.getColorFromStellarClassString(spectralClassString);
       let coordinates = converters.getCoordinates(s["赤経"], s["赤緯"], distance, this.options.distance);
       
@@ -151,6 +145,8 @@ class Constellations {
 
   render = async (stars, linePaths, constellationInfo) => {
     let options = this.options;
+    let group = new THREE.Group();
+
     // 中心座標の取得
     let getCoordinateInfo = (list) => list.reduce((acc,curr,i)=> {return {
         min: {
@@ -246,11 +242,19 @@ class Constellations {
     
     // グリッド
     if (options.grid == true) {
-      scene.add(new THREE.GridHelper( 1000, 100, 0x5a0a0a, 0x0a0a0a))
-      scene.add(new THREE.AxesHelper());
+      let size = 100
+      scene.add(new THREE.GridHelper( size * 100, size * 10, 0xfa0a0a, 0x333333))
+      scene.add(new THREE.AxesHelper(size));
+      let label_x = createLabel ("x", {r: 255, g:100, b: 100}, 24, 1);
+      let label_y = createLabel ("y", {r: 100, g:255, b: 100}, 24, 1);
+      let label_z = createLabel ("z", {r: 100, g:100, b: 255}, 24, 1);
+      label_x.position.set(size / 2, 0.5, 0.5);
+      label_y.position.set(0.5, size / 2, 0.5);
+      label_z.position.set(0.5, 0.5, size / 2);
+      group.add(label_x);
+      group.add(label_y);
+      group.add(label_z);
     }
-    
-    let group = new THREE.Group();
 
     // 星座線の描画
     if (options.showLine) {
@@ -376,13 +380,19 @@ class Constellations {
         const starMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
         const starMesh = new THREE.InstancedMesh(starGeometry, starMaterial, stars.length);
         const dummy = new THREE.Object3D();
-    
         stars.forEach((s, i) => {
           dummy.position.set(s.coordinates.x, s.coordinates.y, s.coordinates.z);
           dummy.scale.setScalar(s.size.radius / 25);
           dummy.updateMatrix();
           starMesh.setMatrixAt(i, dummy.matrix);
-          
+/* ###### tmp realistic change ######
+          let radius = ((s.size.defined_radius) ? s.size.defined_radius : s.size.radius);
+          dummy.position.set(s.coordinates.x, s.coordinates.y, s.coordinates.z);
+          dummy.scale.setScalar(radius * constants.SUN_DIAMETER / constants.LIGHT_YEAR / 2 * Math.pow(10,3) + 0.1);
+          dummy.updateMatrix();
+          starMesh.setMatrixAt(i, dummy.matrix);
+
+*/
           // 星名の表示
           if (options.showStarName) {
             let label = createLabel(s.name, s.color);
