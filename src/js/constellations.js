@@ -25,9 +25,12 @@ class Constellations {
       showLine    : (renderParams.showLine ?? true) != '0',
       showStarName: renderParams.showStarName == '1',
       showConstellationName: renderParams.showConstellationName == '1',
-      rotate      : parseFloat(renderParams.rotate ?? 0) * Math.PI / 180,
+      showGuideConstellations: renderParams.showGuideConstellations == '1',
+      rotateX      : parseFloat(renderParams.rotateX ?? 0) * Math.PI / 180,
+      rotateY      : parseFloat(renderParams.rotateY ?? 0) * Math.PI / 180,
+      rotateZ      : parseFloat(renderParams.rotateZ ?? 0) * Math.PI / 180,
       worldRotateX: parseFloat(renderParams.worldRotateX ?? 0) * Math.PI / 180,
-      worldRotateY: parseFloat(renderParams.worldRotateY ?? 0) * Math.PI / 180,
+      worldRotateY: parseFloat(renderParams.worldRotateY ?? 90) * Math.PI / 180,
       worldRotateZ: parseFloat(renderParams.worldRotateZ ?? 0) * Math.PI / 180,
       autoRotate  : renderParams.autoRotate == '1',
       autoRotateSpeed: renderParams.autoRotateSpeed,
@@ -118,8 +121,8 @@ class Constellations {
       .map(l => l.map(hip => (stars.filter(s => s.id === hip)[0] ?? {}).coordinates).filter(s => s !== undefined))
     return lines;
   };
-  loadCustomLineData = async (symbol, target = "custom") => {
-    // usage: await constellations.loadCustomLineData("Summer Triangle", (await Promise.all(["Lyr", "Cyg", "Aql"].map(s => constellations.loadStarData(s,()=>{})))).map(s => s.stars).reduce((a,c) => a.concat(c)))
+  loadGuideLineData = async (symbol, target = "guide") => {
+    // usage: await constellations.loadGuideLineData("Summer Triangle", (await Promise.all(["Lyr", "Cyg", "Aql"].map(s => constellations.loadStarData(s,()=>{})))).map(s => s.stars).reduce((a,c) => a.concat(c)))
     symbol ??= "";
     if (!Object.keys(constants.additionalConstellations).includes(symbol)) {
       return;
@@ -128,10 +131,10 @@ class Constellations {
     let stars = (await Promise.all(constants.additionalConstellations[symbol].NearBy.map(s => constellations.loadStarData(s,()=>{})))).map(s => s.stars).reduce((a,c) => a.concat(c))
     // 星座線を取得
     switch (target) {
-      case "custom":
+      case "guide":
       case "obsolete":
         let lineData = (await this.loadJSON(this.path_lineDef_custom))
-          .custom.ConstellationLines
+          .guide.ConstellationLines
           .filter(l => l.Key === symbol)[0]
         let lines = lineData.Lines
           .map(l => l.map(hip => (stars.filter(s => s.id === hip)[0] ?? {}).coordinates).filter(s => s !== undefined))
@@ -238,7 +241,7 @@ class Constellations {
     perspectiveCamera.lookAt((options.earthView)
       ? new THREE.Vector3(0,0,0)
       : new THREE.Vector3(linePositionInfo.center.x, linePositionInfo.center.y, linePositionInfo.center.z));
-    perspectiveCamera.up = new THREE.Vector3(0,1,options.rotate);
+    perspectiveCamera.up = new THREE.Vector3(options.rotateX * 100, options.rotateY * 100,options.rotateZ * 100);
     
     // グリッド
     if (options.grid == true) {
@@ -279,22 +282,22 @@ class Constellations {
     }
 
     // 特殊星座の描画
-    options.customLine = true;
-    if (options.customLine) {
+    options.showGuideConstellations = true;
+    if (options.showGuideConstellations) {
 
-      const customMaterial = new THREE.LineBasicMaterial({color: 0xffaa00});
-      const customMaterial_dashed = new THREE.LineDashedMaterial({color: 0xff5500, dashSize: 1, gapSize: 1});
-      const customConstellationList = Object.keys(constants.additionalConstellations);
-      customConstellationList.forEach(async c => {
+      const guideMaterial = new THREE.LineBasicMaterial({color: 0xffaa00});
+      const guideMaterial_dashed = new THREE.LineDashedMaterial({color: 0xff5500, dashSize: 1, gapSize: 1});
+      const guideConstellationList = Object.keys(constants.additionalConstellations);
+      guideConstellationList.forEach(async c => {
         if (!(constants.additionalConstellations[c].NearBy.map(n => this.symbol.includes(n)).reduce((a,c) => a || c))) return;
-        let customData = await this.loadCustomLineData(c);
-        customData.lines.forEach((points, i) => {
-          if (customData.LineStyle !== undefined && customData.LineStyle.type === "CatmullRomCurve") {
+        let guideData = await this.loadGuideLineData(c);
+        guideData.lines.forEach((points, i) => {
+          if (guideData.LineStyle !== undefined && guideData.LineStyle.type === "CatmullRomCurve") {
             // 星座線
             let curve = new THREE.CatmullRomCurve3( points.map(p => new THREE.Vector3(p.x, p.y, p.z)));
             let curvePoints = curve.getPoints( 60 );
             let bufGeometry = new THREE.BufferGeometry().setFromPoints( curvePoints );
-            let line = new THREE.Line( bufGeometry, customData.LineStyle.style === "dashed" ? customMaterial_dashed : customMaterial );
+            let line = new THREE.Line( bufGeometry, guideData.LineStyle.style === "dashed" ? guideMaterial_dashed : guideMaterial );
             line.computeLineDistances();
             group.add(line)
             // 星座名
@@ -312,7 +315,7 @@ class Constellations {
             // 星座線
             let bufGeometry = new THREE.BufferGeometry();
             bufGeometry.setFromPoints(points.map(p => new THREE.Vector3(p.x, p.y, p.z)));
-            let line = new THREE.Line(bufGeometry, customMaterial);
+            let line = new THREE.Line(bufGeometry, guideMaterial);
             group.add(line);
 
             // 星座名

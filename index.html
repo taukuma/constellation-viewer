@@ -52,36 +52,108 @@
             <div><input class="params" type="radio" name="focalLength" value=200><label>200mm</label></div>
             <div><input class="params" type="radio" name="focalLength" value=400><label>400mm</label></div>
           </div>
-          <div class="param-items hide">初期回転位置</div>
-          <div class="inline-radio hide">
-            <div><input class="params" type="radio" name="rotate" value=0  checked><label>0°</label></div>
-            <div><input class="params" type="radio" name="rotate" value=30 ><label>30°</label></div>
-            <div><input class="params" type="radio" name="rotate" value=60 ><label>60°</label></div>
-            <div><input class="params" type="radio" name="rotate" value=90 ><label>90°</label></div>
-            <div><input class="params" type="radio" name="rotate" value=120><label>120°</label></div>
-            <div><input class="params" type="radio" name="rotate" value=150><label>150°</label></div>
-            <div><input class="params" type="radio" name="rotate" value=180><label>180°</label></div>
-          </div>
-          <div class="inline-radio hide">
-            <div><input class="params" type="radio" name="rotate" value=210><label>210°</label></div>
-            <div><input class="params" type="radio" name="rotate" value=240><label>240°</label></div>
-            <div><input class="params" type="radio" name="rotate" value=270><label>270°</label></div>
-            <div><input class="params" type="radio" name="rotate" value=300><label>300°</label></div>
-            <div><input class="params" type="radio" name="rotate" value=330><label>330°</label></div>
-            <div><input class="params" type="radio" name="rotate" value=360><label>360°</label></div>
+          <div class="hide">
+            <div class="param-items">X軸回転
+              <select class="params" name="rotateX" value="0">
+                <option value="360">360°</option>
+                <option value="330">330°</option>
+                <option value="300">300°</option>
+                <option value="270">270°</option>
+                <option value="240">240°</option>
+                <option value="210">210°</option>
+                <option value="180">180°</option>
+                <option value="150">150°</option>
+                <option value="120">120°</option>
+                <option value="90">90°</option>
+                <option value="60">60°</option>
+                <option value="30">30°</option>
+                <option value="0" selected>0°</option>
+                <option value="-30">-30°</option>
+                <option value="-60">-60°</option>
+                <option value="-90">-90°</option>
+                <option value="-120">-120°</option>
+                <option value="-150">-150°</option>
+                <option value="-180">-180°</option>
+                <option value="-210">-210°</option>
+                <option value="-240">-240°</option>
+                <option value="-270">-270°</option>
+                <option value="-300">-300°</option>
+                <option value="-330">-330°</option>
+                <option value="-360">-360°</option>
+              </select>
+            </div>
+            <div class="param-items">Y軸回転
+              <select class="params" name="rotateY" value="0">
+                <option value="360">360°</option>
+                <option value="330">330°</option>
+                <option value="300">300°</option>
+                <option value="270">270°</option>
+                <option value="240">240°</option>
+                <option value="210">210°</option>
+                <option value="180">180°</option>
+                <option value="150">150°</option>
+                <option value="120">120°</option>
+                <option value="90" selected>90°</option>
+                <option value="60">60°</option>
+                <option value="30">30°</option>
+                <!-- option value="0">0°</option -->
+                <option value="-30">-30°</option>
+                <option value="-60">-60°</option>
+                <option value="-90">-90°</option>
+                <option value="-120">-120°</option>
+                <option value="-150">-150°</option>
+                <option value="-180">-180°</option>
+                <option value="-210">-210°</option>
+                <option value="-240">-240°</option>
+                <option value="-270">-270°</option>
+                <option value="-300">-300°</option>
+                <option value="-330">-330°</option>
+                <option value="-360">-360°</option>
+              </select>
+            </div>
+            <div class="param-items">Z軸回転
+              <select class="params" name="rotateZ" value="0">
+                <option value="360">360°</option>
+                <option value="330">330°</option>
+                <option value="300">300°</option>
+                <option value="270">270°</option>
+                <option value="240">240°</option>
+                <option value="210">210°</option>
+                <option value="180">180°</option>
+                <option value="150">150°</option>
+                <option value="120">120°</option>
+                <option value="90">90°</option>
+                <option value="60">60°</option>
+                <option value="30">30°</option>
+                <option value="0" selected>0°</option>
+                <option value="-30">-30°</option>
+                <option value="-60">-60°</option>
+                <option value="-90">-90°</option>
+                <option value="-120">-120°</option>
+                <option value="-150">-150°</option>
+                <option value="-180">-180°</option>
+                <option value="-210">-210°</option>
+                <option value="-240">-240°</option>
+                <option value="-270">-270°</option>
+                <option value="-300">-300°</option>
+                <option value="-330">-330°</option>
+                <option value="-360">-360°</option>
+              </select>
+            </div>
           </div>
           <div>
             <div class="param-items">星座線を表示<input class="tgl tgl-ios params" id="param-showLine" type="checkbox" name="param-showLine" checked/><label class="tgl-btn" for="param-showLine"></label></div>
             <div class="param-items">星座名を表示<input class="tgl tgl-ios params" id="param-showConstellationName" type="checkbox" name="param-showConstellationName"/><label class="tgl-btn" for="param-showConstellationName"></label></div>
             <div class="param-items">星名を表示<input class="tgl tgl-ios params" id="param-showStarName" type="checkbox" name="param-showStarName"/><label class="tgl-btn" for="param-showStarName"></label></div>
-            <div class="param-items">グリッド表示<input class="tgl tgl-ios params" id="param-grid" type="checkbox" name="param-grid"/><label class="tgl-btn" for="param-grid"></label></div>
+            <div class="param-items">ガイド星座<input class="tgl tgl-ios params" id="param-showGuideConstellations" type="checkbox" name="param-showGuideConstellations"/><label class="tgl-btn" for="param-showGuideConstellations"></label></div>
           </div>
           <div>
             <div class="param-items">自動回転<input class="tgl tgl-ios params" id="param-autoRotate" type="checkbox" name="param-autoRotate" checked/><label class="tgl-btn" for="param-autoRotate"></label></div>
             <div class="param-items">オートロード<input class="tgl tgl-ios params" id="param-autoLoad" type="checkbox" name="param-autoLoad"/><label class="tgl-btn" for="param-autoLoad"></label></div>
             <div class="param-items">距離<input class="tgl tgl-ios params" id="param-distance" type="checkbox" name="param-distance" checked/><label class="tgl-btn" for="param-distance"></label></div>
+            <div class="param-items">グリッド表示<input class="tgl tgl-ios params" id="param-grid" type="checkbox" name="param-grid"/><label class="tgl-btn" for="param-grid"></label></div>
           </div>
-          <div>
+          <div class="hide">
             <div class="param-items">X軸回転
               <select class="params" name="worldRotateX" value="0">
                 <option value="360">360°</option>
