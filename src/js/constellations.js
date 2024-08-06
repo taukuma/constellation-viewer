@@ -7,20 +7,11 @@ import {UnrealBloomPass} from 'three/addons/postprocessing/UnrealBloomPass.js';
 import {ShaderPass} from 'three/addons/postprocessing/ShaderPass.js';
 import {Lensflare, LensflareElement} from 'three/addons/objects/Lensflare.js';
 
-//  './src/js/three/OrbitControls.js',
-//  './src/js/three/Pass.js',
-//  './src/js/three/ShaderPass.js',
-//  './src/js/three/EffectComposer.js',
-//  './src/js/three/RenderPass.js',
-//  './src/js/three/LuminosityHighPassShader.js',
-//  './src/js/three/CopyShader.js',
-//  './src/js/three/UnrealBloomPass.js',
-//  './src/js/three/TrackballControls.js',
-//  './src/js/three/Lensflare.js',
 class Constellations {
   constructor() {
     this.path = './src/data/constellations';
     this.path_lineDef = './src/data/mitaka/constellation_lines.json';
+    this.path_lineDef_custom = './src/data/mitaka/constelation_lines_custom.json';
     this.isInitialized = false;
     this.data = new Array();
     this.options = {}
@@ -34,9 +25,12 @@ class Constellations {
       showLine    : (renderParams.showLine ?? true) != '0',
       showStarName: renderParams.showStarName == '1',
       showConstellationName: renderParams.showConstellationName == '1',
-      rotate      : parseFloat(renderParams.rotate ?? 0) * Math.PI / 180,
+      showGuideConstellations: renderParams.showGuideConstellations == '1',
+      rotateX      : parseFloat(renderParams.rotateX ?? 0) * Math.PI / 180,
+      rotateY      : parseFloat(renderParams.rotateY ?? 0) * Math.PI / 180,
+      rotateZ      : parseFloat(renderParams.rotateZ ?? 0) * Math.PI / 180,
       worldRotateX: parseFloat(renderParams.worldRotateX ?? 0) * Math.PI / 180,
-      worldRotateY: parseFloat(renderParams.worldRotateY ?? 0) * Math.PI / 180,
+      worldRotateY: parseFloat(renderParams.worldRotateY ?? 90) * Math.PI / 180,
       worldRotateZ: parseFloat(renderParams.worldRotateZ ?? 0) * Math.PI / 180,
       autoRotate  : renderParams.autoRotate == '1',
       autoRotateSpeed: renderParams.autoRotateSpeed,
@@ -48,6 +42,7 @@ class Constellations {
   init = async (symbol, updateProgressBar) => {
     this.isInitialized = false;
     symbol = (Array.isArray(symbol)) ? symbol : [symbol];
+    this.symbol = symbol;
     let starData = (await Promise.all(symbol.map(s => this.loadStarData(s, updateProgressBar))));
     let stars = starData.map(s => s.stars)
       .reduce((acc,curr) => acc.concat(curr));
@@ -80,6 +75,10 @@ class Constellations {
       let hip                 =  !isEmpty(s["ヒッパルコス星表"]) ? `HIP_${s["ヒッパルコス星表"]}` : 'HIP_' + Object.keys(s.additional_info).map(k => (k.includes("HIP")?k:"").replace(/.*HIP ([0-9]+).*/g,'$1')).filter(f => f !== '')[0]
      
       let size = converters.getStarRadiusFromStellarClassString(spectralClassString);
+/*  ###### tmp realistic change ######
+      let radiusOnAdditionalInfo = (s.additional_info["半径"]) ? s.additional_info["半径"].replace(/\([0-9]+\)|\[[0-9]+\]/g,"").replace(/^[^0-9]+/,"") : undefined;
+      (size||{}).defined_radius = (radiusOnAdditionalInfo) ? (radiusOnAdditionalInfo.includes("km")) ? parseFloat(radiusOnAdditionalInfo) / constants.SUN_DIAMETER * 2 : parseFloat(radiusOnAdditionalInfo) : undefined; 
+*/
       let color = converters.getColorFromStellarClassString(spectralClassString);
       let coordinates = converters.getCoordinates(s["赤経"], s["赤緯"], distance, this.options.distance);
       
@@ -115,18 +114,42 @@ class Constellations {
       return;
     }
     // 星座線を取得
-    let mitakaData = (await this.loadJSON(this.path_lineDef))
+    let lineData = (await this.loadJSON(this.path_lineDef))
       .ConstellationLines
       .filter(l => l.Key === `CNST_${symbol}`)[0].Lines
-    let lines = mitakaData
+    let lines = lineData
       .map(l => l.map(hip => (stars.filter(s => s.id === hip)[0] ?? {}).coordinates).filter(s => s !== undefined))
-    console.log(symbol, {stars: stars, lines: lines, originalLineData: {mitakaData: mitakaData, lineStarMap: mitakaData.map(l => l.map(hip => (stars.filter(s => s.id === hip)[0] ?? {})))}});
-    
     return lines;
+  };
+  loadGuideLineData = async (symbol, target = "guide") => {
+    // usage: await constellations.loadGuideLineData("Summer Triangle", (await Promise.all(["Lyr", "Cyg", "Aql"].map(s => constellations.loadStarData(s,()=>{})))).map(s => s.stars).reduce((a,c) => a.concat(c)))
+    symbol ??= "";
+    if (!Object.keys(constants.additionalConstellations).includes(symbol)) {
+      return;
+    }
+    // get stars
+    let stars = (await Promise.all(constants.additionalConstellations[symbol].NearBy.map(s => constellations.loadStarData(s,()=>{})))).map(s => s.stars).reduce((a,c) => a.concat(c))
+    // 星座線を取得
+    switch (target) {
+      case "guide":
+      case "obsolete":
+        let lineData = (await this.loadJSON(this.path_lineDef_custom))
+          .guide.ConstellationLines
+          .filter(l => l.Key === symbol)[0]
+        let lines = lineData.Lines
+          .map(l => l.map(hip => (stars.filter(s => s.id === hip)[0] ?? {}).coordinates).filter(s => s !== undefined))
+        return {lines: lines, LineStyle: lineData.LineStyle};
+      case "domestic":
+        return undefined;
+      default:
+        return undefined;
+    }
   };
 
   render = async (stars, linePaths, constellationInfo) => {
     let options = this.options;
+    let group = new THREE.Group();
+
     // 中心座標の取得
     let getCoordinateInfo = (list) => list.reduce((acc,curr,i)=> {return {
         min: {
@@ -218,15 +241,23 @@ class Constellations {
     perspectiveCamera.lookAt((options.earthView)
       ? new THREE.Vector3(0,0,0)
       : new THREE.Vector3(linePositionInfo.center.x, linePositionInfo.center.y, linePositionInfo.center.z));
-    perspectiveCamera.up = new THREE.Vector3(0,1,options.rotate);
+    perspectiveCamera.up = new THREE.Vector3(options.rotateX * 100, options.rotateY * 100,options.rotateZ * 100);
     
     // グリッド
     if (options.grid == true) {
-      scene.add(new THREE.GridHelper( 1000, 100, 0x5a0a0a, 0x0a0a0a))
-      scene.add(new THREE.AxesHelper());
+      let size = 100
+      scene.add(new THREE.GridHelper( size * 100, size * 10, 0xfa0a0a, 0x333333))
+      scene.add(new THREE.AxesHelper(size));
+      let label_x = createLabel ("x", {r: 255, g:100, b: 100}, 24, 1);
+      let label_y = createLabel ("y", {r: 100, g:255, b: 100}, 24, 1);
+      let label_z = createLabel ("z", {r: 100, g:100, b: 255}, 24, 1);
+      label_x.position.set(size / 2, 0.5, 0.5);
+      label_y.position.set(0.5, size / 2, 0.5);
+      label_z.position.set(0.5, 0.5, size / 2);
+      group.add(label_x);
+      group.add(label_y);
+      group.add(label_z);
     }
-    
-    let group = new THREE.Group();
 
     // 星座線の描画
     if (options.showLine) {
@@ -239,6 +270,69 @@ class Constellations {
         let line = new THREE.Line(bufGeometry, material);
         group.add(line);
       });
+    }
+
+    //星座名の表示
+    if (options.showConstellationName) {
+      constellationInfo.forEach(c => {
+        let label = createLabel(c.label, {r:0, g:125, b:255}, 38, 1)
+        label.position.set(c.coordinates.x, c.coordinates.y, c.coordinates.z);
+        group.add(label);
+      })
+    }
+
+    // 特殊星座の描画
+    options.showGuideConstellations = true;
+    if (options.showGuideConstellations) {
+
+      const guideMaterial = new THREE.LineBasicMaterial({color: 0xffaa00});
+      const guideMaterial_dashed = new THREE.LineDashedMaterial({color: 0xff5500, dashSize: 1, gapSize: 1});
+      const guideConstellationList = Object.keys(constants.additionalConstellations);
+      guideConstellationList.forEach(async c => {
+        if (!(constants.additionalConstellations[c].NearBy.map(n => this.symbol.includes(n)).reduce((a,c) => a || c))) return;
+        let guideData = await this.loadGuideLineData(c);
+        guideData.lines.forEach((points, i) => {
+          if (guideData.LineStyle !== undefined && guideData.LineStyle.type === "CatmullRomCurve") {
+            // 星座線
+            let curve = new THREE.CatmullRomCurve3( points.map(p => new THREE.Vector3(p.x, p.y, p.z)));
+            let curvePoints = curve.getPoints( 60 );
+            let bufGeometry = new THREE.BufferGeometry().setFromPoints( curvePoints );
+            let line = new THREE.Line( bufGeometry, guideData.LineStyle.style === "dashed" ? guideMaterial_dashed : guideMaterial );
+            line.computeLineDistances();
+            group.add(line)
+            // 星座名
+            if (options.showConstellationName) {
+              let centerCoordinate = points.filter((v,i) => i < points.length - 1).reduce((acc, curr, i) => {return {
+                x: (((acc.center ?? {}).x ?? acc.x) * i + curr.x)/(i + 1),
+                y: (((acc.center ?? {}).y ?? acc.y) * i + curr.y)/(i + 1),
+                z: (((acc.center ?? {}).z ?? acc.z) * i + curr.z)/(i + 1),
+              }});
+              let label = createLabel(constants.additionalConstellations[c].label, {r:0xff, g:0x55, b:0x00}, 38, 0.5);
+              label.position.set(centerCoordinate.x, centerCoordinate.y, centerCoordinate.z);
+              group.add(label);
+            }
+          } else {
+            // 星座線
+            let bufGeometry = new THREE.BufferGeometry();
+            bufGeometry.setFromPoints(points.map(p => new THREE.Vector3(p.x, p.y, p.z)));
+            let line = new THREE.Line(bufGeometry, guideMaterial);
+            group.add(line);
+
+            // 星座名
+            if (options.showConstellationName) {
+              let centerCoordinate = points.reduce((acc, curr, i) => {return {
+                x: (((acc.center ?? {}).x ?? acc.x) * i + curr.x)/(i + 1),
+                y: (((acc.center ?? {}).y ?? acc.y) * i + curr.y)/(i + 1),
+                z: (((acc.center ?? {}).z ?? acc.z) * i + curr.z)/(i + 1),
+              }});
+              let label = createLabel(constants.additionalConstellations[c].label, {r:0xff, g:0xaa, b:0x00}, 38, 0.5);
+              label.position.set(centerCoordinate.x, centerCoordinate.y, centerCoordinate.z);
+              group.add(label);
+            }
+          }
+        });
+
+      })
     }
 
     // 恒星の描画
@@ -289,13 +383,19 @@ class Constellations {
         const starMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
         const starMesh = new THREE.InstancedMesh(starGeometry, starMaterial, stars.length);
         const dummy = new THREE.Object3D();
-    
         stars.forEach((s, i) => {
           dummy.position.set(s.coordinates.x, s.coordinates.y, s.coordinates.z);
           dummy.scale.setScalar(s.size.radius / 25);
           dummy.updateMatrix();
           starMesh.setMatrixAt(i, dummy.matrix);
-          
+/* ###### tmp realistic change ######
+          let radius = ((s.size.defined_radius) ? s.size.defined_radius : s.size.radius);
+          dummy.position.set(s.coordinates.x, s.coordinates.y, s.coordinates.z);
+          dummy.scale.setScalar(radius * constants.SUN_DIAMETER / constants.LIGHT_YEAR / 2 * Math.pow(10,3) + 0.1);
+          dummy.updateMatrix();
+          starMesh.setMatrixAt(i, dummy.matrix);
+
+*/
           // 星名の表示
           if (options.showStarName) {
             let label = createLabel(s.name, s.color);
@@ -312,18 +412,7 @@ class Constellations {
         });
     
         group.add(starMesh);
-        console.log("render with InstancedMesh");
       } break;
-    }
-
-    //星座名の表示
-    if (options.showConstellationName) {
-      console.log("show name", constellationInfo)
-      constellationInfo.forEach(c => {
-        let label = createLabel(c.label, {r:0, g:125, b:255}, 38, 1)
-        label.position.set(c.coordinates.x, c.coordinates.y, c.coordinates.z);
-        group.add(label);
-      })
     }
 
     group.rotation.x = options.worldRotateX;
@@ -342,10 +431,10 @@ class Constellations {
     
     // Bloom
     const bloomParams = {
-      exposure: 0.1,
+      exposure: 2.1,
       bloomStrength: .85,
       bloomRadius: 1.1,
-      bloomThreshold: 0.5,
+      bloomThreshold: 0,
     };
     renderer.toneMapping = THREE.ReinhardToneMapping;
     renderer.toneMappingExposure = bloomParams.exposure;

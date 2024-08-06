@@ -175,18 +175,18 @@ body.black .progress-bar-container .progress-bar {
   text-align: center;
   margin: 5px 0px 0px 10px;
 }
-#constellation-link-filter {
+.constellation-link-filter {
   display: flex;
   justify-content: center;
   align-items: center;
   flex-wrap: wrap;
   padding: 10px 0px;
 }
-#constellation-link-filter li {
+.constellation-link-filter li {
   display: inline-block;
   margin: 5px;
 }
-#constellation-link-filter li button {
+.constellation-link-filter li button {
 cursor: pointer;
   font-family: 'Klee One';
   font-size: 1em;
@@ -197,7 +197,7 @@ cursor: pointer;
   border: 1px solid #000;
   position:relative;
 }
-#constellation-link-filter li button:hover {
+.constellation-link-filter li button:hover {
   background: linear-gradient(45deg, #00aaff,#0054df);
   color: white;
 }
