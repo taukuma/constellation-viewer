@@ -15,6 +15,9 @@ class Constellations {
     this.isInitialized = false;
     this.data = new Array();
     this.options = {}
+    this.perspectiveCamera = undefined;
+    this.orbitControls = undefined;
+    this.trackballControls = undefined
   };
 
   setOptions = (renderParams) => {
@@ -68,26 +71,41 @@ class Constellations {
     // 恒星情報を取得
     let starData = data.stars.map((s) => {
       let isEmpty = (str) => str == undefined || str == null || str == "" || str == {} || str == [];
-      let spectralClassString = ((!isEmpty(s["スペクトル分類"])  ? s["スペクトル分類"] : s["スペクトル型"]) ?? "").replace(/\-/g,'');
-      let absoluteMagnitude   =  !isEmpty(s["絶対等級"])         ? s["絶対等級"]       : !isEmpty(s.additional_info["絶対等級 (MV)"]) ? s.additional_info["絶対等級 (MV)"] : 1;
-      let magnitude           =  !isEmpty(s["見かけの等級"])     ? s["見かけの等級"]   : !isEmpty(s.additional_info["見かけの等級 (MV)"]) ? s.additional_info["見かけの等級 (MV)"] : !isEmpty(s.additional_info["等級 (天文)"]) ? s.additional_info["等級 (天文)"] : 1;
+      let spectralClassString = ((!isEmpty(s["スペクトル分類"])  
+        ? s["スペクトル分類"] 
+        : s["スペクトル型"]) ?? "").replace(/\-/g,'');
+      let absoluteMagnitude   =  parseFloat(!isEmpty(s["絶対等級"])         
+        ? s["絶対等級"]
+        : !isEmpty(s.additional_info["絶対等級 (MV)"] || s.additional_info["絶対等級 (mv)"]) 
+          ? (s.additional_info["絶対等級 (MV)"] || s.additional_info["絶対等級 (mv)"])
+          : 10);
+      let magnitude           =  Math.min(
+        parseFloat(!isEmpty(s["見かけの等級"])
+          ? s["見かけの等級"]   
+            : !isEmpty(s.additional_info["見かけの等級 (MV)"] || s.additional_info["見かけの等級 (mv)"]) 
+              ? (s.additional_info["見かけの等級 (MV)"] || s.additional_info["見かけの等級 (mv)"])
+              : 10),
+        parseFloat(!isEmpty(s["等級 (天文)"])
+            ? s["等級 (天文)"] 
+            : !isEmpty(s.additional_info["等級 (天文)"])
+              ? s.additional_info["等級 (天文)"]
+              : 10)
+      );
       let distance            =  !isEmpty(s["宇宙の距離梯子"])   ? s["宇宙の距離梯子"] : s.additional_info["距離"];
       let hip                 =  !isEmpty(s["ヒッパルコス星表"]) ? `HIP_${s["ヒッパルコス星表"]}` : 'HIP_' + Object.keys(s.additional_info).map(k => (k.includes("HIP")?k:"").replace(/.*HIP ([0-9]+).*/g,'$1')).filter(f => f !== '')[0]
      
-      let size = converters.getStarRadiusFromStellarClassString(spectralClassString);
-/*  ###### tmp realistic change ######
+      let size = converters.getStarRadiusFromStellarClassString(spectralClassString, this.options.distance);
+  //###### tmp realistic change ######
       let radiusOnAdditionalInfo = (s.additional_info["半径"]) ? s.additional_info["半径"].replace(/\([0-9]+\)|\[[0-9]+\]/g,"").replace(/^[^0-9]+/,"") : undefined;
       (size||{}).defined_radius = (radiusOnAdditionalInfo) ? (radiusOnAdditionalInfo.includes("km")) ? parseFloat(radiusOnAdditionalInfo) / constants.SUN_DIAMETER * 2 : parseFloat(radiusOnAdditionalInfo) : undefined; 
-*/
+
       let color = converters.getColorFromStellarClassString(spectralClassString);
-      let coordinates = converters.getCoordinates(s["赤経"], s["赤緯"], distance, this.options.distance);
+      let coordinates = converters.getCoordinates(s["赤経"], s["赤緯"], distance, this.options.distance, 1/5);
       
 
       if (coordinates == undefined || absoluteMagnitude == undefined || distance == undefined || size == undefined || color == undefined) {
         return undefined;
       }
-
-      window.starDistance.push([s["名前"], distance, s["宇宙の距離梯子"], s.additional_info["距離"]])
 
       return {
         name:s["名前"],
@@ -95,7 +113,8 @@ class Constellations {
         size: size,
         color: color,
         "スペクトル分類": spectralClassString, 
-        brightness: absoluteMagnitude,
+        absoluteMagnitude: absoluteMagnitude,
+        magnitude: magnitude,
         id: hip
       }
     }).filter(s => s !== undefined);
@@ -148,6 +167,7 @@ class Constellations {
 
   render = async (stars, linePaths, constellationInfo) => {
     let options = this.options;
+    console.log(options);
     let group = new THREE.Group();
 
     // 中心座標の取得
@@ -181,7 +201,7 @@ class Constellations {
     // シーンとカメラ
     const ASPECT = windowSize.width / windowSize.height;
     let scene = new THREE.Scene();
-    let perspectiveCamera = new THREE.PerspectiveCamera(
+    this.perspectiveCamera = new THREE.PerspectiveCamera(
       options.focalLength ?? 45,
       ASPECT,
       1,
@@ -189,7 +209,7 @@ class Constellations {
     );
 
     let renderer = new THREE.WebGLRenderer({alpha: true, antialias: true});
-    //scene.fog = new THREE.Fog(0x0000000, 0, 1500);
+    //scene.fog = new THREE.Fog(0x0000000, 0, 150);
 
     // レンダラーとDOMの設定
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -201,47 +221,46 @@ class Constellations {
     document.body.appendChild(renderer.domElement);
     
     // コントローラーの定義
-    let controls, orbit;
     // Trackball Controls
-    controls = new TrackballControls(perspectiveCamera, renderer.domElement);
-    controls.target = (options.earthView) ? new THREE.Vector3(1, 1, 1) : new THREE.Vector3(linePositionInfo.center.x, linePositionInfo.center.y, linePositionInfo.center.z);
-    controls.rotateSpeed = 2.0;
-    controls.zoomSpeed = 1.2;
-    controls.panSpeed = 0.8;
-    controls.noRotate = false;
-    controls.noZoom = true;
-    controls.noPan = true;
-    controls.staticMoving = false;
-    controls.dynamicDampingFactor = 0.05;
-    controls.keys = [ 'KeyA', 'KeyS', 'KeyD' ]; // [ rotateKey, zoomKey, panKey ]
-    controls.rotateSpeed = 0.5;
-    controls.update();
+    this.trackballControls = new TrackballControls(this.perspectiveCamera, renderer.domElement);
+    this.trackballControls.target = (options.earthView) ? new THREE.Vector3(1, 1, 1) : new THREE.Vector3(linePositionInfo.center.x, linePositionInfo.center.y, linePositionInfo.center.z);
+    this.trackballControls.rotateSpeed = 2.0;
+    this.trackballControls.zoomSpeed = 1.2;
+    this.trackballControls.panSpeed = 0.8;
+    this.trackballControls.noRotate = false;
+    this.trackballControls.noZoom = true;
+    this.trackballControls.noPan = true;
+    this.trackballControls.staticMoving = false;
+    this.trackballControls.dynamicDampingFactor = 0.05;
+    this.trackballControls.keys = [ 'KeyA', 'KeyS', 'KeyD' ]; // [ rotateKey, zoomKey, panKey ]
+    this.trackballControls.rotateSpeed = 0.5;
+    this.trackballControls.update();
     // Orbit Controls
-    orbit = new OrbitControls(perspectiveCamera, renderer.domElement);
-    orbit.target = (options.earthView)
+    this.orbitControls = new OrbitControls(this.perspectiveCamera, renderer.domElement);
+    this.orbitControls.target = (options.earthView)
       ? new THREE.Vector3(1, 1, 1)
       : new THREE.Vector3(linePositionInfo.center.x, linePositionInfo.center.y, linePositionInfo.center.z);
-    orbit.maxPolarAngle = Infinity;
-    orbit.minPolarAngle = -Infinity;
-    orbit.maxAzimuthAngle = Infinity;
-    orbit.minAzimuthAngle = -Infinity;
-    orbit.enableDamping = false;
-    orbit.dampingFactor = 0.05;
-    orbit.enablePan = true;
-    orbit.enableZoom = true;
-    orbit.enableRotate = false;
-    orbit.autoRotate = options.autoRotate;
-    orbit.autoRotateSpeed = options.autoRotateSpeed || 1.0;
-    orbit.update();
+    this.orbitControls.maxPolarAngle = Infinity;
+    this.orbitControls.minPolarAngle = -Infinity;
+    this.orbitControls.maxAzimuthAngle = Infinity;
+    this.orbitControls.minAzimuthAngle = -Infinity;
+    this.orbitControls.enableDamping = false;
+    this.orbitControls.dampingFactor = 0.05;
+    this.orbitControls.enablePan = true;
+    this.orbitControls.enableZoom = true;
+    this.orbitControls.enableRotate = false;
+    this.orbitControls.autoRotate = options.autoRotate;
+    this.orbitControls.autoRotateSpeed = options.autoRotateSpeed || 1.0;
+    this.orbitControls.update();
 
     // カメラ位置
-    perspectiveCamera.setFocalLength(options.focalLength ?? 45);
-    perspectiveCamera.position.set(0, 0, 0);
-    perspectiveCamera.rotation.order = "XYZ";
-    perspectiveCamera.lookAt((options.earthView)
+    this.perspectiveCamera.setFocalLength(options.focalLength ?? 45);
+    this.perspectiveCamera.position.set(0, 0, 0);
+    this.perspectiveCamera.rotation.order = "XYZ";
+    this.perspectiveCamera.lookAt((options.earthView)
       ? new THREE.Vector3(0,0,0)
       : new THREE.Vector3(linePositionInfo.center.x, linePositionInfo.center.y, linePositionInfo.center.z));
-    perspectiveCamera.up = new THREE.Vector3(options.rotateX * 100, options.rotateY * 100,options.rotateZ * 100);
+    this.perspectiveCamera.up = new THREE.Vector3(options.rotateX * 100, options.rotateY * 100,options.rotateZ * 100);
     
     // グリッド
     if (options.grid == true) {
@@ -262,7 +281,7 @@ class Constellations {
     // 星座線の描画
     if (options.showLine) {
       const material = new THREE.LineBasicMaterial({
-        color: 0x0055ff
+        color: 0x002299
       });
       linePaths.forEach((points,i) => {
         let bufGeometry = new THREE.BufferGeometry();
@@ -273,20 +292,25 @@ class Constellations {
     }
 
     //星座名の表示
+    let constellatinNamePositionOffset = (options.distance) ? 20 : 100;
+    let constellatinNameScalorFactor = (options.distance) ? 1/100 : 1/25;
+    let constellatinNameFontSize = 38;
+    let constellatinNameOpacity = 1;
     if (options.showConstellationName) {
       constellationInfo.forEach(c => {
-        let label = createLabel(c.label, {r:0, g:125, b:255}, 38, 1)
-        label.position.set(c.coordinates.x, c.coordinates.y, c.coordinates.z);
+        let label = createLabel(c.label, {r:0, g:125, b:255}, constellatinNameFontSize, constellatinNameOpacity, constellatinNameScalorFactor)
+        let labelCoordinate = new THREE.Vector3(c.coordinates.x, c.coordinates.y, c.coordinates.z);
+        labelCoordinate.setLength(constellatinNamePositionOffset);
+        label.position.set(labelCoordinate.x, labelCoordinate.y, labelCoordinate.z);
         group.add(label);
       })
     }
 
     // 特殊星座の描画
-    options.showGuideConstellations = true;
     if (options.showGuideConstellations) {
 
       const guideMaterial = new THREE.LineBasicMaterial({color: 0xffaa00});
-      const guideMaterial_dashed = new THREE.LineDashedMaterial({color: 0xff5500, dashSize: 1, gapSize: 1});
+      const guideMaterial_dashed = new THREE.LineDashedMaterial({color: 0xff5500, dashSize: 0.5, gapSize: 0.5});
       const guideConstellationList = Object.keys(constants.additionalConstellations);
       guideConstellationList.forEach(async c => {
         if (!(constants.additionalConstellations[c].NearBy.map(n => this.symbol.includes(n)).reduce((a,c) => a || c))) return;
@@ -307,8 +331,10 @@ class Constellations {
                 y: (((acc.center ?? {}).y ?? acc.y) * i + curr.y)/(i + 1),
                 z: (((acc.center ?? {}).z ?? acc.z) * i + curr.z)/(i + 1),
               }});
-              let label = createLabel(constants.additionalConstellations[c].label, {r:0xff, g:0x55, b:0x00}, 38, 0.5);
-              label.position.set(centerCoordinate.x, centerCoordinate.y, centerCoordinate.z);
+              let labelCoordinate = new THREE.Vector3(centerCoordinate.x, centerCoordinate.y, centerCoordinate.z);
+              labelCoordinate.setLength(constellatinNamePositionOffset);
+              let label = createLabel(constants.additionalConstellations[c].label, {r:0xff, g:0x55, b:0x00}, constellatinNameFontSize, constellatinNameOpacity, constellatinNameScalorFactor);
+              label.position.set(labelCoordinate.x, labelCoordinate.y, labelCoordinate.z);
               group.add(label);
             }
           } else {
@@ -325,8 +351,10 @@ class Constellations {
                 y: (((acc.center ?? {}).y ?? acc.y) * i + curr.y)/(i + 1),
                 z: (((acc.center ?? {}).z ?? acc.z) * i + curr.z)/(i + 1),
               }});
-              let label = createLabel(constants.additionalConstellations[c].label, {r:0xff, g:0xaa, b:0x00}, 38, 0.5);
-              label.position.set(centerCoordinate.x, centerCoordinate.y, centerCoordinate.z);
+              let labelCoordinate = new THREE.Vector3(centerCoordinate.x, centerCoordinate.y, centerCoordinate.z);
+              labelCoordinate.setLength(constellatinNamePositionOffset);
+              let label = createLabel(constants.additionalConstellations[c].label, {r:0xff, g:0xaa, b:0x00}, constellatinNameFontSize, constellatinNameOpacity, constellatinNameScalorFactor);
+              label.position.set(labelCoordinate.x, labelCoordinate.y, labelCoordinate.z);
               group.add(label);
             }
           }
@@ -336,9 +364,15 @@ class Constellations {
     }
 
     // 恒星の描画
+    const starGeometry = new THREE.SphereGeometry(1, 12, 12); // Higher resolution geometry
+    const starMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const starMesh = new THREE.InstancedMesh(starGeometry, starMaterial, stars.length);
+    const dummy = new THREE.Object3D();
     switch (options.renderMode) {
+/*
       //using point light and lensflare
       case 'PointLight': {
+
         let isStarFormsConstellationLine = (s) => linePaths.reduce((acc,curr) => acc.concat(curr)).filter(l => l.x === s.x && l.y === s.y && l.z === s.z).length > 0;
         const textureLoader = new THREE.TextureLoader();
         const textureFlare0 = textureLoader.load( "./src/img/textures/lensflare/lensflare0_mono.png" );
@@ -376,30 +410,36 @@ class Constellations {
         });
         console.log("render with PointLight");
       } break;
+*/
       //using InstancedMesh
       case 'InstancedMesh':
       default: {
-        const starGeometry = new THREE.SphereGeometry(1, 12, 12); // Higher resolution geometry
-        const starMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-        const starMesh = new THREE.InstancedMesh(starGeometry, starMaterial, stars.length);
-        const dummy = new THREE.Object3D();
         stars.forEach((s, i) => {
+          let radius = 0;
+          let magnitude = Math.pow(1/2.5, s.magnitude);
+          if (options.distance) {
+            radius = (
+                (
+                  (s.size.defined_radius) 
+                    ? s.size.defined_radius 
+                    : s.size.radius
+                )
+                * (constants.SUN_DIAMETER / constants.LIGHT_YEAR / 2) 
+              + 0.01)
+              * magnitude
+              + 0.05;
+          } else {
+            radius = Math.min(magnitude, 0.5) + 0.05;
+          }
           dummy.position.set(s.coordinates.x, s.coordinates.y, s.coordinates.z);
-          dummy.scale.setScalar(s.size.radius / 25);
-          dummy.updateMatrix();
-          starMesh.setMatrixAt(i, dummy.matrix);
-/* ###### tmp realistic change ######
-          let radius = ((s.size.defined_radius) ? s.size.defined_radius : s.size.radius);
-          dummy.position.set(s.coordinates.x, s.coordinates.y, s.coordinates.z);
-          dummy.scale.setScalar(radius * constants.SUN_DIAMETER / constants.LIGHT_YEAR / 2 * Math.pow(10,3) + 0.1);
+          dummy.scale.setScalar(radius);
           dummy.updateMatrix();
           starMesh.setMatrixAt(i, dummy.matrix);
 
-*/
           // 星名の表示
           if (options.showStarName) {
-            let label = createLabel(s.name, s.color);
-            label.position.copy(dummy.position);
+            let label = createLabel(s.name, s.color, 38, 1, 0.001);
+            label.position.set(dummy.position.x, dummy.position.y + radius * 1.5, dummy.position.z);
             group.add(label)
           }
     
@@ -421,7 +461,7 @@ class Constellations {
     scene.add(group);
     
     // composer setting
-    const renderScene   = new RenderPass( scene, perspectiveCamera );
+    const renderScene   = new RenderPass( scene, this.perspectiveCamera );
     const composer      = new EffectComposer( renderer );
     const bloomComposer = new EffectComposer(renderer);
     const finalComposer = new EffectComposer(renderer);
@@ -432,7 +472,7 @@ class Constellations {
     // Bloom
     const bloomParams = {
       exposure: 2.1,
-      bloomStrength: .85,
+      bloomStrength: .95,
       bloomRadius: 1.1,
       bloomThreshold: 0,
     };
@@ -470,7 +510,7 @@ class Constellations {
     finalComposer.addPass(renderScene);
     finalComposer.addPass(finalPass);
 
-    function createLabel(text, color, size = 16, opacity = 0.4) {
+    function createLabel(text, color, size = 16, opacity = 0.4, scaleFactor = 1/25) {
       const width = size * 15;
       const height = size * 6;
       const canvas = document.createElement('canvas');
@@ -489,18 +529,18 @@ class Constellations {
     
       const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
       const sprite = new THREE.Sprite(spriteMaterial);
-      sprite.scale.set(width / 25, height / 25, 1);
+      sprite.scale.set(width *scaleFactor, height * scaleFactor, 1);
     
       return sprite;
     }
 
     composer.addPass( renderScene );
     renderer.setAnimationLoop((_) => {
-/*
+
       stars.forEach((s, i) => {
         // Update twinkle effect in each frame
-        const twinkleFactor = Math.sin(Date.now() * 0.005 + i) * 0.4 + 2; // More pronounced and slower twinkle effect
-        const randomFactor = Math.random() * 0.3 + 0.8; // Add some randomness
+        const twinkleFactor = Math.sin(Date.now() / (10000 * Math.random()) + i) * 0.2 + 2; // More pronounced and slower twinkle effect
+        const randomFactor = 0.8; // Add some randomness
         const finalTwinkleFactor = twinkleFactor * randomFactor;
     
         const twinkleColor = new THREE.Color(s.color).multiplyScalar(finalTwinkleFactor);
@@ -510,14 +550,14 @@ class Constellations {
     
       starMesh.instanceMatrix.needsUpdate = true; // Ensure updates are reflected
       starMesh.instanceColor.needsUpdate = true; // Ensure color updates are reflected
-*/
 
-      renderer.render(scene, perspectiveCamera);
+
+      renderer.render(scene, this.perspectiveCamera);
       composer.render();
       bloomComposer.render();
       finalComposer.render();
-      controls.update();
-      orbit.update();
+      this.trackballControls.update();
+      this.orbitControls.update();
     });
   }
 
