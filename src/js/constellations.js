@@ -285,6 +285,33 @@ class Constellations {
         });
     
         return parsedCommands;
+      },
+      groupCommands: (commands) => {
+        const groupedCommands = [];
+        let currentMode = 'sync';  // Default mode
+        let currentGroup = { mode: currentMode, commands: [] };
+    
+        commands.forEach(command => {
+            if (command.action === 'set mode') {
+                // If there's already a group with commands, push it to groupedCommands
+                if (currentGroup.commands.length > 0) {
+                    groupedCommands.push(currentGroup);
+                }
+                // Start a new group with the new mode
+                currentMode = command.value;
+                currentGroup = { mode: currentMode, commands: [] };
+            } else {
+                // Add the command to the current group
+                currentGroup.commands.push(command);
+            }
+        });
+    
+        // Push the last group if it has any commands
+        if (currentGroup.commands.length > 0) {
+            groupedCommands.push(currentGroup);
+        }
+    
+        return groupedCommands;
       }
     }
   };
@@ -472,7 +499,8 @@ class Constellations {
       width: window.innerWidth
     };
     let starPositionInfo = getCoordinateInfo(stars.map(s => s.coordinates));
-    let linePositionInfo = getCoordinateInfo(linePaths.reduce((acc,curr) => acc.concat(curr)));
+    let linePositionInfo = getCoordinateInfo(linePaths.reduce((acc,curr) => acc.concat(curr)).reduce((acc,curr) => acc.concat(curr)));
+    console.log(linePaths)
 
     // シーンとカメラ
     const ASPECT = windowSize.width / windowSize.height;
@@ -500,6 +528,7 @@ class Constellations {
     
     // コントローラーの定義
     // Trackball Controls
+    console.log(linePositionInfo)
     let target = (options.earthView || this.symbol.length >= 48) 
       ? new THREE.Vector3(0.001, 0.001, 0.001) 
       : new THREE.Vector3(linePositionInfo.center.x, linePositionInfo.center.y, linePositionInfo.center.z);
