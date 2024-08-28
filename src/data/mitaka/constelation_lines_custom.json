@@ -32,10 +32,11 @@
                 "LineStyle": {"type": "CatmullRomCurve", "style": "dashed"}
             },
             {
-                "Key": "春の大四辺形",
+                "Key": "春のダイヤモンド",
                 "Lines": [
                     ["HIP_69673", "HIP_65474", "HIP_57632", "HIP_63125", "HIP_69673"]
-                ]
+                ],
+                "LineStyle": {"type": "", "style": "dashed", "color": "0xFF00FF"}
             },
             {
                 "Key": "夏の大三角",
