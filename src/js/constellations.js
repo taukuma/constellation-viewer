@@ -27,14 +27,17 @@ class Constellations {
         mode: "sync",
       },
       run: async (input) => {
-        for await (let cmd of this.command.getCommands(input)) {
-          console.log(cmd)
+        const commandGroup = this.command.groupCommands(this.command.getCommands(input));
+        const lookAtTarget = new THREE.Object3D();
+        const execCommand = (cmd) => new Promise((res,rej) => {
           switch (cmd.action) {
             case "set mode": {
               //async or sync
+              res();
             } break;
             case "set duration": {
               this.command.options.duration = cmd.value;
+              res();
             } break;
             case "set easing": {
               // see https://gsap.com/docs/v3/Eases/
@@ -57,90 +60,100 @@ class Constellations {
                   this.command.options.easing = "none";
                   break;
               }
+              res();
             } break;
             case "goto":{
-              await new Promise((res,rej) => {
-                gsap.to(this.perspectiveCamera.position, {
-                  x: cmd.value.x,
-                  y: cmd.value.y,
-                  z: cmd.value.z,
-                  duration: this.command.options.duration / 1000,
-                  ease: this.command.options.easing,
-                  onUpdate: () => {
-                  },
-                  onComplete: () => {
-                    console.log("done");
-                    res()
-                  }
-                })
+              gsap.to(this.perspectiveCamera.position, {
+                x: cmd.value.x,
+                y: cmd.value.y,
+                z: cmd.value.z,
+                duration: this.command.options.duration / 1000,
+                ease: this.command.options.easing,
+                onUpdate: () => {
+                  this.perspectiveCamera.lookAt(lookAtTarget.position);
+                },
+                onComplete: () => {
+                  console.log("done");
+                  res()
+                }
               })
             } break;
             case "polarto": {
-              await new Promise((res,rej) => {
-                gsap.to(this.perspectiveCamera.up, {
-                  x: cmd.value.x,
-                  y: cmd.value.y,
-                  z: cmd.value.z,
-                  duration: this.command.options.duration / 1000,
-                  ease: this.command.options.easing,
-                  onUpdate: () => {
-                  },
-                  onComplete: () => {
-                    console.log("done");
-                    res()
-                  }
-                })
+              gsap.to(this.perspectiveCamera.up, {
+                x: cmd.value.x,
+                y: cmd.value.y,
+                z: cmd.value.z,
+                duration: this.command.options.duration / 1000,
+                ease: this.command.options.easing,
+                onUpdate: () => {
+                },
+                onComplete: () => {
+                  console.log("done");
+                  res()
+                }
               })
             } break;
             case "lookat": {
-              const lookAtTarget = new THREE.Object3D();
               lookAtTarget.position.copy(this.perspectiveCamera.getWorldDirection(new THREE.Vector3()).add(this.perspectiveCamera.position));
-    
-              await new Promise((res,rej) => {
-                gsap.to(lookAtTarget.position, {
-                  x: cmd.value.x,
-                  y: cmd.value.y,
-                  z: cmd.value.z,
-                  duration: this.command.options.duration / 1000,
-                  ease: this.command.options.easing,
-                  onUpdate: () => {
-                    this.perspectiveCamera.lookAt(lookAtTarget.position)
-                  },
-                  onComplete: () => {
-                    //this.perspectiveCamera.lookAt(new THREE.Vector3(cmd.value.x,cmd.value.y,cmd.value.z))
-                    let factor = 1//Math.pow(10, Math.ceil(Math.log10(Math.max(cmd.value.x,cmd.value.y,cmd.value.z))))
-                    this.orbitControls.target = new THREE.Vector3(cmd.value.x / factor, cmd.value.y / factor, cmd.value.z / factor);
-                    this.trackballControls.target = new THREE.Vector3(cmd.value.x / factor,cmd.value.y / factor,cmd.value.z / factor);
-                    console.log("done");
-                    res()
-                  }
-                })
-              });
+
+              gsap.to(lookAtTarget.position, {
+                x: cmd.value.x,
+                y: cmd.value.y,
+                z: cmd.value.z,
+                duration: this.command.options.duration / 1000,
+                ease: this.command.options.easing,
+                onUpdate: () => {
+                  this.perspectiveCamera.lookAt(lookAtTarget.position)
+                },
+                onComplete: () => {
+                  //this.perspectiveCamera.lookAt(new THREE.Vector3(cmd.value.x,cmd.value.y,cmd.value.z))
+                  let factor = 1//Math.pow(10, Math.ceil(Math.log10(Math.max(cmd.value.x,cmd.value.y,cmd.value.z))))
+                  this.orbitControls.target = new THREE.Vector3(cmd.value.x / factor, cmd.value.y / factor, cmd.value.z / factor);
+                  this.trackballControls.target = new THREE.Vector3(cmd.value.x / factor,cmd.value.y / factor,cmd.value.z / factor);
+
+                  const targetQuaternion = this.perspectiveCamera.quaternion.clone(); // Get the final orientation
+                  this.perspectiveCamera.quaternion.copy(targetQuaternion); // Apply it directly
+                  console.log("done");
+                  res()
+                }
+              })
             } break;
             case "zoomto": {
               const focalLengthProxy = { value: this.perspectiveCamera.getFocalLength() };
-              await new Promise((res,rej) => {
-                gsap.to(focalLengthProxy, {
-                  value: cmd.value,
-                  duration: this.command.options.duration / 1000,
-                  ease: this.command.options.easing,
-                  onUpdate: () => {
-                    this.perspectiveCamera.setFocalLength(focalLengthProxy.value);
-                    this.perspectiveCamera.updateProjectionMatrix();
-                  },
-                  onComplete: () => {
-                    console.log("done");
-                    res()
-                  }
-                });
-              })
+              gsap.to(focalLengthProxy, {
+                value: cmd.value,
+                duration: this.command.options.duration / 1000,
+                ease: this.command.options.easing,
+                onUpdate: () => {
+                  this.perspectiveCamera.setFocalLength(focalLengthProxy.value);
+                  this.perspectiveCamera.updateProjectionMatrix();
+                },
+                onComplete: () => {
+                  console.log("done");
+                  res()
+                }
+              });
             } break;
             case "wait":{
-              await new Promise((res, rej) => {
-                setTimeout(res,cmd.value)
-              })
+              setTimeout(res,cmd.value)
             } break;
             default:
+              res();
+          }
+        })
+        console.log(commandGroup);
+
+        for await (let group of commandGroup) {
+          switch (group.mode) {
+            case "async": {
+              await Promise.all(group.commands.map(cmd => execCommand(cmd)));
+            } break;
+            case "sync":
+            default: {
+              for await (let cmd of group.commands) {
+                await execCommand(cmd);
+              }
+            } break;
           }
         }
       },
@@ -285,6 +298,33 @@ class Constellations {
         });
     
         return parsedCommands;
+      },
+      groupCommands: (commands) => {
+        const groupedCommands = [];
+        let currentMode = 'sync';  // Default mode
+        let currentGroup = { mode: currentMode, commands: [] };
+    
+        commands.forEach(command => {
+            if (command.action === 'set mode') {
+                // If there's already a group with commands, push it to groupedCommands
+                if (currentGroup.commands.length > 0) {
+                    groupedCommands.push(currentGroup);
+                }
+                // Start a new group with the new mode
+                currentMode = command.value;
+                currentGroup = { mode: currentMode, commands: [] };
+            } else {
+                // Add the command to the current group
+                currentGroup.commands.push(command);
+            }
+        });
+    
+        // Push the last group if it has any commands
+        if (currentGroup.commands.length > 0) {
+            groupedCommands.push(currentGroup);
+        }
+    
+        return groupedCommands;
       }
     }
   };
@@ -389,6 +429,7 @@ class Constellations {
     return {
       constellation: {
         label: constants.symbols[symbol].label,
+        symbol: symbol,
         coordinates: starData[0].coordinates
       },
       stars: starData
@@ -472,7 +513,7 @@ class Constellations {
       width: window.innerWidth
     };
     let starPositionInfo = getCoordinateInfo(stars.map(s => s.coordinates));
-    let linePositionInfo = getCoordinateInfo(linePaths.reduce((acc,curr) => acc.concat(curr)));
+    let linePositionInfo = getCoordinateInfo(linePaths.reduce((acc,curr) => acc.concat(curr)).reduce((acc,curr) => acc.concat(curr)));
 
     // シーンとカメラ
     const ASPECT = windowSize.width / windowSize.height;
@@ -515,7 +556,7 @@ class Constellations {
     this.trackballControls.staticMoving = false;
     this.trackballControls.dynamicDampingFactor = 0.05;
     this.trackballControls.keys = [ 'KeyA', 'KeyS', 'KeyD' ]; // [ rotateKey, zoomKey, panKey ]
-    this.trackballControls.update();
+    //this.trackballControls.update();
     // Orbit Controls
     this.orbitControls = new OrbitControls(this.perspectiveCamera, renderer.domElement);
     this.orbitControls.target = target;
@@ -530,7 +571,7 @@ class Constellations {
     this.orbitControls.enableRotate = false;
     this.orbitControls.autoRotate = options.autoRotate;
     this.orbitControls.autoRotateSpeed = options.autoRotateSpeed || 1.0;
-    this.orbitControls.update();
+    //this.orbitControls.update();
 
     // カメラ位置
     this.perspectiveCamera.setFocalLength(options.focalLength ?? 45);
@@ -575,7 +616,8 @@ class Constellations {
     let constellatinNameOpacity = 1;
     if (options.showConstellationName) {
       constellationInfo.forEach(c => {
-        let label = createLabel(c.label, {r:0, g:125, b:255}, constellatinNameFontSize, constellatinNameOpacity, constellatinNameScalorFactor)
+        let constellationName = `${c.label} (${c.symbol})`;
+        let label = createLabel(constellationName, {r:0, g:125, b:255}, constellatinNameFontSize, constellatinNameOpacity, constellatinNameScalorFactor)
         let labelCoordinate = new THREE.Vector3(c.coordinates.x, c.coordinates.y, c.coordinates.z);
         labelCoordinate.setLength(constellatinNamePositionOffset);
         label.position.set(labelCoordinate.x, labelCoordinate.y, labelCoordinate.z);
