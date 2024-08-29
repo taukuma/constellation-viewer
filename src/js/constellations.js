@@ -28,6 +28,7 @@ class Constellations {
       },
       run: async (input) => {
         const commandGroup = this.command.groupCommands(this.command.getCommands(input));
+        const lookAtTarget = new THREE.Object3D();
         const execCommand = (cmd) => new Promise((res,rej) => {
           switch (cmd.action) {
             case "set mode": {
@@ -69,6 +70,7 @@ class Constellations {
                 duration: this.command.options.duration / 1000,
                 ease: this.command.options.easing,
                 onUpdate: () => {
+                  this.perspectiveCamera.lookAt(lookAtTarget.position);
                 },
                 onComplete: () => {
                   console.log("done");
@@ -92,7 +94,6 @@ class Constellations {
               })
             } break;
             case "lookat": {
-              const lookAtTarget = new THREE.Object3D();
               lookAtTarget.position.copy(this.perspectiveCamera.getWorldDirection(new THREE.Vector3()).add(this.perspectiveCamera.position));
 
               gsap.to(lookAtTarget.position, {
@@ -109,6 +110,9 @@ class Constellations {
                   let factor = 1//Math.pow(10, Math.ceil(Math.log10(Math.max(cmd.value.x,cmd.value.y,cmd.value.z))))
                   this.orbitControls.target = new THREE.Vector3(cmd.value.x / factor, cmd.value.y / factor, cmd.value.z / factor);
                   this.trackballControls.target = new THREE.Vector3(cmd.value.x / factor,cmd.value.y / factor,cmd.value.z / factor);
+
+                  const targetQuaternion = this.perspectiveCamera.quaternion.clone(); // Get the final orientation
+                  this.perspectiveCamera.quaternion.copy(targetQuaternion); // Apply it directly
                   console.log("done");
                   res()
                 }
@@ -552,7 +556,7 @@ class Constellations {
     this.trackballControls.staticMoving = false;
     this.trackballControls.dynamicDampingFactor = 0.05;
     this.trackballControls.keys = [ 'KeyA', 'KeyS', 'KeyD' ]; // [ rotateKey, zoomKey, panKey ]
-    this.trackballControls.update();
+    //this.trackballControls.update();
     // Orbit Controls
     this.orbitControls = new OrbitControls(this.perspectiveCamera, renderer.domElement);
     this.orbitControls.target = target;
@@ -567,7 +571,7 @@ class Constellations {
     this.orbitControls.enableRotate = false;
     this.orbitControls.autoRotate = options.autoRotate;
     this.orbitControls.autoRotateSpeed = options.autoRotateSpeed || 1.0;
-    this.orbitControls.update();
+    //this.orbitControls.update();
 
     // カメラ位置
     this.perspectiveCamera.setFocalLength(options.focalLength ?? 45);
