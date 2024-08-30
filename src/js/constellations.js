@@ -118,6 +118,29 @@ class Constellations {
                 }
               })
             } break;
+            case "rotate": {
+              const cameraDirection = new THREE.Vector3();
+              const currentlookAtPoint = new THREE.Vector3();
+              const verticalLevel = {x: this.perspectiveCamera.up.x, y: this.perspectiveCamera.up.y, z: this.perspectiveCamera.up.z};
+              //get current direction
+              this.perspectiveCamera.getWorldDirection(cameraDirection);
+              currentlookAtPoint.addVectors(this.perspectiveCamera.position, cameraDirection)
+              const updateCoordinate = converters.getRaotateVerticalLevel(currentlookAtPoint, verticalLevel, cmd.value);
+
+              gsap.to(this.perspectiveCamera.up, {
+                x: updateCoordinate.x,
+                y: updateCoordinate.y,
+                z: updateCoordinate.z,
+                duration: this.command.options.duration / 1000,
+                ease: this.command.options.easing,
+                onUpdate: () => {
+                },
+                onComplete: () => {
+                  console.log("done");
+                  res()
+                }
+              })
+            } break;
             case "zoomto": {
               const focalLengthProxy = { value: this.perspectiveCamera.getFocalLength() };
               gsap.to(focalLengthProxy, {
@@ -171,6 +194,7 @@ class Constellations {
         const gotoPattern = /^goto\s+(\(([^,]+),([^,]+),([^)]+)\)|\w+)$/;
         const polartoPattern = /^polarto\s+(\(([^,]+),([^,]+),([^)]+)\)|\w+)$/;
         const zoomPattern = /^zoomto\s+(\d+)$/;
+        const rotatePattern = /^rotate\s+([+-]?\d+)$/;
         const waitPattern = /^wait\s+(\d+)$/;
         const setDurationPattern = /^set\s+duration\s*=\s*(\d+)$/;
         const setEasingPattern = /^set\s+easing\s*=\s*([\w\d]+\.[\w\d]+|\w+)$/;
@@ -276,12 +300,21 @@ class Constellations {
                 value: easing
               });
             }
+            // set mode
             else if (match = command.match(setModePattern)) {
               const mode = match[1].trim();
               parsedCommands.push({
                 action: 'set mode',
                 value: mode
               })
+            }
+            // rotate
+            else if (match = command.match(rotatePattern)) {
+              const theta = parseInt(match[1].trim(), 10);
+              parsedCommands.push({
+                action: 'rotate',
+                value: theta
+              });
             }
             // zoomto
             else if (match = command.match(zoomPattern)) {
