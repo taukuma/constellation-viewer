@@ -12,6 +12,7 @@ let loadingText = document.querySelector(".loading-text");
 let progressBar = document.querySelector(".progress-bar");
 let titleBox = document.querySelector("#title-box-container");
 let titleContainer = document.querySelector("#title-container");
+let viewerContainer = document.querySelector("#viewer-container");
 let touchEvent = "click"; //(window.ontouchstart === undefined) ? "click" : "touchstart"
 window.constellations = constellations;
 let scripts = [
@@ -70,9 +71,11 @@ let initApp = async () => {
   await constellations.render(
     data.stars,
     data.lines,
-    data.constellation
+    data.constellation,
+    viewerContainer
   )
   loadingContainer.style.display = "none";
+  viewerContainer.style.display = "block"
 };
 let getFrame = (color) => {
   return {

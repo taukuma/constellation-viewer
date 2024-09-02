@@ -81,7 +81,7 @@ converters = {
           // Luminosityクラスが必ずしもスペクトル分類に含まれないので、その場合はStellarClassから取得
     }
   },
-  getRaotateVerticalLevel: (cameraDirection, verticalLevel, theta) => {
+  getRotateVerticalLevel: (cameraDirection, verticalLevel, theta) => {
     // Convert theta from degrees to radians
     const thetaRad = theta * (- Math.PI / 180);
 
