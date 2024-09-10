@@ -105,7 +105,15 @@ let updateLink = (target) => {
 
 let setFilter = (e) => {
   let f = e.target.getAttribute("data-filter-target");
-  document.querySelectorAll(".constellation-item")
+  if (f === "") {
+    document.querySelectorAll("input.constellation-link:checked").forEach(i => i.checked=false);
+    document.querySelector("#draw-constellation").classList.add("hide");
+  } else if (f === "ALL") {
+    document.querySelectorAll("input.constellation-link:checked").forEach(i => i.checked=false);
+    document.querySelectorAll("#constellation-link-container li:not(.hide) input.constellation-link").forEach(i => i.checked = true);
+    showStartButton();
+  } else {
+    document.querySelectorAll(".constellation-item")
     .forEach(d => {
       if (d.getAttribute("data-filter-list").includes(f) || f === undefined || f === "") {
         d.parentElement.classList.remove("hide");
@@ -113,11 +121,11 @@ let setFilter = (e) => {
         d.parentElement.classList.add("hide")
       }
     });
-  if (f === "") {
-    document.querySelectorAll("input.constellation-link:checked").forEach(i => i.checked=false);
-    document.querySelector("#draw-constellation").classList.add("hide");
   }
 };
+
+// show start button
+let showStartButton = () => {document.querySelector("#draw-constellation").setAttribute("class", (document.querySelectorAll("input.constellation-link:checked").length) ? "bn632-hover bn26" : "hide");}
 
 let init = () => {
   //main
@@ -148,8 +156,6 @@ let init = () => {
     titleContainer.className = "hide"
     document.body.setAttribute("class", "");
     
-    // show start button
-    let showStartButton = () => {document.querySelector("#draw-constellation").setAttribute("class", (document.querySelectorAll("input.constellation-link:checked").length) ? "bn632-hover bn26" : "hide");}
     document.querySelectorAll("input.constellation-link").forEach(l => l.addEventListener(touchEvent, showStartButton, false));
     document.querySelector("#draw-constellation").addEventListener(touchEvent, ()=>{window.location.href=updateLink()}, false);
     setTimeout(showStartButton, 1000);
