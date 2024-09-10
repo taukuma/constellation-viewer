@@ -40,9 +40,9 @@
             <div><input class="params" type="radio" name="focalLength" value=8><label>8mm</label></div>
             <div><input class="params" type="radio" name="focalLength" value=14><label>14mm</label></div>
             <div><input class="params" type="radio" name="focalLength" value=24><label>24mm</label></div>
-            <div><input class="params" type="radio" name="focalLength" value=28><label>28mm</label></div>
+            <div><input class="params" type="radio" name="focalLength" value=28 checked><label>28mm</label></div>
             <div><input class="params" type="radio" name="focalLength" value=25><label>35mm</label></div>
-            <div><input class="params" type="radio" name="focalLength" value=45 checked><label>45mm</label></div>
+            <div><input class="params" type="radio" name="focalLength" value=45><label>45mm</label></div>
           </div>
           <div class="inline-radio">
             <div><input class="params" type="radio" name="focalLength" value=50><label>50mm</label></div>
@@ -143,12 +143,12 @@
           </div>
           <div>
             <div class="param-items">星座線を表示<input class="tgl tgl-ios params" id="param-showLine" type="checkbox" name="param-showLine" checked/><label class="tgl-btn" for="param-showLine"></label></div>
-            <div class="param-items">星座名を表示<input class="tgl tgl-ios params" id="param-showConstellationName" type="checkbox" name="param-showConstellationName"/><label class="tgl-btn" for="param-showConstellationName"></label></div>
+            <div class="param-items">星座名を表示<input class="tgl tgl-ios params" id="param-showConstellationName" type="checkbox" name="param-showConstellationName" checked/><label class="tgl-btn" for="param-showConstellationName"></label></div>
             <div class="param-items">星名を表示<input class="tgl tgl-ios params" id="param-showStarName" type="checkbox" name="param-showStarName"/><label class="tgl-btn" for="param-showStarName"></label></div>
             <div class="param-items">ガイド星座<input class="tgl tgl-ios params" id="param-showGuideConstellations" type="checkbox" name="param-showGuideConstellations"/><label class="tgl-btn" for="param-showGuideConstellations"></label></div>
           </div>
           <div>
-            <div class="param-items">自動回転<input class="tgl tgl-ios params" id="param-autoRotate" type="checkbox" name="param-autoRotate" checked/><label class="tgl-btn" for="param-autoRotate"></label></div>
+            <div class="param-items">自動回転<input class="tgl tgl-ios params" id="param-autoRotate" type="checkbox" name="param-autoRotate"/><label class="tgl-btn" for="param-autoRotate"></label></div>
             <div class="param-items">オートロード<input class="tgl tgl-ios params" id="param-autoLoad" type="checkbox" name="param-autoLoad"/><label class="tgl-btn" for="param-autoLoad"></label></div>
             <div class="param-items">距離<input class="tgl tgl-ios params" id="param-distance" type="checkbox" name="param-distance" checked/><label class="tgl-btn" for="param-distance"></label></div>
             <div class="param-items">グリッド表示<input class="tgl tgl-ios params" id="param-grid" type="checkbox" name="param-grid"/><label class="tgl-btn" for="param-grid"></label></div>
@@ -263,6 +263,7 @@
         <!-- li><button class="filter-item" data-filter-target="アルゴ4星座">アルゴ4星座</button></li -->
       </ul>
       <ul class="constellation-link-filter">
+        <li><button class="filter-item" data-filter-target="ALL">全選択</button></li>
         <li><button class="filter-item" data-filter-target="">リセット</button></li>
       </ul>
       <ul id="constellation-link-container" class="block">
