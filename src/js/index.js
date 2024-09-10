@@ -12,6 +12,7 @@ let loadingText = document.querySelector(".loading-text");
 let progressBar = document.querySelector(".progress-bar");
 let titleBox = document.querySelector("#title-box-container");
 let titleContainer = document.querySelector("#title-container");
+let controllerContainer = document.querySelector("#controller-container");
 let touchEvent = "click"; //(window.ontouchstart === undefined) ? "click" : "touchstart"
 window.constellations = constellations;
 let scripts = [
@@ -70,7 +71,8 @@ let initApp = async () => {
   await constellations.render(
     data.stars,
     data.lines,
-    data.constellation
+    data.constellation,
+    document.body
   )
   loadingContainer.style.display = "none";
 };
@@ -138,9 +140,10 @@ let init = () => {
     document.querySelector("#index-title-frame-bottom").innerHTML = frame.bottom;
     document.querySelector("#constellation_list").setAttribute("class", "");
     document.querySelector("#constellation-link-container").innerHTML = 
+      `<li class="common-setting"><svg height="0" width="0"><defs><linearGradient id="constellation-line-gradient" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#25aae1; stop-opacity:1" /><stop offset="33%" style="stop-color:#4481eb; stop-opacity:1" /><stop offset="66%" style="stop-color:#04befe; stop-opacity:1" /><stop offset="100%" style="stop-color:#3f86ed; stop-opacity:1" /></linearGradient></defs></svg></li>` +
       Object
         .keys(constants.symbols)
-        .map(s => `<li><div class="constellation-item" data-filter-list="${constants.symbols[s].filters.join(",")}"><input type="checkBox" class="constellation-link" id="constellation-${s}" name="constellation-link" value="${s}"/><label for="constellation-${s}">${constants.symbols[s].english || s}<br>${constants.symbols[s].label}</label></div></li>`)
+        .map(s => `<li><div class="constellation-item" data-filter-list="${constants.symbols[s].filters.join(",")}"><input type="checkBox" class="constellation-link" id="constellation-${s}" name="constellation-link" value="${s}"/><label for="constellation-${s}" style="display:relative">${constants.symbols[s].english || s}<br>${constants.symbols[s].label}<div style="height:100%; width:100%;overflow:hidden; mix-blend-mode: difference;">${constants.symbols[s].svg}</div></label></div></li>`)
         .join("")
     titleContainer.className = "hide"
     document.body.setAttribute("class", "");

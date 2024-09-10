@@ -81,4 +81,47 @@ converters = {
           // Luminosityクラスが必ずしもスペクトル分類に含まれないので、その場合はStellarClassから取得
     }
   },
+  getRotateVerticalLevel: (cameraDirection, verticalLevel, theta) => {
+    // Convert theta from degrees to radians
+    const thetaRad = theta * (- Math.PI / 180);
+
+    // Normalize the direction vector
+    const d = cameraDirection;
+    const dNorm = Math.sqrt(d.x * d.x + d.y * d.y + d.z * d.z);
+    const u = d.x / dNorm;
+    const v = d.y / dNorm;
+    const w = d.z / dNorm;
+
+    // Construct the rotation matrix
+    const cosTheta = Math.cos(thetaRad);
+    const sinTheta = Math.sin(thetaRad);
+    const oneMinusCosTheta = 1 - cosTheta;
+
+    const R = [
+        [
+            cosTheta + u * u * oneMinusCosTheta,
+            u * v * oneMinusCosTheta - w * sinTheta,
+            u * w * oneMinusCosTheta + v * sinTheta
+        ],
+        [
+            v * u * oneMinusCosTheta + w * sinTheta,
+            cosTheta + v * v * oneMinusCosTheta,
+            v * w * oneMinusCosTheta - u * sinTheta
+        ],
+        [
+            w * u * oneMinusCosTheta - v * sinTheta,
+            w * v * oneMinusCosTheta + u * sinTheta,
+            cosTheta + w * w * oneMinusCosTheta
+        ]
+    ];
+
+    // Apply the rotation matrix to the vertical level vector
+    const vPrime = {
+        x: R[0][0] * verticalLevel.x + R[0][1] * verticalLevel.y + R[0][2] * verticalLevel.z,
+        y: R[1][0] * verticalLevel.x + R[1][1] * verticalLevel.y + R[1][2] * verticalLevel.z,
+        z: R[2][0] * verticalLevel.x + R[2][1] * verticalLevel.y + R[2][2] * verticalLevel.z
+    };
+
+    return vPrime;
+  }
 };
