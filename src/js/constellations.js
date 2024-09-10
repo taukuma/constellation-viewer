@@ -45,6 +45,7 @@ class Constellations {
         const setDurationPattern = /^set\s+duration\s*=\s*(\d+)$/;
         const setEasingPattern = /^set\s+easing\s*=\s*([\w\d]+\.[\w\d]+|\w+)$/;
         const setModePattern = /^set\s+mode\s*=\s*(async|sync)$/;
+        const setRotationOriginPattern = /^set\s+rotationorigin\s*=\s*(\(([^,]+),([^,]+),([^)]+)\)|\w+)$/;
         const enableAutoRotatePattern = /^(enable|start)\s+(autorotate|autoRotate|AutoRotate)$/;
         const disableAutoRotatePattern = /^(disable|stop)\s+(autorotate|autoRotate|AutoRotate)$/;
     
@@ -156,6 +157,31 @@ class Constellations {
                 value: mode
               })
             }
+            // set rotationorigin
+            else if (match = command.match(setRotationOriginPattern)) {
+              const target = match[1].trim();
+  
+              if (target.startsWith('(')) {
+                  // Direct coordinates
+                  parsedCommands.push({
+                      action: 'set rotationorigin',
+                      value: {
+                          x: parseFloat(match[2].trim()),
+                          y: parseFloat(match[3].trim()),
+                          z: parseFloat(match[4].trim())
+                      }
+                  });
+              } else if (this.predefinedLocations[target]) {
+                  // Predefined location
+                  parsedCommands.push({
+                      action: 'set rotationorigin',
+                      value: this.predefinedLocations[target]
+                  });
+              } else {
+                  console.error(`Invalid rotationorigin location: ${target}`);
+              }
+          } 
+          // wai
             // enable autorotate
             else if (match = command.match(enableAutoRotatePattern)) {
               parsedCommands.push({
@@ -232,6 +258,15 @@ class Constellations {
             } break;
             case "set duration": {
               this.command.options.duration = cmd.value;
+              res();
+            } break;
+            case "set rotationorigin": {
+              let cameraDirection = new THREE.Vector3();
+              this.perspectiveCamera.getWorldDirection(cameraDirection);
+              this.orbitControls.target = new THREE.Vector3(cmd.value.x, cmd.value.y, cmd.value.z);
+              this.trackballControls.target = new THREE.Vector3(cmd.value.x,cmd.value.y,cmd.value.z);
+              this.perspectiveCamera.lookAt(cameraDirection.x, cameraDirection.y, cameraDirection.z);
+              console.log("set rotateorigin command",  this.orbitControls.target, this.trackballControls.target)
               res();
             } break;
             case "set easing": {
@@ -383,7 +418,37 @@ class Constellations {
       }
     }
   };
+  newVector = (...args) => new THREE.Vector3(...args);
+  getProjectivePlaneCoordinate = (coordinate, canvas, width = 192, height = 192) => {
+    // Get the object's 3D position
+    const vector = new THREE.Vector3(coordinate.x, coordinate.y, coordinate.z);
+    
+    // Project the 3D position to 2D screen space
+    vector.project(this.perspectiveCamera);
 
+    // Calculate the aspect ratios
+    const canvasAspectRatio = canvas.clientWidth / canvas.clientHeight;
+    const targetAspectRatio = width / height;
+
+    // Convert the normalized device coordinates to 2D screen space
+    let scaleX = width / 2;
+    let scaleY = height / 2;
+
+    // Adjust for aspect ratio difference
+    if (canvasAspectRatio > targetAspectRatio) {
+        // Canvas is wider than target, scale by height
+        scaleX = scaleY * canvasAspectRatio / targetAspectRatio;
+    } else {
+        // Canvas is taller than target, scale by width
+        scaleY = scaleX * targetAspectRatio / canvasAspectRatio;
+    }
+
+    const x = (vector.x * scaleX) + width / 2;
+    const y = -(vector.y * scaleY) + height / 2;
+
+    return { x, y };
+    //this.constellations.data.lines[0].map(ls => ls.map(l => this.constellations.getProjectivePlaneCoordinate(l, document.querySelector("canvas"))).map(l => l.x + " " + l.y).join(" L ")).join(" M ").replace(/^/g,"M ").replace(/^/g, `<svg xmlns="http://www.w3.org/2000/svg"><path d="`).replace(/$/g, `" stroke="#FF0000" stroke-width="1" fill="none"/></svg>`)
+  };
   setOptions = (renderParams) => {
     this.options = {
       focalLength : parseFloat(renderParams.focalLength ?? 45),
@@ -472,6 +537,7 @@ class Constellations {
 
       return {
         name:s["名前"],
+        symbol: symbol,
         coordinates: coordinates,
         size: size,
         color: color,
@@ -541,6 +607,7 @@ class Constellations {
   render = async (stars, linePaths, constellationInfo, renderElement) => {
     let options = this.options;
     let group = new THREE.Group();
+    this.data = {stars: stars, constellations: constellationInfo, lines: linePaths}
 
     // 中心座標の取得
     let getCoordinateInfo = (list) => list.reduce((acc,curr,i)=> {return {
@@ -607,7 +674,7 @@ class Constellations {
     this.trackballControls.noPan = false;
     this.trackballControls.panSpeed = 0.02;
     this.trackballControls.noRotate = false;
-    this.trackballControls.rotateSpeed = 0.05;
+    this.trackballControls.rotateSpeed = 0.5;
     this.trackballControls.staticMoving = false;
     this.trackballControls.dynamicDampingFactor = 0.05;
     this.trackballControls.keys = [ 'KeyA', 'KeyS', 'KeyD' ]; // [ rotateKey, zoomKey, panKey ]
@@ -794,6 +861,7 @@ class Constellations {
       //using InstancedMesh
       case 'InstancedMesh':
       default: {
+        console.log(stars.length)
         stars.forEach((s, i) => {
           let radius = 0;
           let magnitude = Math.pow(1/2.5, s.magnitude);
