@@ -199,7 +199,7 @@ cursor: pointer;
   position:relative;
 }
 .constellation-link-filter li button:hover {
-  background: linear-gradient(45deg, #00aaff,#0054df);
+  background: linear-gradient(45deg, #005bff55,#0054df55);
   color: white;
 }
 
@@ -220,14 +220,15 @@ cursor: pointer;
   cursor: pointer;
 }
 .constellation-item input:not(:checked):hover + label {
-  background: linear-gradient(45deg, #00aaff55,#0054df55);
+  background: linear-gradient(45deg, #005bff55,#0054df55);
   color: #fff;
   border-radius: 5px;
 }
 .constellation-item input:checked + label{
-  background: linear-gradient(45deg, #0af,#0054df);
+  background: linear-gradient(45deg, #005bff55,#0054df22);
   color: #fff;
   border-radius: 5px;
+  box-shadow: inset 0 0 0px 1px #00aaff, inset 0 0 20px 1px #0054df;
 }
 #constellation_list ul.block > li {
   position: relative;
