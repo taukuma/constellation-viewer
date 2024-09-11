@@ -180,7 +180,8 @@ body.black .progress-bar-container .progress-bar {
   justify-content: center;
   align-items: center;
   flex-wrap: wrap;
-  padding: 10px 0px;
+  padding: 5px 0px;
+  margin: 0;
 }
 .constellation-link-filter li {
   display: inline-block;
@@ -399,7 +400,7 @@ cursor: pointer;
   top: 0;
 }
 .menu-trigger span:nth-of-type(2) {
-  top: 20px;
+  top: calc(50% - 1px);
 }
 .menu-trigger span:nth-of-type(3) {
   bottom: 0;
@@ -461,4 +462,45 @@ cursor: pointer;
     #3f86ed
   );
   box-shadow: 0 4px 15px 0 rgba(65, 132, 234, 0.75);
+}
+
+#navigation-menu-container {
+ background-color: #000;
+}
+#navigation-menu-trigger {
+  position: fixed; 
+  transform: scale(0.8);
+  right: 15px; 
+  top:15px;
+  z-index: 1;
+}
+#navigation-menu-container .settings {
+  height: 0;
+  width: max(30vw, 500px);
+  background: #000000cf;
+  position: fixed;
+  right: 0;
+  top: 5px;
+  bottom: 5px;
+  backdrop-filter: blur(3px);
+  border-radius: 0px 0 0 15px;
+  z-index: 0;
+  opacity: 0;
+  
+  -webkit-transition: all 0.3s ease-in-out;
+  -moz-transition: all 0.3s ease-in-out;
+  -ms-transition: all 0.3s ease-in-out;
+  -o-transition: all 0.3s ease-in-out;
+  transition: all 0.3s ease-in-out;
+}
+#navigation-menu-container .menu-trigger.active + .settings {
+  opacity: 1;
+  height: calc(100vh - 45px);
+  box-shadow: 0 0 120px 20px #b6b6b61a;
+  border: 1px solid #000;
+  -webkit-transition: all 0.3s ease-in-out;
+  -moz-transition: all 0.3s ease-in-out;
+  -ms-transition: all 0.3s ease-in-out;
+  -o-transition: all 0.3s ease-in-out;
+  transition: all 0.3s ease-in-out;
 }
