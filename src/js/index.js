@@ -107,6 +107,7 @@ let setFilter = (e) => {
   let f = e.target.getAttribute("data-filter-target");
   if (f === "") {
     document.querySelectorAll("input.constellation-link:checked").forEach(i => i.checked=false);
+    document.querySelectorAll("#constellation-link-container li").forEach(i => i.classList.remove("hide"));
     document.querySelector("#draw-constellation").classList.add("hide");
   } else if (f === "ALL") {
     document.querySelectorAll("input.constellation-link:checked").forEach(i => i.checked=false);
@@ -140,9 +141,12 @@ let init = () => {
       document.querySelector("#title-text").innerHTML = targetConstellationLabels.filter((v,i) => i < 5).join("</br>") + ((targetConstellationLabels.length > 5) ? `<br>...他 ${targetConstellationLabels.length - 5} 星座` : "");
       playButton.addEventListener(touchEvent, initApp, false);
     }
+
+    
+    document.querySelector("#navigation-menu-container .menu-trigger").addEventListener(touchEvent, () => {document.querySelector('#navigation-menu-container .menu-trigger').classList.toggle('active')}, false);
   } else {
     let frame = getFrame("#aaa");
-    document.querySelector(".menu-trigger").addEventListener(touchEvent, () => {document.querySelector('.menu-trigger').classList.toggle('active')}, false);
+    document.querySelector("#param-list .menu-trigger").addEventListener(touchEvent, () => {document.querySelector('#param-list .menu-trigger').classList.toggle('active')}, false);
     document.querySelectorAll(".filter-item").forEach(f => f.addEventListener(touchEvent, setFilter, false));
     document.querySelector("#index-title-frame-top").innerHTML = frame.top;
     document.querySelector("#index-title-frame-bottom").innerHTML = frame.bottom;
