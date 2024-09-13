@@ -23,8 +23,10 @@ class Constellations {
     this.command = {
       options: {
         duration: 5000,
+        stopoffset: 0,
         easing: "power2.inOut",
         mode: "sync",
+        lookAtTarget: new THREE.Object3D()
       },
       getCommands: (input) => {
         // Split the input string by semi-colon, trim, and filter out empty commands
@@ -45,6 +47,7 @@ class Constellations {
         const setDurationPattern = /^set\s+duration\s*=\s*(\d+)$/;
         const setEasingPattern = /^set\s+easing\s*=\s*([\w\d]+\.[\w\d]+|\w+)$/;
         const setModePattern = /^set\s+mode\s*=\s*(async|sync)$/;
+        const setStopOffsetPattern = /^set\s+stopoffset\s*=\s*(\d+)$/;
         const setRotationOriginPattern = /^set\s+rotationorigin\s*=\s*(\(([^,]+),([^,]+),([^)]+)\)|\w+)$/;
         const enableAutoRotatePattern = /^(enable|start)\s+(autorotate|autoRotate|AutoRotate)$/;
         const disableAutoRotatePattern = /^(disable|stop)\s+(autorotate|autoRotate|AutoRotate)$/;
@@ -141,6 +144,14 @@ class Constellations {
                 value: duration
               });
             }
+            // set stopoffset
+            else if (match = command.match(setStopOffsetPattern)) {
+              const offset = parseInt(match[1].trim(), 10);
+              parsedCommands.push({
+                action: 'set stopoffset',
+                value: offset
+              });
+            }
             // set easing
             else if (match = command.match(setEasingPattern)) {
               const easing = match[1].trim();
@@ -181,7 +192,7 @@ class Constellations {
                   console.error(`Invalid rotationorigin location: ${target}`);
               }
           } 
-          // wai
+          // wait
             // enable autorotate
             else if (match = command.match(enableAutoRotatePattern)) {
               parsedCommands.push({
@@ -247,9 +258,34 @@ class Constellations {
     
         return groupedCommands;
       },
+      getOffsetCoordinate: (coordinate1, coordinate2, distanceAmount) => {
+        // Calculate the direction vector from coordinate1 to coordinate2
+        let direction = {
+          x: coordinate2.x - coordinate1.x,
+          y: coordinate2.y - coordinate1.y,
+          z: coordinate2.z - coordinate1.z
+        };
+      
+        // Normalize the direction vector
+        let length = Math.sqrt(direction.x ** 2 + direction.y ** 2 + direction.z ** 2);
+        console.log(length)
+        let normalizedDirection = {
+          x: direction.x / length,
+          y: direction.y / length,
+          z: direction.z / length
+        };
+      
+        // Calculate the new coordinate based on the distanceAmount
+        let newCoordinate = {
+          x: coordinate2.x - normalizedDirection.x * distanceAmount,
+          y: coordinate2.y - normalizedDirection.y * distanceAmount,
+          z: coordinate2.z - normalizedDirection.z * distanceAmount
+        };
+      
+        return newCoordinate;
+      },
       run: async (input) => {
         const commandGroup = this.command.groupCommands(this.command.getCommands(input));
-        const lookAtTarget = new THREE.Object3D();
         const execCommand = (cmd) => new Promise((res,rej) => {
           switch (cmd.action) {
             case "set mode": {
@@ -258,6 +294,10 @@ class Constellations {
             } break;
             case "set duration": {
               this.command.options.duration = cmd.value;
+              res();
+            } break;
+            case "set stopoffset": {
+              this.command.options.stopoffset = cmd.value;
               res();
             } break;
             case "set rotationorigin": {
@@ -293,14 +333,21 @@ class Constellations {
               res();
             } break;
             case "goto":{
+              let destination = (this.command.options.stopoffset === 0)
+                ? cmd.value
+                : this.command.getOffsetCoordinate(
+                  {x:this.perspectiveCamera.position.x,y:this.perspectiveCamera.position.y,z:this.perspectiveCamera.position.z},
+                  cmd.value,
+                  this.command.options.stopoffset);
+              console.log(destination)
               gsap.to(this.perspectiveCamera.position, {
-                x: cmd.value.x,
-                y: cmd.value.y,
-                z: cmd.value.z,
+                x: destination.x,
+                y: destination.y,
+                z: destination.z,
                 duration: this.command.options.duration / 1000,
                 ease: this.command.options.easing,
                 onUpdate: () => {
-                  this.perspectiveCamera.lookAt(lookAtTarget.position);
+                  this.perspectiveCamera.lookAt(this.command.options.lookAtTarget.position);
                 },
                 onComplete: () => {
                   console.log("done");
@@ -324,16 +371,16 @@ class Constellations {
               })
             } break;
             case "lookat": {
-              lookAtTarget.position.copy(this.perspectiveCamera.getWorldDirection(new THREE.Vector3()).add(this.perspectiveCamera.position));
+              this.command.options.lookAtTarget.position.copy(this.perspectiveCamera.getWorldDirection(new THREE.Vector3()).add(this.perspectiveCamera.position));
 
-              gsap.to(lookAtTarget.position, {
+              gsap.to(this.command.options.lookAtTarget.position, {
                 x: cmd.value.x,
                 y: cmd.value.y,
                 z: cmd.value.z,
                 duration: this.command.options.duration / 1000,
                 ease: this.command.options.easing,
                 onUpdate: () => {
-                  this.perspectiveCamera.lookAt(lookAtTarget.position)
+                  this.perspectiveCamera.lookAt(this.command.options.lookAtTarget.position)
                 },
                 onComplete: () => {
                   //this.perspectiveCamera.lookAt(new THREE.Vector3(cmd.value.x,cmd.value.y,cmd.value.z))
@@ -538,7 +585,9 @@ class Constellations {
       return {
         name:s["名前"],
         symbol: symbol,
-        coordinates: coordinates,
+        coordinates: coordinates.coordinate,
+        distance: coordinates.distance,
+        render_distance: coordinates.render_distance,
         size: size,
         color: color,
         "スペクトル分類": spectralClassString, 
@@ -864,17 +913,12 @@ class Constellations {
         console.log(stars.length)
         stars.forEach((s, i) => {
           let radius = 0;
-          let magnitude = Math.pow(1/2.5, s.magnitude);
-          if (options.distance) {
-            radius = (
-                (
-                  (s.size.defined_radius) 
-                    ? s.size.defined_radius 
-                    : s.size.radius
-                )
-                * (constants.SUN_DIAMETER / constants.LIGHT_YEAR / 2) 
-              + 0.01)
-              * magnitude
+          let magnitude = Math.pow(1/2.5, (s.magnitude));
+          let r = ((s.size.defined_radius) ? s.size.defined_radius : s.size.radius)
+
+          if (options.distance && options.distanceMultiplyScalar >= 0.1) {
+            radius = 
+              Math.min(magnitude, 0.5) * (s.render_distance / 100) //(r * (constants.SUN_DIAMETER / constants.LIGHT_YEAR / 2) + 0.01) * magnitude
               + 0.05;
           } else {
             radius = Math.min(magnitude, 0.5) + 0.05;

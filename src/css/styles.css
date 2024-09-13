@@ -368,6 +368,65 @@ cursor: pointer;
 .tgl-ios:checked + .tgl-btn:active:after {
   margin-left: -0.8em;
 }
+
+.range-ios {
+  position: relative;
+  width: 100%;
+  padding: 0px 0 0 10px;
+}
+.range-ios::before,
+.range-ios::after {
+  display: block;
+  position: absolute;
+  z-index: 99;
+  color: #fffa;
+  text-align: center;
+  font-size: 1.5rem;
+  line-height: 1;
+  padding: 0.25rem 0;
+  pointer-events: none;
+}
+.range-ios::before {
+  content: "+";
+  right:10px;
+}
+.range-ios::after {
+  content: "−";
+  left:20px;
+}
+
+.range-ios input[type=range] {
+  -webkit-appearance: none;
+  background-color: rgba(255, 255, 255, 0.1);
+  position: absolute;
+  top: 5px;
+  left: 10px;
+  margin: 0;
+  padding: 0;
+  width: calc(100% - 10px);
+  height: 32px;
+  /* transform: translate(-50%, -50%) rotate(-90deg); */
+  border-radius: 1rem;
+  overflow: hidden;
+  cursor: col-resize;
+}
+.range-ios input[type=range][step] {
+  background-color: transparent;
+  background-image: repeating-linear-gradient(to right, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.14) calc(12.5% - 1px), #05051a 12.5%);
+  box-shadow: inset 0 0 5px 0px #000a
+}
+.range-ios input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 0;
+  box-shadow: -20rem 0 0 20rem #1472e5dd;
+  mix-blend-mode: difference;
+}
+.range-ios input[type=range]::-moz-range-thumb {
+  border: none;
+  width: 0;
+  box-shadow: -20rem 0 0 20rem #0afa;
+}
+
 .menu-trigger,
 .menu-trigger span {
   display: inline-block;
