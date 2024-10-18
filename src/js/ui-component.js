@@ -263,7 +263,7 @@ let UI = {
             flex-flow: column;
             position: absolute;
             left: 2.5vw;
-            top: calc(97.5vh - ${maxHeight + 65}px);
+            top: calc(95vh - ${maxHeight + 150}px);
             background: linear-gradient(0deg, transparent, black, transparent);
           }
           .horizontalscroll-warpper::-webkit-scrollbar {
