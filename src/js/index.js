@@ -156,7 +156,6 @@ let init = () => {
     document.querySelector("#index-title-frame-bottom").innerHTML = frame.bottom;
     document.querySelector("#constellation_list").setAttribute("class", "");
     document.querySelector("#constellation-link-container").innerHTML = 
-      `<li class="common-setting" style="height:0; width:0; margin:0; padding:0;"><svg height="0" width="0"><defs><linearGradient id="constellation-line-gradient" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#25aae1; stop-opacity:1" /><stop offset="33%" style="stop-color:#4481eb; stop-opacity:1" /><stop offset="66%" style="stop-color:#04befe; stop-opacity:1" /><stop offset="100%" style="stop-color:#3f86ed; stop-opacity:1" /></linearGradient></defs></svg></li>` +
       Object
         .keys(constants.symbols)
         .map(s => `<li><div class="constellation-item" data-filter-list="${constants.symbols[s].filters.join(",")}"><input type="checkBox" class="constellation-link" id="constellation-${s}" name="constellation-link" value="${s}"/><label for="constellation-${s}" style="display:relative">${constants.symbols[s][params.lang == "en" ? "label_en" : "label"]}<br>${s}<div style="height:100%; width:100%;overflow:hidden;">${constants.symbols[s].svg}</div></label></div></li>`)

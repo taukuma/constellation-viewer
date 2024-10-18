@@ -27,6 +27,8 @@ let UI = {
             font-style: normal;
             cursor: pointer;
             user-select: none;
+            backdrop-filter: blur(2px);
+            background: repeating-linear-gradient(-45deg, #ffffff05 0px, #ffffff05 5px, #ffffff10 5px, #ffffff10 10px);
           }
 
           .scrollselect-content {
@@ -148,7 +150,7 @@ let UI = {
             const target = content.querySelector(".active");
             const translateY = target.offsetTop - container.offsetHeight / 2 + target.offsetHeight / 2
             content.style.transform = `translateY(-${translateY}px)`;
-            callback(items.item(index));
+            callback(items.item(index).getAttribute("data-value"));
           }
           // init selection
           activeIndex = (activeIndex < 0) ? 0 : activeIndex;
@@ -230,6 +232,220 @@ let UI = {
             startY = 0;
             endY = 0;
           });
+        }
+      },
+      horizontalscroll: {
+        get: (lists, options) => {
+          //lists = [{label:"", value:""}]
+          options = options || {};
+  
+          //ui
+          let style = document.createElement('style');
+          let wrapper = document.createElement("form");
+          let container = document.createElement("div");
+          let toggle = document.createElement("div");
+          //let titleLabel = document.createElement("div");
+          let items = lists.map((l) => {
+            let item = document.createElement("label");
+            item.classList = "horizontalscroll-item-container";
+            item.innerHTML = `<input name="list" type="radio" value="${l.value}"><div class="horizontalscroll-item">${l.label}</div>`;
+            return item;
+          });
+          let maxHeight = 150;
+          let css = document.createTextNode(`
+          .horizontalscroll-warpper {
+            width: 95vw;
+            height: ${maxHeight + 65}px;
+            overflow: auto;
+            display: flex;
+            align-items: flex-start;
+            place-content: center;
+            flex-flow: column;
+            position: absolute;
+            left: 2.5vw;
+            top: calc(97.5vh - ${maxHeight + 65}px);
+            background: linear-gradient(0deg, transparent, black, transparent);
+          }
+          .horizontalscroll-warpper::-webkit-scrollbar {
+            width: 16px;
+            display:none;
+          }
+        
+          .horizontalscroll-warpper::-webkit-scrollbar-track {
+            background: transparent;
+            display:none;
+          }
+        
+          .horizontalscroll-warpper::-webkit-scrollbar-thumb {
+            background-image: repeating-linear-gradient(-45deg, #ffffff15 0px, #ffffff15 5px, #ffffff30 5px, #ffffff30 10px);
+            box-shadow: inset 0 0 5px #000a;
+            border-radius: 0px;
+            border: 2px solid #000;
+            display:none;
+          }
+          .horizontalscroll-switch-container {
+            position: fixed;
+            display: flex;
+            flex-direction: column;
+            flex-wrap: nowrap;
+            align-content: center;
+            justify-content: center;
+            align-items: flex-start;
+            backdrop-filter: blur(5px);
+            background: linear-gradient(to right, transparent, black 50%, transparent);
+            font-family: "Barlow Condensed", sans-serif;
+          }
+          .horizontalscroll-switch {
+            display: block;
+            width: 120px;
+            height: 50px;
+            padding: 0px 15px;
+            filter: brightness(0.4);
+            font-size: 18px;
+            line-height: 50px;
+            background: repeating-linear-gradient(-45deg, #ffffff05 0px, #ffffff05 5px, #ffffff15 5px, #ffffff15 10px);
+            margin: 2px;
+            -webkit-transition: all 0.1s ease-in-out;
+            -moz-transition: all 0.1s ease-in-out;
+            -ms-transition: all 0.1s ease-in-out;
+            -o-transition: all 0.1s ease-in-out;
+            transition: all 0.1s ease-in-out;
+          }
+          .horizontalscroll-switch:has(input:checked) {
+            filter: brightness(2);
+            font-size: 24px;
+            line-height: 50px;
+            0 0 50px #000000, inset 0 0 20px #ffffff17;
+            -webkit-transition: all 0.1s ease-in-out;
+            -moz-transition: all 0.1s ease-in-out;
+            -ms-transition: all 0.1s ease-in-out;
+            -o-transition: all 0.1s ease-in-out;
+            transition: all 0.1s ease-in-out;
+          }
+          .horizontalscroll-switch input {
+            display: none;
+            visibility: hidden;
+          }
+
+          .horizontalscroll-container {
+            display:flex;
+            padding-left: 200px;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            justify-content: flex-start;
+            align-items: center;
+            height: ${maxHeight}px;
+            margin: 0 15px;
+          }
+          .horizontalscroll-container .horizontalscroll-item-container{
+            background: repeating-linear-gradient(-45deg, #ffffff05 0px, #ffffff05 5px, #ffffff10 5px, #ffffff10 10px);
+            filter: brightness(0.6);
+              -webkit-transition: all 0.1s ease-in-out;
+              -moz-transition: all 0.1s ease-in-out;
+              -ms-transition: all 0.1s ease-in-out;
+              -o-transition: all 0.1s ease-in-out;
+              transition: all 0.1s ease-in-out;
+          }
+          .horizontalscroll-container .horizontalscroll-item-container:has(input:checked) {
+            filter: brightness(1);
+            box-shadow: 0 0 50px #000;
+            background-color: rgb(0 0 0 / 0%);
+            backdrop-filter: blur(5px);
+            border-radius: 10px !important;
+              -webkit-transition: all 0.1s ease-in-out;
+              -moz-transition: all 0.1s ease-in-out;
+              -ms-transition: all 0.1s ease-in-out;
+              -o-transition: all 0.1s ease-in-out;
+              transition: all 0.1s ease-in-out;
+          }
+          .horizontalscroll-container .horizontalscroll-item-container .horizontalscroll-item{
+            height:75px;
+            width: 150px;
+            overflow: hidden;
+            cursor: pointer;
+            white-space: pre-wrap;
+            display: flex;
+            align-content: center;
+            justify-content: center;
+            align-items: center;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            text-align: center;
+              -webkit-transition: all 0.1s ease-in-out;
+              -moz-transition: all 0.1s ease-in-out;
+              -ms-transition: all 0.1s ease-in-out;
+              -o-transition: all 0.1s ease-in-out;
+              transition: all 0.1s ease-in-out;
+          }
+          .horizontalscroll-container .horizontalscroll-item-container:has(input:checked) .horizontalscroll-item{
+            height:${maxHeight}px;
+            width: ${maxHeight}px;
+            cursor: pointer;
+            white-space: pre-wrap;
+            display: flex;
+            align-content: center;
+            justify-content: center;
+            align-items: center;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            text-align: center; 
+            font-size: 14px;
+            color: #fff;
+            text-shadow: 0 0 2px #000, 0 0 5px #000;
+              -webkit-transition: all 0.1s ease-in-out;
+              -moz-transition: all 0.1s ease-in-out;
+              -ms-transition: all 0.1s ease-in-out;
+              -o-transition: all 0.1s ease-in-out;
+              transition: all 0.1s ease-in-out;
+          }
+          .horizontalscroll-container .horizontalscroll-item-container input[type=radio] {
+            visibility: hidden;
+            display: none;
+          }
+          `);
+
+          toggle.innerHTML = `
+            <label class="horizontalscroll-switch"><input name="command" type="radio" value="lookat" checked>Look At</label>
+            <label class="horizontalscroll-switch"><input name="command" type="radio" value="goto">Go To</label>
+            <label class="horizontalscroll-switch"><input name="command" type="radio" value="targetto">Rotate Around</label>
+          `;
+          style.appendChild(css);
+          wrapper.append(style);
+          wrapper.className = "horizontalscroll-warpper";
+          container.className = "horizontalscroll-container";
+          toggle.className = "horizontalscroll-switch-container";
+          //titleLabel.className = "title";
+          items.forEach(i => container.append(i));
+          wrapper.append(container);
+          wrapper.append(toggle);
+          //return
+          return wrapper;
+        },
+        activate: (container, activeIndex, callback, options) => {
+          options = options || {};
+          let content = container.querySelectorAll(".horizontalscroll-item-container input");
+
+          //update
+          let updateActive = (index) => {
+            content.forEach((item, i) => {
+              item.checked = (i === index);
+            });
+            //const translateY = -((index - 4) * 30);  // Adjust the number to match item height
+            const target = container.querySelector(".horizontalscroll-item-container input:checked");
+            const translateY = target.offsetTop - container.offsetHeight / 2 + target.offsetHeight / 2
+            //content.style.transform = `translateY(-${translateY}px)`;
+            console.log(content.item(index))
+          }
+          
+          container.addEventListener("change", (ev) => {
+            let data = new FormData(container)
+            console.log()
+            callback(new FormData(container));
+          })
+
+          // init selection
+          activeIndex = (activeIndex < 0) ? 0 : activeIndex;
+          updateActive(activeIndex)
         }
       }
     }

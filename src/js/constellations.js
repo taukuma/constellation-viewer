@@ -413,7 +413,7 @@ class Constellations {
             case "lookat": {
               this.command.options.lookAtTarget.position.copy(this.perspectiveCamera.getWorldDirection(new THREE.Vector3()).add(this.perspectiveCamera.position));
               this.resetController(this.command.options.lookAtTarget.position);
-
+              
               gsap.to(this.command.options.lookAtTarget.position, {
                 x: cmd.value.x,
                 y: cmd.value.y,
@@ -425,16 +425,16 @@ class Constellations {
                   this.trackballControls.enabled = false;
                 },
                 onUpdate: () => {
-                  this.perspectiveCamera.lookAt(this.command.options.lookAtTarget.position)
+                  this.perspectiveCamera.lookAt(this.command.options.lookAtTarget.position);
+                  
+                  let direction = new THREE.Vector3();
+                  let distancefactor = -0.005;
+                  direction.subVectors(this.perspectiveCamera.position, this.command.options.lookAtTarget.position).normalize();
+                  let rotationOrigin = new THREE.Vector3().copy(this.perspectiveCamera.position).add(direction.multiplyScalar(distancefactor));
+                  this.orbitControls.target = rotationOrigin;
+                  this.trackballControls.target = rotationOrigin;
                 },
                 onComplete: () => {
-                  let direction = new THREE.Vector3();
-                  let distancefactor = -0.001;
-                  direction.subVectors(this.perspectiveCamera.position, this.command.options.lookAtTarget.position).normalize();
-                  let target = new THREE.Vector3().copy(this.perspectiveCamera.position).add(direction.multiplyScalar(distancefactor));
-                  this.orbitControls.target = target;
-                  this.trackballControls.target = target;
-                  
                   this.orbitControls.enabled = true;
                   this.trackballControls.enabled = true;
                   console.log("done");
@@ -651,7 +651,6 @@ class Constellations {
     ];
     const focalLength = UI.Component.scrollselect.get(focalLengthList, "FOCAL LENGTH");
     let focalLengthInitialIndex = focalLengthList.indexOf(focalLengthList.filter(f => this.options.focalLength <= f.value)[0]);
-    focalLength.style.background = "repeating-linear-gradient(-45deg, #ffffff05 0px, #ffffff05 5px, #ffffff10 5px, #ffffff10 10px)";
     focalLength.style.transform = "scale(0.7)";
     focalLength.style.position = "fixed";
     focalLength.style.right =  "0";
@@ -660,19 +659,66 @@ class Constellations {
     UI.Component.scrollselect.activate(
       focalLength, 
       focalLengthInitialIndex < 0 ? 0 : focalLengthInitialIndex, 
-      (item) => {this.command.run(`zoomto ${item.getAttribute("data-value")};`)}
+      (v) => {this.command.run(`zoomto ${v};`)}
     );
 
-    const constellationList = Object.keys(constants.symbols).map(s => {return {label: constants.symbols[s][this.options.lang == "en" ? "label_en" : "label"], value: s}});
-    const lookAtControl = UI.Component.scrollselect.get(constellationList, "LOOK AT");
-    lookAtControl.style.background = "repeating-linear-gradient(-45deg, #ffffff05 0px, #ffffff05 5px, #ffffff10 5px, #ffffff10 10px)";
-    lookAtControl.style.transform = "scale(0.7)";
-    lookAtControl.style.position = "fixed";
-    lookAtControl.style.left =  "0";
-    lookAtControl.style.top = "calc(25%)";
-    lookAtControl.style.fontSize = "0.8em"
-    //navMenu.append(lookAtControl);
-    //UI.Component.scrollselect.activate(lookAtControl, 0, (item => {this.command.run(`lookat ${item.getAttribute("data-value")}`)}));
+    // lookat select
+    let getConstellationListItem = (svg, label) => `<div style="position: relative;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-content: center;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;">${svg}<span style="position:absolute;">${label}</span></div>`
+    const constellationList = this.symbol.map(s => {return {label: `${getConstellationListItem(constants.symbols[s].svg, constants.symbols[s][this.options.lang == "en" ? "label_en" : "label"])}`, value: s, labelForSort: constants.symbols[s][this.options.lang == "en" ? "label_en" : "label"]}}).sort((a,b) => (a.labelForSort <= b.labelForSort) ? -1 : 1);
+    const lookAtControl = UI.Component.horizontalscroll.get(constellationList);
+    lookAtControl.style.fontFamily = "Klee One";
+    navMenu.append(lookAtControl);
+    UI.Component.horizontalscroll.activate(lookAtControl, 0, (v => {
+      console.log(v.get("command"), v.get("list"));
+      switch (v.get("command")) {
+        case 'goto': {
+          const stopOffset = 20;
+          this.command.run(`set stopoffset=${stopOffset}; set mode=async; targetto ${v.get("list")}; ${v.get("command")} ${v.get("list")}`);
+        } break;
+        case 'lookat':{
+          this.command.run(`${v.get("command")} ${v.get("list")}`);
+          let timeRemains = 5000;
+          let iter = 0;
+          let unfocusIter = 0;
+          let unfocusInterval = undefined;
+          let r = 0x00;
+          let g = 0x55;
+          const rDelta = 0xff / (timeRemains / 100);
+          const gDelta = 0x99 / (timeRemains / 100);
+          let focusInterval = setInterval(() => {
+            if (timeRemains - (iter++) * 100 < 0) {
+              clearInterval(focusInterval);
+              let unfocusInterval = setInterval(() => {
+                r = (r - rDelta < 0) ? 0 : r - rDelta;
+                g = (g -gDelta < 0) ? 0 : g - gDelta;
+                //new THREE.LineBasicMaterial({color: 0x0055ff});
+                this.constellationLineGroup[v.get("list")].forEach(l => l.material = new THREE.LineBasicMaterial({color: parseInt(`0x${Math.ceil(r).toString(16)}${Math.ceil(g).toString(16)}ff`, 16)}))
+                
+                if (timeRemains - (unfocusIter++) * 100 < 0) {
+                  this.constellationLineGroup[v.get("list")].forEach(l => l.material = new THREE.LineBasicMaterial({color: 0x0055ff}))
+                  clearInterval(unfocusInterval);
+                }
+              },100)
+            } else {
+              r = (0xff <= r + rDelta) ? 0xff : r + rDelta;
+              g = (0xff <= g + gDelta) ? 0xff : g + rDelta;
+              //new THREE.LineBasicMaterial({color: 0x0055ff});
+              this.constellationLineGroup[v.get("list")].forEach(l => l.material = new THREE.LineBasicMaterial({color: parseInt(`0x${Math.ceil(r).toString(16)}${Math.ceil(g).toString(16)}ff`, 16)}))
+            }
+          }, 100)
+        } break;
+        default: {
+          this.command.run(`${v.get("command")} ${v.get("list")}`);
+        } break;
+      }
+    }));
   };
 
   loadStarData = async (symbol, updateProgressBar) => {
@@ -926,12 +972,16 @@ class Constellations {
     // 星座線の描画
     if (options.showLine) {
       const material = new THREE.LineBasicMaterial({color: 0x0055ff});
-      let linePath = linePaths.reduce((acc,curr) => acc.concat(curr))
-      linePath.forEach((points,i) => {
-        let bufGeometry = new THREE.BufferGeometry().setFromPoints(points.map(p => new THREE.Vector3(p.x, p.y, p.z)));
-        let line = new THREE.Line(bufGeometry, material);
-        this.world.add(line);
-      });
+      this.constellationLineGroup = {defaultMaterial: material};
+      linePaths.forEach((linePath, index) => {
+        this.constellationLineGroup[constellationInfo[index].symbol] = [];
+        linePath.forEach((points, i) => {
+          let bufGeometry = new THREE.BufferGeometry().setFromPoints(points.map(p => new THREE.Vector3(p.x, p.y, p.z)));
+          let line = new THREE.Line(bufGeometry, material);
+          this.world.add(line);
+          this.constellationLineGroup[constellationInfo[index].symbol].push(line);
+        })
+      })
     }
 
     //星座名の表示
@@ -1211,7 +1261,12 @@ class Constellations {
     }
     this.getNewMatrix = (x,y,z,q,s) => new THREE.Matrix4(new THREE.Vector3(x,y,z),q,s);
 
-    this.command.run(`set duration=5000; lookat ${Object.keys(this.predefinedLocations)[1]}; set duration=${this.command.options.duration}`);
+    // initial lookat and target
+    if (options.earthView || this.symbol.length >= 48) {
+      this.command.run(`set duration=5000; lookat ${Object.keys(this.predefinedLocations)[1]}; set duration=${this.command.options.duration}`);
+    } else {
+      this.command.run(`set duration=5000; targetto (${this.initialDirection.x},${this.initialDirection.y},${this.initialDirection.z})`);
+    }
   }
 
   reset =  () => {
