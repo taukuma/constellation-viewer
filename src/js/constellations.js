@@ -874,7 +874,7 @@ class Constellations {
   };
   render = async (stars, linePaths, constellationInfo, renderElement) => {
     let options = this.options;
-    this.world = new THREE.Group();
+    let world = new THREE.Group();
     this.data = {stars: stars, constellations: constellationInfo, lines: linePaths}
 
     // navigation
@@ -903,7 +903,9 @@ class Constellations {
       }
     });
     let windowSize = {
-      height: window.innerHeight, 
+      height: (window.innerHeight < window.innerWidth)
+        ? window.innerHeight
+        : window.innerWidth * 16 / 9,
       width: window.innerWidth
     };
     let starPositionInfo = getCoordinateInfo(stars.map(s => s.coordinates));
@@ -964,9 +966,9 @@ class Constellations {
       label_x.position.set(size / 2, 0.5, 0.5);
       label_y.position.set(0.5, size / 2, 0.5);
       label_z.position.set(0.5, 0.5, size / 2);
-      this.world.add(label_x);
-      this.world.add(label_y);
-      this.world.add(label_z);
+      world.add(label_x);
+      world.add(label_y);
+      world.add(label_z);
     }
 
     // 星座線の描画
@@ -978,7 +980,7 @@ class Constellations {
         linePath.forEach((points, i) => {
           let bufGeometry = new THREE.BufferGeometry().setFromPoints(points.map(p => new THREE.Vector3(p.x, p.y, p.z)));
           let line = new THREE.Line(bufGeometry, material);
-          this.world.add(line);
+          world.add(line);
           this.constellationLineGroup[constellationInfo[index].symbol].push(line);
         })
       })
@@ -996,7 +998,7 @@ class Constellations {
         let labelCoordinate = new THREE.Vector3(c.coordinates.x, c.coordinates.y, c.coordinates.z);
         labelCoordinate.setLength(constellatinNamePositionOffset);
         label.position.set(labelCoordinate.x, labelCoordinate.y, labelCoordinate.z);
-        this.world.add(label);
+        world.add(label);
       })
     }
 
@@ -1021,7 +1023,7 @@ class Constellations {
               : new THREE.LineBasicMaterial({color: parseInt(guideData.LineStyle.color) ? parseInt(guideData.LineStyle.color) : 0xffaa00})
             let line = new THREE.Line( bufGeometry, material);
             line.computeLineDistances();
-            this.world.add(line)
+            world.add(line)
             // 星座名
             if (options.showConstellationName) {
               let centerCoordinate = points.filter((v,i) => i < points.length - 1).reduce((acc, curr, i) => {return {
@@ -1033,14 +1035,14 @@ class Constellations {
               labelCoordinate.setLength(constellatinNamePositionOffset);
               let label = createLabel(constants.additionalConstellations[c][this.options.lang == "en" ? "label_en" : "label"], {r:0xff, g:0x55, b:0x00}, constellatinNameFontSize, constellatinNameOpacity, constellatinNameScalorFactor);
               label.position.set(labelCoordinate.x, labelCoordinate.y, labelCoordinate.z);
-              this.world.add(label);
+              world.add(label);
             }
           } else {
             // 星座線
             let bufGeometry = new THREE.BufferGeometry();
             bufGeometry.setFromPoints(points.map(p => new THREE.Vector3(p.x, p.y, p.z)));
             let line = new THREE.Line(bufGeometry, guideMaterial);
-            this.world.add(line);
+            world.add(line);
 
             // 星座名
             if (options.showConstellationName) {
@@ -1053,7 +1055,7 @@ class Constellations {
               labelCoordinate.setLength(constellatinNamePositionOffset);
               let label = createLabel(constants.additionalConstellations[c][this.options.lang == "en" ? "label_en" : "label"], {r:0xff, g:0xaa, b:0x00}, constellatinNameFontSize, constellatinNameOpacity, constellatinNameScalorFactor);
               label.position.set(labelCoordinate.x, labelCoordinate.y, labelCoordinate.z);
-              this.world.add(label);
+              world.add(label);
             }
           }
         });
@@ -1087,7 +1089,7 @@ class Constellations {
           mesh.scale.setScalar(s.size.radius / 50)
           light.add(mesh);
           light.position.set(s.coordinates.x, s.coordinates.y, s.coordinates.z);
-          this.world.add(light);
+          world.add(light);
     
           //flare
           const lensflare = new Lensflare();
@@ -1098,7 +1100,7 @@ class Constellations {
           if (options.showStarName) {
             let label = createLabel(s.name, s.color);
             label.position.copy(light.position);
-            this.world.add(label);
+            world.add(label);
           }
     
           // Initial twinkle effect (if needed)
@@ -1135,7 +1137,7 @@ class Constellations {
           if (options.showStarName) {
             let label = createLabel(s.name, s.color, 38, 1, 0.001);
             label.position.set(dummy.position.x, dummy.position.y + radius * 1.5, dummy.position.z);
-            this.world.add(label)
+            world.add(label)
           }
     
           // Initial twinkle effect (if needed)
@@ -1146,14 +1148,14 @@ class Constellations {
           starMesh.setColorAt(i, twinkleColor);
         });
     
-        this.world.add(starMesh);
+        world.add(starMesh);
       } break;
     }
 
-    this.world.rotation.x = options.worldRotateX;
-    this.world.rotation.y = options.worldRotateY;
-    this.world.rotation.z = options.worldRotateZ;
-    scene.add(this.world);
+    world.rotation.x = options.worldRotateX;
+    world.rotation.y = options.worldRotateY;
+    world.rotation.z = options.worldRotateZ;
+    scene.add(world);
     
     // composer setting
     const renderScene   = new RenderPass( scene, this.perspectiveCamera );
