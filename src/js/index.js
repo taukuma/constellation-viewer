@@ -59,6 +59,7 @@ let constellationList = (params.constellations !== undefined)
     : params.constellations.split("+").map(c => decodeURI(c))
   : undefined;
 constellations.setOptions(params);
+
 //init
 let initApp = async () => {
   titleBox.style.display = "none";
@@ -94,13 +95,16 @@ let updateLink = (target) => {
   let autoLoad = document.querySelector("input[name=param-autoLoad]").checked ? 1 : 0;
   let grid = document.querySelector("input[name=param-grid]").checked ? 1 : 0;
   let autoRotate = document.querySelector("input[name=param-autoRotate]").checked ? 1 : 0;
+  let twincle = document.querySelector("input[name=param-twincle]").checked ? 1 : 0;
   let distance = document.querySelector("input[name=param-distance]").checked ? 1 : 0;
+  let distanceMultiplyScalar = document.querySelector("input[name=param-distance-scalor]").value;
+  let nav = document.querySelector("input[name=param-nav]").checked ? 1 : 0;
   let worldRotateX = document.querySelector("select[name=worldRotateX]").value;
   let worldRotateY = document.querySelector("select[name=worldRotateY]").value;
   let worldRotateZ = document.querySelector("select[name=worldRotateZ]").value;
   let cons = [];
   document.querySelectorAll("input.constellation-link:checked").forEach(v => cons.push(v.value))
-  return `index.html?constellations=${cons.join("+")}&focalLength=${focalLength}&rotateX=${rotateX}&rotateY=${rotateY}&rotateZ=${rotateZ}&showLine=${showLine}&showConstellationName=${showConstellationName}&showGuideConstellations=${showGuideConstellations}&showStarName=${showStarName}&autoLoad=${autoLoad}&grid=${grid}&autoRotate=${autoRotate}&distance=${distance}&worldRotateX=${worldRotateX}&worldRotateY=${worldRotateY}&worldRotateZ=${worldRotateZ}`;
+  return `index.html?constellations=${cons.join("+")}&focalLength=${focalLength}&rotateX=${rotateX}&rotateY=${rotateY}&rotateZ=${rotateZ}&showLine=${showLine}&showConstellationName=${showConstellationName}&showGuideConstellations=${showGuideConstellations}&showStarName=${showStarName}&autoLoad=${autoLoad}&grid=${grid}&autoRotate=${autoRotate}&distance=${distance}&distanceMultiplyScalar=${distanceMultiplyScalar}&nav=${nav}&twincle=${twincle}&worldRotateX=${worldRotateX}&worldRotateY=${worldRotateY}&worldRotateZ=${worldRotateZ}&lang=${params.lang || "ja"}`;
 };
 
 let setFilter = (e) => {
@@ -135,7 +139,7 @@ let init = () => {
       initApp();
     } else {
       let frame = getFrame('#59a');
-      let targetConstellationLabels = constellationList.map(s => constants.symbols[s].label);
+      let targetConstellationLabels = constellationList.map(s => constants.symbols[s][params.lang == "en" ? "label_en" : "label"]);
       document.querySelector("#title-box-top-frame-container").innerHTML = frame.top;
       document.querySelector("#title-box-bottom-frame-container").innerHTML = frame.bottom;
       document.querySelector("#title-text").innerHTML = targetConstellationLabels.filter((v,i) => i < 5).join("</br>") + ((targetConstellationLabels.length > 5) ? `<br>...他 ${targetConstellationLabels.length - 5} 星座` : "");
@@ -152,10 +156,9 @@ let init = () => {
     document.querySelector("#index-title-frame-bottom").innerHTML = frame.bottom;
     document.querySelector("#constellation_list").setAttribute("class", "");
     document.querySelector("#constellation-link-container").innerHTML = 
-      `<li class="common-setting" style="height:0; width:0; margin:0; padding:0;"><svg height="0" width="0"><defs><linearGradient id="constellation-line-gradient" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#25aae1; stop-opacity:1" /><stop offset="33%" style="stop-color:#4481eb; stop-opacity:1" /><stop offset="66%" style="stop-color:#04befe; stop-opacity:1" /><stop offset="100%" style="stop-color:#3f86ed; stop-opacity:1" /></linearGradient></defs></svg></li>` +
       Object
         .keys(constants.symbols)
-        .map(s => `<li><div class="constellation-item" data-filter-list="${constants.symbols[s].filters.join(",")}"><input type="checkBox" class="constellation-link" id="constellation-${s}" name="constellation-link" value="${s}"/><label for="constellation-${s}" style="display:relative">${constants.symbols[s].english || s}<br>${constants.symbols[s].label}<div style="height:100%; width:100%;overflow:hidden;">${constants.symbols[s].svg}</div></label></div></li>`)
+        .map(s => `<li><div class="constellation-item" data-filter-list="${constants.symbols[s].filters.join(",")}"><input type="checkBox" class="constellation-link" id="constellation-${s}" name="constellation-link" value="${s}"/><label for="constellation-${s}" style="display:relative">${constants.symbols[s][params.lang == "en" ? "label_en" : "label"]}<br>${s}<div style="height:100%; width:100%;overflow:hidden;">${constants.symbols[s].svg}</div></label></div></li>`)
         .join("")
     titleContainer.className = "hide"
     document.body.setAttribute("class", "");

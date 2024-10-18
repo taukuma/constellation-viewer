@@ -6,10 +6,13 @@
     <meta name="theme-color" content="#000000" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Yomogi&family=Klee+One&family=Noto+Sans+JP:wght@100..900&family=Zen+Maru+Gothic&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Yomogi&family=Klee+One&family=Noto+Sans+JP:wght@100..900&family=Zen+Maru+Gothic&family=Barlow+Condensed&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="src/css/styles.css">
   </head>
   <body class="black">
+    <div id="defs" style="opacity:0; height:0; width:0; position:absolute; top: -200vh;">
+      <svg height="0" width="0"><defs><linearGradient id="constellation-line-gradient" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#25aae1; stop-opacity:1" /><stop offset="33%" style="stop-color:#4481eb; stop-opacity:1" /><stop offset="66%" style="stop-color:#04befe; stop-opacity:1" /><stop offset="100%" style="stop-color:#3f86ed; stop-opacity:1" /></linearGradient></defs></svg>
+    </div>
     <div id="title-container">
       <div id="title-box-container" style="position: absolute;">
         <div id="title-box">
@@ -48,7 +51,7 @@
             <div><input class="params" type="radio" name="focalLength" value=50><label>50mm</label></div>
             <div><input class="params" type="radio" name="focalLength" value=70><label>70mm</label></div>
             <div><input class="params" type="radio" name="focalLength" value=85><label>85mm</label></div>
-            <div><input class="params" type="radio" name="focalLength" value=100><label>100mm</label></div>
+            <div><input class="params" type="radio" name="focalLength" value=135><label>135mm</label></div>
             <div><input class="params" type="radio" name="focalLength" value=200><label>200mm</label></div>
             <div><input class="params" type="radio" name="focalLength" value=400><label>400mm</label></div>
           </div>
@@ -145,13 +148,18 @@
             <div class="param-items">星座線を表示<input class="tgl tgl-ios params" id="param-showLine" type="checkbox" name="param-showLine" checked/><label class="tgl-btn" for="param-showLine"></label></div>
             <div class="param-items">星座名を表示<input class="tgl tgl-ios params" id="param-showConstellationName" type="checkbox" name="param-showConstellationName" checked/><label class="tgl-btn" for="param-showConstellationName"></label></div>
             <div class="param-items">星名を表示<input class="tgl tgl-ios params" id="param-showStarName" type="checkbox" name="param-showStarName"/><label class="tgl-btn" for="param-showStarName"></label></div>
-            <div class="param-items">ガイド星座<input class="tgl tgl-ios params" id="param-showGuideConstellations" type="checkbox" name="param-showGuideConstellations"/><label class="tgl-btn" for="param-showGuideConstellations"></label></div>
+            <div class="param-items">ガイド星座<input class="tgl tgl-ios params" id="param-showGuideConstellations" type="checkbox" name="param-showGuideConstellations" checked/><label class="tgl-btn" for="param-showGuideConstellations"></label></div>
+            <div class="param-items">グリッド表示<input class="tgl tgl-ios params" id="param-grid" type="checkbox" name="param-grid"/><label class="tgl-btn" for="param-grid"></label></div>
           </div>
           <div>
+            <div class="param-items">距離<input class="tgl tgl-ios params" id="param-distance" type="checkbox" name="param-distance" checked/><label class="tgl-btn" for="param-distance"></label></div>
+            <div class="param-items">ナビ<input class="tgl tgl-ios params" id="param-nav" type="checkbox" name="param-nav" checked/><label class="tgl-btn" for="param-nav"></label></div>
             <div class="param-items">自動回転<input class="tgl tgl-ios params" id="param-autoRotate" type="checkbox" name="param-autoRotate"/><label class="tgl-btn" for="param-autoRotate"></label></div>
             <div class="param-items">オートロード<input class="tgl tgl-ios params" id="param-autoLoad" type="checkbox" name="param-autoLoad"/><label class="tgl-btn" for="param-autoLoad"></label></div>
-            <div class="param-items">距離<input class="tgl tgl-ios params" id="param-distance" type="checkbox" name="param-distance" checked/><label class="tgl-btn" for="param-distance"></label></div>
-            <div class="param-items">グリッド表示<input class="tgl tgl-ios params" id="param-grid" type="checkbox" name="param-grid"/><label class="tgl-btn" for="param-grid"></label></div>
+            <div class="param-items">瞬き<input class="tgl tgl-ios params" id="param-twincle" type="checkbox" name="param-twincle"/><label class="tgl-btn" for="param-twincle"></label></div>
+          </div>
+          <div>
+            <div class="param-items" style="width: 80%">距離倍率<div class="range-ios"><input class=" params" id="param-distance-scalor" type="range" name="param-distance-scalor" value="0.2" min="0.1" max="1" step="0.0125"/></div></div>
           </div>
           <div class="hide">
             <div class="param-items">X軸回転
@@ -251,18 +259,18 @@
         <li><button class="filter-item" data-filter-target="秋の星座">秋の星座</button></li>
         <li><button class="filter-item" data-filter-target="冬の星座">冬の星座</button></li>
       </ul>
-      <ul class="constellation-link-filter">
+      <ul class="constellation-link-filter hide">
         <li><button class="filter-item" data-filter-target="春の大三角">春の大三角</button></li>
         <li><button class="filter-item" data-filter-target="夏の大三角">夏の大三角</button></li>
         <li><button class="filter-item" data-filter-target="冬の大三角">冬の大三角</button></li>
       </ul>
-      <ul class="constellation-link-filter">
+      <ul class="constellation-link-filter hide">
         <li><button class="filter-item" data-filter-target="春の大曲線">春の大曲線</button></li>
         <li><button class="filter-item" data-filter-target="秋の四辺形">秋の四辺形</button></li>
         <li><button class="filter-item" data-filter-target="北斗七星">北斗七星</button></li>
-        <!-- li><button class="filter-item" data-filter-target="北天の星座">北天の星座</button></li -->
-        <!-- li><button class="filter-item" data-filter-target="南天の星座">南天の星座</button></li -->
-        <!-- li><button class="filter-item" data-filter-target="アルゴ4星座">アルゴ4星座</button></li -->
+        <li><button class="filter-item" data-filter-target="北天の星座">北天の星座</button></li>
+        <li><button class="filter-item" data-filter-target="南天の星座">南天の星座</button></li>
+        <li><button class="filter-item" data-filter-target="アルゴ4星座">アルゴ4星座</button></li>
       </ul>
       <ul class="constellation-link-filter">
         <li><button class="filter-item" data-filter-target="ALL">全選択</button></li>
@@ -280,7 +288,8 @@
       </button>
       <div id="navigation-menu" class="settings"></div>
     </div>
-    <div id="controller-container" style="display:none;background: #0001;backdrop-filter: blur(5px);border-radius: 10px;box-shadow: 0 0 10px #000;height: calc(min(100vh,100vw) * 0.75);width: calc(min(100vh,100vw)*0.75);position: fixed;top: calc((100vh - min(100vh, 100vw)*0.75) / 2);left: calc((100vw - min(100vh, 100vw)*0.75) / 2);"></div>
+    <div id="controller-container" style="display:none;background: #0001;backdrop-filter: blur(5px);border-radius: 10px;box-shadow: 0 0 10px #000;height: calc(min(100vh,100vw) * 0.75);width: calc(min(100vh,100vw)*0.75);position: fixed;top: calc((100vh - min(100vh, 100vw)*0.75) / 2);left: calc((100vw - min(100vh, 100vw)*0.75) / 2);">
+    </div>
     <script type="importMap">
 			{
 				"imports": {
@@ -294,6 +303,7 @@
     <script src="src/js/constants.js"></script>
     <script src="src/js/converters.js"></script>
     <script src="src/js/constellations.js" type="module"></script>
+    <script src="src/js/ui-component.js"></script>
     <script src="src/js/index.js" type="module"></script>
   </body>
 </html>

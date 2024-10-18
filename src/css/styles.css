@@ -63,6 +63,10 @@ svg#bottom-frame {
 body.black {
   overflow: hidden;
   background: black;
+  height: 100vh;
+  width: 100vw;
+  padding: 0;
+  margin: 0;
 }
 body.black .play {
   font-family: 'Klee One';
@@ -368,6 +372,66 @@ cursor: pointer;
 .tgl-ios:checked + .tgl-btn:active:after {
   margin-left: -0.8em;
 }
+
+.range-ios {
+  position: relative;
+  width: 100%;
+  padding: 0px 0 0 10px;
+}
+.range-ios::before,
+.range-ios::after {
+  display: block;
+  position: absolute;
+  z-index: 99;
+  color: #fffa;
+  text-align: center;
+  font-size: 1.5rem;
+  line-height: 1;
+  padding: 0.25rem 0;
+  pointer-events: none;
+}
+.range-ios::before {
+  content: "+";
+  right:10px;
+}
+.range-ios::after {
+  content: "−";
+  left:20px;
+}
+
+.range-ios input[type=range] {
+  -webkit-appearance: none;
+  background-color: rgba(255, 255, 255, 0.1);
+  position: absolute;
+  top: 5px;
+  left: 10px;
+  margin: 0;
+  padding: 0;
+  width: calc(100% - 10px);
+  height: 32px;
+  /* transform: translate(-50%, -50%) rotate(-90deg); */
+  border-radius: 1rem;
+  overflow: hidden;
+  cursor: col-resize;
+}
+.range-ios input[type=range][step] {
+  background-color: transparent;
+  background-image: repeating-linear-gradient(to right, transparent, transparent calc(12.5% - 1px), rgba(255, 255, 255, 0.14) 12.5%), 
+                    linear-gradient(to bottom, transparent calc(50% - 1px), rgba(255, 255, 255, 0.14) 50%, transparent calc(50% + 1px));
+  box-shadow: inset 0 0 5px 0px #000a, inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+}
+.range-ios input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 0;
+  box-shadow: -20rem 0 0 20rem #000, -0.9rem 0 0 1rem #0af;
+  mix-blend-mode: screen;
+}
+.range-ios input[type=range]::-moz-range-thumb {
+  border: none;
+  width: 0;
+  box-shadow: -20rem 0 0 20rem #0afa;
+}
+
 .menu-trigger,
 .menu-trigger span {
   display: inline-block;
@@ -477,14 +541,8 @@ cursor: pointer;
 }
 #navigation-menu-container .settings {
   height: 0;
-  width: max(30vw, 500px);
-  background: #000000cf;
+  width: 100%;
   position: fixed;
-  right: 0;
-  top: 5px;
-  bottom: 5px;
-  backdrop-filter: blur(3px);
-  border-radius: 0px 0 0 15px;
   z-index: 0;
   opacity: 0;
   
@@ -496,6 +554,7 @@ cursor: pointer;
 }
 #navigation-menu-container .menu-trigger.active + .settings {
   opacity: 1;
+  /*
   height: calc(100vh - 45px);
   box-shadow: 0 0 120px 20px #b6b6b61a;
   border: 1px solid #000;
@@ -504,4 +563,11 @@ cursor: pointer;
   -ms-transition: all 0.3s ease-in-out;
   -o-transition: all 0.3s ease-in-out;
   transition: all 0.3s ease-in-out;
+  */
+}
+
+#navigation-menu {
+  padding: 50px 15px 5px 15px;
+  position: relative;
+  color: white
 }

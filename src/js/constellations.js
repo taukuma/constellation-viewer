@@ -23,8 +23,10 @@ class Constellations {
     this.command = {
       options: {
         duration: 5000,
+        stopoffset: 0,
         easing: "power2.inOut",
         mode: "sync",
+        lookAtTarget: new THREE.Object3D()
       },
       getCommands: (input) => {
         // Split the input string by semi-colon, trim, and filter out empty commands
@@ -36,16 +38,18 @@ class Constellations {
         const parsedCommands = [];
     
         // Regular expressions to match commands
-        const lookatPattern = /^lookat\s+(\(([^,]+),([^,]+),([^)]+)\)|\w+)$/;
-        const gotoPattern = /^goto\s+(\(([^,]+),([^,]+),([^)]+)\)|\w+)$/;
-        const polartoPattern = /^polarto\s+(\(([^,]+),([^,]+),([^)]+)\)|\w+)$/;
+        const lookatPattern = /^lookat\s+(\(([^,]+),([^,]+),([^)]+)\)|.*)$/;
+        const targettoPattern = /^targetto\s+(\(([^,]+),([^,]+),([^)]+)\)|.*)$/;
+        const gotoPattern = /^goto\s+(\(([^,]+),([^,]+),([^)]+)\)|.*)$/;
+        const polartoPattern = /^polarto\s+(\(([^,]+),([^,]+),([^)]+)\)|.*)$/;
         const zoomPattern = /^zoomto\s+(\d+)$/;
         const rotatePattern = /^rotate\s+([+-]?\d+)$/;
         const waitPattern = /^wait\s+(\d+)$/;
         const setDurationPattern = /^set\s+duration\s*=\s*(\d+)$/;
         const setEasingPattern = /^set\s+easing\s*=\s*([\w\d]+\.[\w\d]+|\w+)$/;
         const setModePattern = /^set\s+mode\s*=\s*(async|sync)$/;
-        const setRotationOriginPattern = /^set\s+rotationorigin\s*=\s*(\(([^,]+),([^,]+),([^)]+)\)|\w+)$/;
+        const setStopOffsetPattern = /^set\s+stopoffset\s*=\s*(\d+)$/;
+        const setRotationOriginPattern = /^set\s+rotationorigin\s*=\s*(\(([^,]+),([^,]+),([^)]+)\)|.*)$/;
         const enableAutoRotatePattern = /^(enable|start)\s+(autorotate|autoRotate|AutoRotate)$/;
         const disableAutoRotatePattern = /^(disable|stop)\s+(autorotate|autoRotate|AutoRotate)$/;
     
@@ -77,6 +81,30 @@ class Constellations {
                     console.error(`Invalid target location: ${target}`);
                 }
             } 
+            // targetto
+            else if (match = command.match(targettoPattern)) {
+              const target = match[1].trim();
+  
+              if (target.startsWith('(')) {
+                  // Direct coordinates
+                  parsedCommands.push({
+                      action: 'targetto',
+                      value: {
+                          x: parseFloat(match[2].trim()),
+                          y: parseFloat(match[3].trim()),
+                          z: parseFloat(match[4].trim())
+                      }
+                  });
+              } else if (this.predefinedLocations[target]) {
+                  // Predefined location
+                  parsedCommands.push({
+                      action: 'targetto',
+                      value: this.predefinedLocations[target]
+                  });
+              } else {
+                  console.error(`Invalid target location: ${target}`);
+              }
+          } 
             // goto
             else if (match = command.match(gotoPattern)) {
                 const target = match[1].trim();
@@ -141,6 +169,14 @@ class Constellations {
                 value: duration
               });
             }
+            // set stopoffset
+            else if (match = command.match(setStopOffsetPattern)) {
+              const offset = parseInt(match[1].trim(), 10);
+              parsedCommands.push({
+                action: 'set stopoffset',
+                value: offset
+              });
+            }
             // set easing
             else if (match = command.match(setEasingPattern)) {
               const easing = match[1].trim();
@@ -181,7 +217,7 @@ class Constellations {
                   console.error(`Invalid rotationorigin location: ${target}`);
               }
           } 
-          // wai
+          // wait
             // enable autorotate
             else if (match = command.match(enableAutoRotatePattern)) {
               parsedCommands.push({
@@ -247,9 +283,34 @@ class Constellations {
     
         return groupedCommands;
       },
+      getOffsetCoordinate: (coordinate1, coordinate2, distanceAmount) => {
+        // Calculate the direction vector from coordinate1 to coordinate2
+        let direction = {
+          x: coordinate2.x - coordinate1.x,
+          y: coordinate2.y - coordinate1.y,
+          z: coordinate2.z - coordinate1.z
+        };
+      
+        // Normalize the direction vector
+        let length = Math.sqrt(direction.x ** 2 + direction.y ** 2 + direction.z ** 2);
+        console.log(length)
+        let normalizedDirection = {
+          x: direction.x / length,
+          y: direction.y / length,
+          z: direction.z / length
+        };
+      
+        // Calculate the new coordinate based on the distanceAmount
+        let newCoordinate = {
+          x: coordinate2.x - normalizedDirection.x * distanceAmount,
+          y: coordinate2.y - normalizedDirection.y * distanceAmount,
+          z: coordinate2.z - normalizedDirection.z * distanceAmount
+        };
+      
+        return newCoordinate;
+      },
       run: async (input) => {
         const commandGroup = this.command.groupCommands(this.command.getCommands(input));
-        const lookAtTarget = new THREE.Object3D();
         const execCommand = (cmd) => new Promise((res,rej) => {
           switch (cmd.action) {
             case "set mode": {
@@ -258,6 +319,10 @@ class Constellations {
             } break;
             case "set duration": {
               this.command.options.duration = cmd.value;
+              res();
+            } break;
+            case "set stopoffset": {
+              this.command.options.stopoffset = cmd.value;
               res();
             } break;
             case "set rotationorigin": {
@@ -293,16 +358,32 @@ class Constellations {
               res();
             } break;
             case "goto":{
+
+              let destination = (this.command.options.stopoffset === 0)
+                ? cmd.value
+                : this.command.getOffsetCoordinate(
+                  {x:this.perspectiveCamera.position.x,y:this.perspectiveCamera.position.y,z:this.perspectiveCamera.position.z},
+                  cmd.value,
+                  this.command.options.stopoffset);
+              console.log(destination)
               gsap.to(this.perspectiveCamera.position, {
-                x: cmd.value.x,
-                y: cmd.value.y,
-                z: cmd.value.z,
+                x: destination.x,
+                y: destination.y,
+                z: destination.z,
                 duration: this.command.options.duration / 1000,
                 ease: this.command.options.easing,
+                onStart: () => {
+                  this.orbitControls.enabled = false;
+                  this.trackballControls.enabled = false;
+                },
                 onUpdate: () => {
-                  this.perspectiveCamera.lookAt(lookAtTarget.position);
+                  this.perspectiveCamera.lookAt(this.command.options.lookAtTarget.position);
                 },
                 onComplete: () => {
+                  this.perspectiveCamera.lookAt(this.command.options.lookAtTarget.position);
+                  
+                  this.orbitControls.enabled = true;
+                  this.trackballControls.enabled = true;
                   console.log("done");
                   res()
                 }
@@ -315,34 +396,77 @@ class Constellations {
                 z: cmd.value.z,
                 duration: this.command.options.duration / 1000,
                 ease: this.command.options.easing,
+                onStart: () => {
+                  this.orbitControls.enabled = false;
+                  this.trackballControls.enabled = false;
+                },
                 onUpdate: () => {
                 },
                 onComplete: () => {
+                  this.orbitControls.enabled = true;
+                  this.trackballControls.enabled = true;
                   console.log("done");
                   res()
                 }
               })
             } break;
             case "lookat": {
-              lookAtTarget.position.copy(this.perspectiveCamera.getWorldDirection(new THREE.Vector3()).add(this.perspectiveCamera.position));
-
-              gsap.to(lookAtTarget.position, {
+              this.command.options.lookAtTarget.position.copy(this.perspectiveCamera.getWorldDirection(new THREE.Vector3()).add(this.perspectiveCamera.position));
+              this.resetController(this.command.options.lookAtTarget.position);
+              
+              gsap.to(this.command.options.lookAtTarget.position, {
                 x: cmd.value.x,
                 y: cmd.value.y,
                 z: cmd.value.z,
                 duration: this.command.options.duration / 1000,
                 ease: this.command.options.easing,
+                onStart: () => {
+                  this.orbitControls.enabled = false;
+                  this.trackballControls.enabled = false;
+                },
                 onUpdate: () => {
-                  this.perspectiveCamera.lookAt(lookAtTarget.position)
+                  this.perspectiveCamera.lookAt(this.command.options.lookAtTarget.position);
+                  
+                  let direction = new THREE.Vector3();
+                  let distancefactor = -0.005;
+                  direction.subVectors(this.perspectiveCamera.position, this.command.options.lookAtTarget.position).normalize();
+                  let rotationOrigin = new THREE.Vector3().copy(this.perspectiveCamera.position).add(direction.multiplyScalar(distancefactor));
+                  this.orbitControls.target = rotationOrigin;
+                  this.trackballControls.target = rotationOrigin;
                 },
                 onComplete: () => {
-                  //this.perspectiveCamera.lookAt(new THREE.Vector3(cmd.value.x,cmd.value.y,cmd.value.z))
-                  let factor = 1//Math.pow(10, Math.ceil(Math.log10(Math.max(cmd.value.x,cmd.value.y,cmd.value.z))))
-                  this.orbitControls.target = new THREE.Vector3(cmd.value.x / factor, cmd.value.y / factor, cmd.value.z / factor);
-                  this.trackballControls.target = new THREE.Vector3(cmd.value.x / factor,cmd.value.y / factor,cmd.value.z / factor);
+                  this.orbitControls.enabled = true;
+                  this.trackballControls.enabled = true;
+                  console.log("done");
+                  res()
+                }
+              })
+            } break;
+            case "targetto": {
+              this.command.options.lookAtTarget.position.copy(this.perspectiveCamera.getWorldDirection(new THREE.Vector3()).add(this.perspectiveCamera.position));
+
+              gsap.to(this.command.options.lookAtTarget.position, {
+                x: cmd.value.x,
+                y: cmd.value.y,
+                z: cmd.value.z,
+                duration: this.command.options.duration / 1000,
+                ease: this.command.options.easing,
+                onStart: () => {
+                  this.orbitControls.enabled = false;
+                  this.trackballControls.enabled = false;
+                },
+                onUpdate: () => {
+                  this.perspectiveCamera.lookAt(this.command.options.lookAtTarget.position)
+                },
+                onComplete: () => {
+                  this.orbitControls.target = new THREE.Vector3(cmd.value.x, cmd.value.y, cmd.value.z);
+                  this.trackballControls.target = new THREE.Vector3(cmd.value.x, cmd.value.y, cmd.value.z);
 
                   const targetQuaternion = this.perspectiveCamera.quaternion.clone(); // Get the final orientation
                   this.perspectiveCamera.quaternion.copy(targetQuaternion); // Apply it directly
+
+                  this.orbitControls.enabled = true;
+                  this.trackballControls.enabled = true;
                   console.log("done");
                   res()
                 }
@@ -369,9 +493,15 @@ class Constellations {
                 z: updateCoordinate.z,
                 duration: this.command.options.duration / 1000,
                 ease: this.command.options.easing,
+                onStart: () => {
+                  this.orbitControls.enabled = false;
+                  this.trackballControls.enabled = false;
+                },
                 onUpdate: () => {
                 },
                 onComplete: () => {
+                  this.orbitControls.enabled = true;
+                  this.trackballControls.enabled = true;
                   console.log("done");
                   res()
                 }
@@ -383,11 +513,17 @@ class Constellations {
                 value: cmd.value,
                 duration: this.command.options.duration / 1000,
                 ease: this.command.options.easing,
+                onStart: () => {
+                  this.orbitControls.enabled = false;
+                  this.trackballControls.enabled = false;
+                },
                 onUpdate: () => {
                   this.perspectiveCamera.setFocalLength(focalLengthProxy.value);
                   this.perspectiveCamera.updateProjectionMatrix();
                 },
                 onComplete: () => {
+                  this.orbitControls.enabled = true;
+                  this.trackballControls.enabled = true;
                   console.log("done");
                   res()
                 }
@@ -402,6 +538,7 @@ class Constellations {
         })
         console.log(commandGroup);
 
+        //run commands
         for await (let group of commandGroup) {
           switch (group.mode) {
             case "async": {
@@ -419,6 +556,8 @@ class Constellations {
     }
   };
   newVector = (...args) => new THREE.Vector3(...args);
+  newQuaternion = (...args) => (new THREE.Quaternion()).setFromAxisAngle( new THREE.Vector3(...args), Math.PI / 2 );
+  newMatrix = () => new THREE.Matrix4();
   getProjectivePlaneCoordinate = (coordinate, canvas, width = 192, height = 192) => {
     // Get the object's 3D position
     const vector = new THREE.Vector3(coordinate.x, coordinate.y, coordinate.z);
@@ -468,7 +607,10 @@ class Constellations {
       autoRotateSpeed: renderParams.autoRotateSpeed,
       distance    : renderParams.distance != '0',
       distanceMultiplyScalar: parseFloat(renderParams.distanceMultiplyScalar ?? 1/5),
+      nav         : renderParams.nav == '1',
       renderMode  : renderParams.renderMode,
+      twincle     : renderParams.twincle == '1',
+      lang        : renderParams.lang || "ja"
     };
   };
 
@@ -484,6 +626,101 @@ class Constellations {
     return {stars: stars, lines: lines, constellation: starData.map(s => s.constellation)};
   };
 
+  
+  initNavigation = async () => {
+    const navMenu = document.querySelector("#navigation-menu");
+
+    // focal length
+    const focalLengthList = [
+      {label: "8mm",   value: 8},
+      {label: "14mm",  value: 14},
+      {label: "24mm",  value: 24},
+      {label: "28mm",  value: 28},
+      {label: "35mm",  value: 35},
+      {label: "45mm",  value: 45},
+      {label: "50mm",  value: 50},
+      {label: "70mm",  value: 70},
+      {label: "85mm",  value: 85},
+      {label: "135mm", value: 135},
+      {label: "200mm", value: 200},
+      {label: "400mm", value: 400},
+      {label: "800mm", value: 800},
+      {label: "1000mm", value: 1000},
+      {label: "1500mm", value: 1500},
+      {label: "2000mm", value: 2000}
+    ];
+    const focalLength = UI.Component.scrollselect.get(focalLengthList, "FOCAL LENGTH");
+    let focalLengthInitialIndex = focalLengthList.indexOf(focalLengthList.filter(f => this.options.focalLength <= f.value)[0]);
+    focalLength.style.transform = "scale(0.7)";
+    focalLength.style.position = "fixed";
+    focalLength.style.right =  "0";
+    focalLength.style.top = "calc(25%)";
+    navMenu.append(focalLength);
+    UI.Component.scrollselect.activate(
+      focalLength, 
+      focalLengthInitialIndex < 0 ? 0 : focalLengthInitialIndex, 
+      (v) => {this.command.run(`zoomto ${v};`)}
+    );
+
+    // lookat select
+    let getConstellationListItem = (svg, label) => `<div style="position: relative;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-content: center;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;">${svg}<span style="position:absolute;">${label}</span></div>`
+    const constellationList = this.symbol.map(s => {return {label: `${getConstellationListItem(constants.symbols[s].svg, constants.symbols[s][this.options.lang == "en" ? "label_en" : "label"])}`, value: s, labelForSort: constants.symbols[s][this.options.lang == "en" ? "label_en" : "label"]}}).sort((a,b) => (a.labelForSort <= b.labelForSort) ? -1 : 1);
+    const lookAtControl = UI.Component.horizontalscroll.get(constellationList);
+    lookAtControl.style.fontFamily = "Klee One";
+    navMenu.append(lookAtControl);
+    UI.Component.horizontalscroll.activate(lookAtControl, 0, (v => {
+      console.log(v.get("command"), v.get("list"));
+      switch (v.get("command")) {
+        case 'goto': {
+          const stopOffset = 20;
+          this.command.run(`set stopoffset=${stopOffset}; set mode=async; targetto ${v.get("list")}; ${v.get("command")} ${v.get("list")}`);
+        } break;
+        case 'lookat':{
+          this.command.run(`${v.get("command")} ${v.get("list")}`);
+          let timeRemains = 5000;
+          let iter = 0;
+          let unfocusIter = 0;
+          let unfocusInterval = undefined;
+          let r = 0x00;
+          let g = 0x55;
+          const rDelta = 0xff / (timeRemains / 100);
+          const gDelta = 0x99 / (timeRemains / 100);
+          let focusInterval = setInterval(() => {
+            if (timeRemains - (iter++) * 100 < 0) {
+              clearInterval(focusInterval);
+              let unfocusInterval = setInterval(() => {
+                r = (r - rDelta < 0) ? 0 : r - rDelta;
+                g = (g -gDelta < 0) ? 0 : g - gDelta;
+                //new THREE.LineBasicMaterial({color: 0x0055ff});
+                this.constellationLineGroup[v.get("list")].forEach(l => l.material = new THREE.LineBasicMaterial({color: parseInt(`0x${Math.ceil(r).toString(16)}${Math.ceil(g).toString(16)}ff`, 16)}))
+                
+                if (timeRemains - (unfocusIter++) * 100 < 0) {
+                  this.constellationLineGroup[v.get("list")].forEach(l => l.material = new THREE.LineBasicMaterial({color: 0x0055ff}))
+                  clearInterval(unfocusInterval);
+                }
+              },100)
+            } else {
+              r = (0xff <= r + rDelta) ? 0xff : r + rDelta;
+              g = (0xff <= g + gDelta) ? 0xff : g + rDelta;
+              //new THREE.LineBasicMaterial({color: 0x0055ff});
+              this.constellationLineGroup[v.get("list")].forEach(l => l.material = new THREE.LineBasicMaterial({color: parseInt(`0x${Math.ceil(r).toString(16)}${Math.ceil(g).toString(16)}ff`, 16)}))
+            }
+          }, 100)
+        } break;
+        default: {
+          this.command.run(`${v.get("command")} ${v.get("list")}`);
+        } break;
+      }
+    }));
+  };
+
   loadStarData = async (symbol, updateProgressBar) => {
     symbol ??= "";
     if (!Object.keys(constants.symbols).includes(symbol)) {
@@ -497,6 +734,7 @@ class Constellations {
     updateProgressBar();
     
     window.starDistance = [];
+    
     // 恒星情報を取得
     let starData = data.stars.map((s) => {
       let isEmpty = (str) => str == undefined || str == null || str == "" || str == {} || str == [];
@@ -538,7 +776,9 @@ class Constellations {
       return {
         name:s["名前"],
         symbol: symbol,
-        coordinates: coordinates,
+        coordinates: coordinates.coordinate,
+        distance: coordinates.distance,
+        render_distance: coordinates.render_distance,
         size: size,
         color: color,
         "スペクトル分類": spectralClassString, 
@@ -549,7 +789,7 @@ class Constellations {
     }).filter(s => s !== undefined);
     return {
       constellation: {
-        label: constants.symbols[symbol].label,
+        label: constants.symbols[symbol][this.options.lang == "en" ? "label_en" : "label"],
         symbol: symbol,
         coordinates: starData[0].coordinates
       },
@@ -603,11 +843,45 @@ class Constellations {
         return undefined;
     }
   };
-
+  resetController = (target) => {
+    this.trackballControls = new TrackballControls(this.perspectiveCamera, this.renderer.domElement);
+    this.trackballControls.target = target
+    this.trackballControls.noZoom = false;
+    this.trackballControls.zoomSpeed = 2;
+    this.trackballControls.noPan = false;
+    this.trackballControls.panSpeed = 0.02;
+    this.trackballControls.noRotate = false;
+    this.trackballControls.rotateSpeed = 0.5; // to make it opposite set -0.5
+    this.trackballControls.staticMoving = false;
+    this.trackballControls.dynamicDampingFactor = 0.05;
+    this.trackballControls.keys = [ 'KeyA', 'KeyS', 'KeyD' ]; // [ rotateKey, zoomKey, panKey ]
+    this.trackballControls.update();
+    // Orbit Controls
+    this.orbitControls = new OrbitControls(this.perspectiveCamera, this.renderer.domElement);
+    this.orbitControls.target = target;
+    this.orbitControls.maxPolarAngle = Infinity;
+    this.orbitControls.minPolarAngle = -Infinity;
+    this.orbitControls.maxAzimuthAngle = Infinity;
+    this.orbitControls.minAzimuthAngle = -Infinity;
+    this.orbitControls.enableDamping = true;
+    this.orbitControls.dampingFactor = 0.02;
+    this.orbitControls.enablePan = false;
+    this.orbitControls.enableZoom = false;
+    this.orbitControls.enableRotate = false;
+    this.orbitControls.autoRotate = this.options.autoRotate;
+    this.orbitControls.autoRotateSpeed = this.options.autoRotateSpeed || 1.0;
+    this.orbitControls.update();
+  };
   render = async (stars, linePaths, constellationInfo, renderElement) => {
     let options = this.options;
-    let group = new THREE.Group();
+    this.world = new THREE.Group();
     this.data = {stars: stars, constellations: constellationInfo, lines: linePaths}
+
+    // navigation
+    if (options.nav) {
+      document.querySelector("#navigation-menu-container").style.display = "block";
+      this.initNavigation();
+    }
 
     // 中心座標の取得
     let getCoordinateInfo = (list) => list.reduce((acc,curr,i)=> {return {
@@ -629,9 +903,7 @@ class Constellations {
       }
     });
     let windowSize = {
-      height: (window.innerHeight < window.innerWidth)
-        ? window.innerHeight
-        : window.innerWidth * 16 / 9,
+      height: window.innerHeight, 
       width: window.innerWidth
     };
     let starPositionInfo = getCoordinateInfo(stars.map(s => s.coordinates));
@@ -664,45 +936,22 @@ class Constellations {
     // コントローラーの定義
     // Trackball Controls
     let target = (options.earthView || this.symbol.length >= 48) 
-      ? new THREE.Vector3(0.001, 0.001, 0.001) 
+      ? new THREE.Vector3(0, 0, 0) 
       : new THREE.Vector3(linePositionInfo.center.x, linePositionInfo.center.y, linePositionInfo.center.z);
-
-    this.trackballControls = new TrackballControls(this.perspectiveCamera, renderer.domElement);
-    this.trackballControls.target = target
-    this.trackballControls.noZoom = false;
-    this.trackballControls.zoomSpeed = 2;
-    this.trackballControls.noPan = false;
-    this.trackballControls.panSpeed = 0.02;
-    this.trackballControls.noRotate = false;
-    this.trackballControls.rotateSpeed = 0.5;
-    this.trackballControls.staticMoving = false;
-    this.trackballControls.dynamicDampingFactor = 0.05;
-    this.trackballControls.keys = [ 'KeyA', 'KeyS', 'KeyD' ]; // [ rotateKey, zoomKey, panKey ]
-    //this.trackballControls.update();
-    // Orbit Controls
-    this.orbitControls = new OrbitControls(this.perspectiveCamera, renderer.domElement);
-    this.orbitControls.target = target;
-    this.orbitControls.maxPolarAngle = Infinity;
-    this.orbitControls.minPolarAngle = -Infinity;
-    this.orbitControls.maxAzimuthAngle = Infinity;
-    this.orbitControls.minAzimuthAngle = -Infinity;
-    this.orbitControls.enableDamping = true;
-    this.orbitControls.dampingFactor = 0.02;
-    this.orbitControls.enablePan = false;
-    this.orbitControls.enableZoom = false;
-    this.orbitControls.enableRotate = false;
-    this.orbitControls.autoRotate = options.autoRotate;
-    this.orbitControls.autoRotateSpeed = options.autoRotateSpeed || 1.0;
-    //this.orbitControls.update();
+    
+    this.resetController(target);
 
     // カメラ位置
+    this.initialDirection =(options.earthView)
+      ? new THREE.Vector3(0,1,0)
+      : new THREE.Vector3(linePositionInfo.center.x, linePositionInfo.center.y, linePositionInfo.center.z);
     this.perspectiveCamera.setFocalLength(options.focalLength ?? 45);
     this.perspectiveCamera.position.set(0, 0, 0);
     this.perspectiveCamera.rotation.order = "XYZ";
-    this.perspectiveCamera.lookAt((options.earthView)
-      ? new THREE.Vector3(0,0,0)
-      : new THREE.Vector3(linePositionInfo.center.x, linePositionInfo.center.y, linePositionInfo.center.z));
+    this.perspectiveCamera.lookAt(this.initialDirection);
     this.perspectiveCamera.up = new THREE.Vector3(options.rotateX * 100, options.rotateY * 100, options.rotateZ * 100);
+    this.trackballControls.target = target;
+    this.orbitControls.target = target;
     
     // グリッド
     if (options.grid == true) {
@@ -715,20 +964,24 @@ class Constellations {
       label_x.position.set(size / 2, 0.5, 0.5);
       label_y.position.set(0.5, size / 2, 0.5);
       label_z.position.set(0.5, 0.5, size / 2);
-      group.add(label_x);
-      group.add(label_y);
-      group.add(label_z);
+      this.world.add(label_x);
+      this.world.add(label_y);
+      this.world.add(label_z);
     }
 
     // 星座線の描画
     if (options.showLine) {
       const material = new THREE.LineBasicMaterial({color: 0x0055ff});
-      let linePath = linePaths.reduce((acc,curr) => acc.concat(curr))
-      linePath.forEach((points,i) => {
-        let bufGeometry = new THREE.BufferGeometry().setFromPoints(points.map(p => new THREE.Vector3(p.x, p.y, p.z)));
-        let line = new THREE.Line(bufGeometry, material);
-        group.add(line);
-      });
+      this.constellationLineGroup = {defaultMaterial: material};
+      linePaths.forEach((linePath, index) => {
+        this.constellationLineGroup[constellationInfo[index].symbol] = [];
+        linePath.forEach((points, i) => {
+          let bufGeometry = new THREE.BufferGeometry().setFromPoints(points.map(p => new THREE.Vector3(p.x, p.y, p.z)));
+          let line = new THREE.Line(bufGeometry, material);
+          this.world.add(line);
+          this.constellationLineGroup[constellationInfo[index].symbol].push(line);
+        })
+      })
     }
 
     //星座名の表示
@@ -743,7 +996,7 @@ class Constellations {
         let labelCoordinate = new THREE.Vector3(c.coordinates.x, c.coordinates.y, c.coordinates.z);
         labelCoordinate.setLength(constellatinNamePositionOffset);
         label.position.set(labelCoordinate.x, labelCoordinate.y, labelCoordinate.z);
-        group.add(label);
+        this.world.add(label);
       })
     }
 
@@ -768,7 +1021,7 @@ class Constellations {
               : new THREE.LineBasicMaterial({color: parseInt(guideData.LineStyle.color) ? parseInt(guideData.LineStyle.color) : 0xffaa00})
             let line = new THREE.Line( bufGeometry, material);
             line.computeLineDistances();
-            group.add(line)
+            this.world.add(line)
             // 星座名
             if (options.showConstellationName) {
               let centerCoordinate = points.filter((v,i) => i < points.length - 1).reduce((acc, curr, i) => {return {
@@ -778,16 +1031,16 @@ class Constellations {
               }});
               let labelCoordinate = new THREE.Vector3(centerCoordinate.x, centerCoordinate.y, centerCoordinate.z);
               labelCoordinate.setLength(constellatinNamePositionOffset);
-              let label = createLabel(constants.additionalConstellations[c].label, {r:0xff, g:0x55, b:0x00}, constellatinNameFontSize, constellatinNameOpacity, constellatinNameScalorFactor);
+              let label = createLabel(constants.additionalConstellations[c][this.options.lang == "en" ? "label_en" : "label"], {r:0xff, g:0x55, b:0x00}, constellatinNameFontSize, constellatinNameOpacity, constellatinNameScalorFactor);
               label.position.set(labelCoordinate.x, labelCoordinate.y, labelCoordinate.z);
-              group.add(label);
+              this.world.add(label);
             }
           } else {
             // 星座線
             let bufGeometry = new THREE.BufferGeometry();
             bufGeometry.setFromPoints(points.map(p => new THREE.Vector3(p.x, p.y, p.z)));
             let line = new THREE.Line(bufGeometry, guideMaterial);
-            group.add(line);
+            this.world.add(line);
 
             // 星座名
             if (options.showConstellationName) {
@@ -798,9 +1051,9 @@ class Constellations {
               }});
               let labelCoordinate = new THREE.Vector3(centerCoordinate.x, centerCoordinate.y, centerCoordinate.z);
               labelCoordinate.setLength(constellatinNamePositionOffset);
-              let label = createLabel(constants.additionalConstellations[c].label, {r:0xff, g:0xaa, b:0x00}, constellatinNameFontSize, constellatinNameOpacity, constellatinNameScalorFactor);
+              let label = createLabel(constants.additionalConstellations[c][this.options.lang == "en" ? "label_en" : "label"], {r:0xff, g:0xaa, b:0x00}, constellatinNameFontSize, constellatinNameOpacity, constellatinNameScalorFactor);
               label.position.set(labelCoordinate.x, labelCoordinate.y, labelCoordinate.z);
-              group.add(label);
+              this.world.add(label);
             }
           }
         });
@@ -834,7 +1087,7 @@ class Constellations {
           mesh.scale.setScalar(s.size.radius / 50)
           light.add(mesh);
           light.position.set(s.coordinates.x, s.coordinates.y, s.coordinates.z);
-          group.add(light);
+          this.world.add(light);
     
           //flare
           const lensflare = new Lensflare();
@@ -845,7 +1098,7 @@ class Constellations {
           if (options.showStarName) {
             let label = createLabel(s.name, s.color);
             label.position.copy(light.position);
-            group.add(label);
+            this.world.add(label);
           }
     
           // Initial twinkle effect (if needed)
@@ -861,20 +1114,14 @@ class Constellations {
       //using InstancedMesh
       case 'InstancedMesh':
       default: {
-        console.log(stars.length)
         stars.forEach((s, i) => {
           let radius = 0;
-          let magnitude = Math.pow(1/2.5, s.magnitude);
-          if (options.distance) {
-            radius = (
-                (
-                  (s.size.defined_radius) 
-                    ? s.size.defined_radius 
-                    : s.size.radius
-                )
-                * (constants.SUN_DIAMETER / constants.LIGHT_YEAR / 2) 
-              + 0.01)
-              * magnitude
+          let magnitude = Math.pow(1/2.5, (s.magnitude));
+          let r = ((s.size.defined_radius) ? s.size.defined_radius : s.size.radius)
+
+          if (options.distance && options.distanceMultiplyScalar >= 0.1) {
+            radius = 
+              Math.min(magnitude, 0.5) * (s.render_distance / 100) //(r * (constants.SUN_DIAMETER / constants.LIGHT_YEAR / 2) + 0.01) * magnitude
               + 0.05;
           } else {
             radius = Math.min(magnitude, 0.5) + 0.05;
@@ -888,25 +1135,25 @@ class Constellations {
           if (options.showStarName) {
             let label = createLabel(s.name, s.color, 38, 1, 0.001);
             label.position.set(dummy.position.x, dummy.position.y + radius * 1.5, dummy.position.z);
-            group.add(label)
+            this.world.add(label)
           }
     
           // Initial twinkle effect (if needed)
-          const twinkleFactor = Math.sin(Date.now() * 0.005 + i) * 0.8 + 2; // Initial twinkle effect
+          const twinkleFactor = (options.twincle) ? Math.sin(Date.now() * 0.005 + i) * 0.8 + 2 : 2 ; // Initial twinkle effect
           s.color = `#${('0'+parseInt(s.color.r).toString(16)).slice(-2)}${('0'+parseInt(s.color.g).toString(16)).slice(-2)}${('0'+parseInt(s.color.b).toString(16)).slice(-2)}`;
           const twinkleColor = new THREE.Color(s.color).multiplyScalar(twinkleFactor);
     
           starMesh.setColorAt(i, twinkleColor);
         });
     
-        group.add(starMesh);
+        this.world.add(starMesh);
       } break;
     }
 
-    group.rotation.x = options.worldRotateX;
-    group.rotation.y = options.worldRotateY;
-    group.rotation.z = options.worldRotateZ;
-    scene.add(group);
+    this.world.rotation.x = options.worldRotateX;
+    this.world.rotation.y = options.worldRotateY;
+    this.world.rotation.z = options.worldRotateZ;
+    scene.add(this.world);
     
     // composer setting
     const renderScene   = new RenderPass( scene, this.perspectiveCamera );
@@ -959,8 +1206,8 @@ class Constellations {
     finalComposer.addPass(finalPass);
 
     function createLabel(text, color, size = 16, opacity = 0.4, scaleFactor = 1/25) {
-      const width = size * 15;
-      const height = size * 6;
+      const width = size * 30;
+      const height = size * 5;
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
       context.canvas.width = width;
@@ -984,21 +1231,21 @@ class Constellations {
 
     composer.addPass( renderScene );
     renderer.setAnimationLoop((_) => {
-
-      stars.forEach((s, i) => {
-        // Update twinkle effect in each frame
-        const twinkleFactor = Math.sin(Date.now() / (10000 * Math.random()) + i) * 0.2 + 2; // More pronounced and slower twinkle effect
-        const randomFactor = 0.8; // Add some randomness
-        const finalTwinkleFactor = twinkleFactor * randomFactor;
-    
-        const twinkleColor = new THREE.Color(s.color).multiplyScalar(finalTwinkleFactor);
-    
-        starMesh.setColorAt(i, twinkleColor);
-      });
-    
-      starMesh.instanceMatrix.needsUpdate = true; // Ensure updates are reflected
-      starMesh.instanceColor.needsUpdate = true; // Ensure color updates are reflected
-
+      if (options.twincle) {
+        stars.forEach((s, i) => {
+          // Update twinkle effect in each frame
+          const twinkleFactor = Math.sin(Date.now() / 500 + i) * 0.75 + 2; // More pronounced and slower twinkle effect
+          const randomFactor = 0.8; // Add some randomness
+          const finalTwinkleFactor = twinkleFactor * randomFactor;
+      
+          const twinkleColor = new THREE.Color(s.color).multiplyScalar(finalTwinkleFactor);
+      
+          starMesh.setColorAt(i, twinkleColor);
+        });
+      
+        starMesh.instanceMatrix.needsUpdate = true; // Ensure updates are reflected
+        starMesh.instanceColor.needsUpdate = true; // Ensure color updates are reflected
+      }
 
       renderer.render(scene, this.perspectiveCamera);
       composer.render();
@@ -1013,6 +1260,13 @@ class Constellations {
       renderer.render(scene, this.perspectiveCamera);
     }
     this.getNewMatrix = (x,y,z,q,s) => new THREE.Matrix4(new THREE.Vector3(x,y,z),q,s);
+
+    // initial lookat and target
+    if (options.earthView || this.symbol.length >= 48) {
+      this.command.run(`set duration=5000; lookat ${Object.keys(this.predefinedLocations)[1]}; set duration=${this.command.options.duration}`);
+    } else {
+      this.command.run(`set duration=5000; targetto (${this.initialDirection.x},${this.initialDirection.y},${this.initialDirection.z})`);
+    }
   }
 
   reset =  () => {
