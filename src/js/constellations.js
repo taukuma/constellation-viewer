@@ -293,7 +293,6 @@ class Constellations {
       
         // Normalize the direction vector
         let length = Math.sqrt(direction.x ** 2 + direction.y ** 2 + direction.z ** 2);
-        console.log(length)
         let normalizedDirection = {
           x: direction.x / length,
           y: direction.y / length,
@@ -365,7 +364,6 @@ class Constellations {
                   {x:this.perspectiveCamera.position.x,y:this.perspectiveCamera.position.y,z:this.perspectiveCamera.position.z},
                   cmd.value,
                   this.command.options.stopoffset);
-              console.log(destination)
               gsap.to(this.perspectiveCamera.position, {
                 x: destination.x,
                 y: destination.y,
@@ -536,7 +534,6 @@ class Constellations {
               res();
           }
         })
-        console.log(commandGroup);
 
         //run commands
         for await (let group of commandGroup) {
@@ -614,6 +611,11 @@ class Constellations {
     };
   };
 
+  toKatakana = (str) => str.replace(/[\u3041-\u3096]/g, function(match) {
+		var chr = match.charCodeAt(0) + 0x60;
+		return String.fromCharCode(chr);
+	});
+
   init = async (symbol, updateProgressBar) => {
     this.isInitialized = false;
     symbol = (Array.isArray(symbol)) ? symbol : [symbol];
@@ -668,12 +670,11 @@ class Constellations {
     justify-content: center;
     align-items: center;
     overflow: hidden;">${svg}<span style="position:absolute;">${label}</span></div>`
-    const constellationList = this.symbol.map(s => {return {label: `${getConstellationListItem(constants.symbols[s].svg, constants.symbols[s][this.options.lang == "en" ? "label_en" : "label"])}`, value: s, labelForSort: constants.symbols[s][this.options.lang == "en" ? "label_en" : "label"]}}).sort((a,b) => (a.labelForSort <= b.labelForSort) ? -1 : 1);
+    const constellationList = this.symbol.map(s => {return {label: `${getConstellationListItem(constants.symbols[s].svg, constants.symbols[s][this.options.lang == "en" ? "label_en" : "label"])}`, value: s, labelForSort: constants.symbols[s][this.options.lang == "en" ? "label_en" : "label"]}}).sort((a,b) => (this.toKatakana(a.labelForSort) <= this.toKatakana(b.labelForSort)) ? -1 : 1);
     const lookAtControl = UI.Component.horizontalscroll.get(constellationList);
     lookAtControl.style.fontFamily = "Klee One";
     navMenu.append(lookAtControl);
     UI.Component.horizontalscroll.activate(lookAtControl, 0, (v => {
-      console.log(v.get("command"), v.get("list"));
       switch (v.get("command")) {
         case 'goto': {
           const stopOffset = 20;
@@ -905,14 +906,6 @@ class Constellations {
         : window.innerWidth * 16 / 9,
       width: window.innerWidth
     };
-    let maxHeight = 2000;
-    let ratio = window.innerHeight / window.innerWidth;
-    let height = (ratio <= 0) ? Math.min(window.innerWidth, maxHeight) * ratio : Math.min(window.innerHeight, maxHeight);
-    let width = height / ratio
-    windowSize = {
-      height:height,
-      width:width
-    }
 
     let starPositionInfo = getCoordinateInfo(stars.map(s => s.coordinates));
     let linePositionInfo = getCoordinateInfo(linePaths.reduce((acc,curr) => acc.concat(curr)).reduce((acc,curr) => acc.concat(curr)));
@@ -939,8 +932,7 @@ class Constellations {
     renderer.toneMappingExposure = Math.pow(0.8, 2.0);
     renderer.setClearColor( 0x000000, 0.5 )
     renderElement.appendChild(renderer.domElement);
-    if (height / window.innerWidt > 0) renderer.domElement.style.transform = `scale(${height / window.innerWidth})`;
-    
+
     // コントローラーの定義
     // Trackball Controls
     let target = (options.earthView || this.symbol.length >= 48) 
