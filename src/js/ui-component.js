@@ -19,9 +19,11 @@ let UI = {
           .scrollselect-container {
             width: 150px;
             height: 500px;
+            top: calc(50% - 500px / 2);
+            position: fixed;
+            right: 2.5%;
             overflow: hidden;
             border: none;
-            position: relative;
             font-family: "Barlow Condensed", sans-serif;
             font-weight: 100;
             font-style: normal;
@@ -254,16 +256,16 @@ let UI = {
           let maxHeight = 150;
           let css = document.createTextNode(`
           .horizontalscroll-warpper {
-            width: 95vw;
+            width: 95%;
             height: ${maxHeight + 65}px;
             overflow: auto;
             display: flex;
             align-items: flex-start;
             place-content: center;
             flex-flow: column;
-            position: absolute;
-            left: 2.5vw;
-            top: calc(95vh - ${maxHeight + 150}px);
+            position: fixed;
+            left: 2.5%;
+            bottom: 0px;
             background: linear-gradient(0deg, transparent, black, transparent);
           }
           .horizontalscroll-warpper::-webkit-scrollbar {

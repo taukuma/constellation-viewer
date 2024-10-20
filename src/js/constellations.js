@@ -652,9 +652,6 @@ class Constellations {
     const focalLength = UI.Component.scrollselect.get(focalLengthList, "FOCAL LENGTH");
     let focalLengthInitialIndex = focalLengthList.indexOf(focalLengthList.filter(f => this.options.focalLength <= f.value)[0]);
     focalLength.style.transform = "scale(0.7)";
-    focalLength.style.position = "fixed";
-    focalLength.style.right =  "0";
-    focalLength.style.top = "calc(25%)";
     navMenu.append(focalLength);
     UI.Component.scrollselect.activate(
       focalLength, 
@@ -908,6 +905,15 @@ class Constellations {
         : window.innerWidth * 16 / 9,
       width: window.innerWidth
     };
+    let maxHeight = 2000;
+    let ratio = window.innerHeight / window.innerWidth;
+    let height = (ratio <= 0) ? Math.min(window.innerWidth, maxHeight) * ratio : Math.min(window.innerHeight, maxHeight);
+    let width = height / ratio
+    windowSize = {
+      height:height,
+      width:width
+    }
+
     let starPositionInfo = getCoordinateInfo(stars.map(s => s.coordinates));
     let linePositionInfo = getCoordinateInfo(linePaths.reduce((acc,curr) => acc.concat(curr)).reduce((acc,curr) => acc.concat(curr)));
 
@@ -932,8 +938,8 @@ class Constellations {
     renderer.toneMapping = THREE.ReinhardToneMapping;
     renderer.toneMappingExposure = Math.pow(0.8, 2.0);
     renderer.setClearColor( 0x000000, 0.5 )
-    //renderer.domElement.style.setProperty("mix-blend-mode", "color-burn")
     renderElement.appendChild(renderer.domElement);
+    if (height / window.innerWidt > 0) renderer.domElement.style.transform = `scale(${height / window.innerWidth})`;
     
     // コントローラーの定義
     // Trackball Controls
