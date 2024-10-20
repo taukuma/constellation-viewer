@@ -293,7 +293,6 @@ class Constellations {
       
         // Normalize the direction vector
         let length = Math.sqrt(direction.x ** 2 + direction.y ** 2 + direction.z ** 2);
-        console.log(length)
         let normalizedDirection = {
           x: direction.x / length,
           y: direction.y / length,
@@ -365,7 +364,6 @@ class Constellations {
                   {x:this.perspectiveCamera.position.x,y:this.perspectiveCamera.position.y,z:this.perspectiveCamera.position.z},
                   cmd.value,
                   this.command.options.stopoffset);
-              console.log(destination)
               gsap.to(this.perspectiveCamera.position, {
                 x: destination.x,
                 y: destination.y,
@@ -536,7 +534,6 @@ class Constellations {
               res();
           }
         })
-        console.log(commandGroup);
 
         //run commands
         for await (let group of commandGroup) {
@@ -678,7 +675,6 @@ class Constellations {
     lookAtControl.style.fontFamily = "Klee One";
     navMenu.append(lookAtControl);
     UI.Component.horizontalscroll.activate(lookAtControl, 0, (v => {
-      console.log(v.get("command"), v.get("list"));
       switch (v.get("command")) {
         case 'goto': {
           const stopOffset = 20;
