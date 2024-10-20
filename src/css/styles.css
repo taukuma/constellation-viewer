@@ -568,7 +568,6 @@ cursor: pointer;
 }
 #navigation-menu-container .menu-trigger.active + .settings {
   opacity: 1;
-  z-index: 10;
   /*
   height: calc(100vh - 45px);
   box-shadow: 0 0 120px 20px #b6b6b61a;
