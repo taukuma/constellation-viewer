@@ -4,10 +4,11 @@ body {
   background-size: 400% 400%;
   animation: gradient 15s ease infinite;
   display: flex;
-  flex-direction: column;
-  flex-wrap: nowrap;
-  align-content: center;
-  justify-content: center;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-content: center;
+    justify-content: center;
+    align-items: center;
 }
 @keyframes gradient {
 	0% {
@@ -30,7 +31,12 @@ body {
   font-weight: 100;
 }
 #title-container {
-  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-content: center;
+  justify-content: center;
+  align-items: center;
 }
 #title-box-container {
   width: 100vw;
@@ -562,6 +568,7 @@ cursor: pointer;
 }
 #navigation-menu-container .menu-trigger.active + .settings {
   opacity: 1;
+  z-index: 10;
   /*
   height: calc(100vh - 45px);
   box-shadow: 0 0 120px 20px #b6b6b61a;
@@ -577,5 +584,5 @@ cursor: pointer;
 #navigation-menu {
   padding: 50px 15px 5px 15px;
   position: relative;
-  color: white
+  color: white;
 }
