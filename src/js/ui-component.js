@@ -265,8 +265,7 @@ let UI = {
             flex-flow: column;
             position: fixed;
             left: 2.5%;
-            bottom: 0px;
-            background: linear-gradient(0deg, transparent, black, transparent);
+            bottom: 2.5%;
           }
           .horizontalscroll-warpper::-webkit-scrollbar {
             width: 16px;
@@ -294,7 +293,6 @@ let UI = {
             justify-content: center;
             align-items: flex-start;
             backdrop-filter: blur(5px);
-            background: linear-gradient(to right, transparent, black 50%, transparent);
             font-family: "Barlow Condensed", sans-serif;
           }
           .horizontalscroll-switch {
@@ -315,8 +313,8 @@ let UI = {
           }
           .horizontalscroll-switch:has(input:checked) {
             filter: brightness(2);
-            font-size: 24px;
             line-height: 50px;
+            background: repeating-linear-gradient(45deg, #ffffff05 0px, #ffffff05 5px, #ffffff15 5px, #ffffff15 10px);
             0 0 50px #000000, inset 0 0 20px #ffffff17;
             -webkit-transition: all 0.1s ease-in-out;
             -moz-transition: all 0.1s ease-in-out;
@@ -349,8 +347,9 @@ let UI = {
               transition: all 0.1s ease-in-out;
           }
           .horizontalscroll-container .horizontalscroll-item-container:has(input:checked) {
-            filter: brightness(1);
-            box-shadow: 0 0 50px #000;
+            background: repeating-linear-gradient(45deg, #ffffff05 0px, #ffffff05 5px, #ffffff10 5px, #ffffff10 10px);
+            filter: brightness(2);
+            /*box-shadow: 0 0 50px #000;*/
             background-color: rgb(0 0 0 / 0%);
             backdrop-filter: blur(5px);
             border-radius: 10px !important;
