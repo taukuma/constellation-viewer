@@ -931,6 +931,7 @@ class Constellations {
     renderer.toneMapping = THREE.ReinhardToneMapping;
     renderer.toneMappingExposure = Math.pow(0.8, 2.0);
     renderer.setClearColor( 0x000000, 0.5 )
+    renderer.domElement.style.transform = `scale(${((window.innerHeight < window.innerWidth)? 1 : window.innerHeight / windowSize.height)})`;
     renderElement.appendChild(renderer.domElement);
 
     // コントローラーの定義
