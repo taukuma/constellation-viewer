@@ -545,6 +545,7 @@ cursor: pointer;
 
 #navigation-menu-container {
  background-color: #000;
+ z-index: 10;
 }
 #navigation-menu-trigger {
   position: fixed; 
