@@ -1248,6 +1248,15 @@ class Constellations {
         starMesh.instanceColor.needsUpdate = true; // Ensure color updates are reflected
       }
 
+      // rotate direction (if pos is inside of constellation name (15) => set negative dir)
+      this.trackballControls.rotateSpeed = 
+        (Math.sqrt(
+          Math.pow(this.perspectiveCamera.position.x,2) + 
+          Math.pow(this.perspectiveCamera.position.y,2) + 
+          Math.pow(this.perspectiveCamera.position.z,2)) <= 15 && this.symbol.length >= 48) 
+        ? -0.5 
+        : 0.5;
+
       renderer.render(scene, this.perspectiveCamera);
       composer.render();
       bloomComposer.render();
