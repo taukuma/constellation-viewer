@@ -6,6 +6,7 @@ import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
 import {UnrealBloomPass} from 'three/addons/postprocessing/UnrealBloomPass.js';
 import {ShaderPass} from 'three/addons/postprocessing/ShaderPass.js';
 import {Lensflare, LensflareElement} from 'three/addons/objects/Lensflare.js';
+import {Text} from 'trioka-three-text';
 
 class Constellations {
   constructor() {
@@ -20,6 +21,7 @@ class Constellations {
     this.trackballControls = undefined;
     this.predefinedLocations = {Origin: {x: 0, y: 0, z:0}};
     this.symbol = undefined;
+    this.isAwayFromEarth = false;
     this.command = {
       options: {
         duration: 5000,
@@ -555,7 +557,7 @@ class Constellations {
   newVector = (...args) => new THREE.Vector3(...args);
   newQuaternion = (...args) => (new THREE.Quaternion()).setFromAxisAngle( new THREE.Vector3(...args), Math.PI / 2 );
   newMatrix = () => new THREE.Matrix4();
-  getProjectivePlaneCoordinate = (coordinate, canvas, width = 192, height = 192) => {
+  getProjectivePlaneCoordinateForCanvasSize = (coordinate, canvas, width = 192, height = 192) => {
     // Get the object's 3D position
     const vector = new THREE.Vector3(coordinate.x, coordinate.y, coordinate.z);
     
@@ -583,7 +585,7 @@ class Constellations {
     const y = -(vector.y * scaleY) + height / 2;
 
     return { x, y };
-    //this.constellations.data.lines[0].map(ls => ls.map(l => this.constellations.getProjectivePlaneCoordinate(l, document.querySelector("canvas"))).map(l => l.x + " " + l.y).join(" L ")).join(" M ").replace(/^/g,"M ").replace(/^/g, `<svg xmlns="http://www.w3.org/2000/svg"><path d="`).replace(/$/g, `" stroke="#FF0000" stroke-width="1" fill="none"/></svg>`)
+    //this.constellations.data.lines[0].map(ls => ls.map(l => this.constellations.getProjectivePlaneCoordinateForCanvasSize(l, document.querySelector("canvas"))).map(l => l.x + " " + l.y).join(" L ")).join(" M ").replace(/^/g,"M ").replace(/^/g, `<svg xmlns="http://www.w3.org/2000/svg"><path d="`).replace(/$/g, `" stroke="#FF0000" stroke-width="1" fill="none"/></svg>`)
   };
   setOptions = (renderParams) => {
     this.options = {
@@ -674,46 +676,79 @@ class Constellations {
     const lookAtControl = UI.Component.horizontalscroll.get(constellationList);
     lookAtControl.style.fontFamily = "Klee One";
     navMenu.append(lookAtControl);
-    UI.Component.horizontalscroll.activate(lookAtControl, 0, (v => {
-      switch (v.get("command")) {
-        case 'goto': {
-          const stopOffset = 20;
-          this.command.run(`set stopoffset=${stopOffset}; set mode=async; targetto ${v.get("list")}; ${v.get("command")} ${v.get("list")}`);
-        } break;
-        case 'lookat':{
-          this.command.run(`${v.get("command")} ${v.get("list")}`);
-          let timeRemains = 5000;
-          let iter = 0;
-          let unfocusIter = 0;
-          let unfocusInterval = undefined;
-          let r = 0x00;
-          let g = 0x55;
-          const rDelta = 0xff / (timeRemains / 100);
-          const gDelta = 0x99 / (timeRemains / 100);
-          let focusInterval = setInterval(() => {
-            if (timeRemains - (iter++) * 100 < 0) {
-              clearInterval(focusInterval);
-              let unfocusInterval = setInterval(() => {
-                r = (r - rDelta < 0) ? 0 : r - rDelta;
-                g = (g -gDelta < 0) ? 0 : g - gDelta;
-                //new THREE.LineBasicMaterial({color: 0x0055ff});
-                this.constellationLineGroup[v.get("list")].forEach(l => l.material = new THREE.LineBasicMaterial({color: parseInt(`0x${Math.ceil(r).toString(16)}${Math.ceil(g).toString(16)}ff`, 16)}))
-                
-                if (timeRemains - (unfocusIter++) * 100 < 0) {
-                  this.constellationLineGroup[v.get("list")].forEach(l => l.material = new THREE.LineBasicMaterial({color: 0x0055ff}))
-                  clearInterval(unfocusInterval);
-                }
-              },100)
-            } else {
-              r = (0xff <= r + rDelta) ? 0xff : r + rDelta;
-              g = (0xff <= g + gDelta) ? 0xff : g + rDelta;
+    UI.Component.horizontalscroll.activate(lookAtControl, 0, ((ev,v) => {
+      let focusConstellationLine = (target) => {
+        let timeRemains = 5000;
+        let iter = 0;
+        let unfocusIter = 0;
+        let unfocusInterval = undefined;
+        let r = 0x00;
+        let g = 0x55;
+        const rDelta = 0xff / (timeRemains / 100);
+        const gDelta = 0x99 / (timeRemains / 100);
+        let focusInterval = setInterval(() => {
+          if (timeRemains - (iter++) * 100 < 0) {
+            clearInterval(focusInterval);
+            let unfocusInterval = setInterval(() => {
+              r = (r - rDelta < 0) ? 0 : r - rDelta;
+              g = (g -gDelta < 0) ? 0 : g - gDelta;
               //new THREE.LineBasicMaterial({color: 0x0055ff});
-              this.constellationLineGroup[v.get("list")].forEach(l => l.material = new THREE.LineBasicMaterial({color: parseInt(`0x${Math.ceil(r).toString(16)}${Math.ceil(g).toString(16)}ff`, 16)}))
-            }
-          }, 100)
+              this.constellationLineGroup[target].forEach(l => l.material = new THREE.LineBasicMaterial({color: parseInt(`0x${Math.ceil(r).toString(16)}${Math.ceil(g).toString(16)}ff`, 16)}))
+              
+              if (timeRemains - (unfocusIter++) * 100 < 0) {
+                this.constellationLineGroup[target].forEach(l => l.material = new THREE.LineBasicMaterial({color: 0x0055ff}))
+                clearInterval(unfocusInterval);
+              }
+            },100)
+          } else {
+            r = (0xff <= r + rDelta) ? 0xff : r + rDelta;
+            g = (0xff <= g + gDelta) ? 0xff : g + rDelta;
+            //new THREE.LineBasicMaterial({color: 0x0055ff});
+            this.constellationLineGroup[target].forEach(l => l.material = new THREE.LineBasicMaterial({color: parseInt(`0x${Math.ceil(r).toString(16)}${Math.ceil(g).toString(16)}ff`, 16)}))
+          }
+        }, 100)
+      };
+      switch (ev.target.name) {
+        case "command": {
+          if (ev.target.getAttribute("data-exec-callback") === "false") {
+            //de-select list
+            ev.target.closest("form").querySelector("input[name=list]:checked").checked = false;
+            return
+          }
         } break;
+        case "list": {
+          switch (v.get("command")) {
+            case 'goto': {
+              const prevStopOffset = `${this.command.options.stopoffset}`;
+              const stopOffset = 20;
+              this.command.run(`set stopoffset=${stopOffset}; set mode=async; targetto ${v.get("list")}; ${v.get("command")} ${v.get("list")}; set stopoffset=${prevStopOffset}`);
+              focusConstellationLine(v.get("list"));
+            } break;
+            case 'lookat':{
+              this.command.run(`${v.get("command")} ${v.get("list")}`);
+              focusConstellationLine(v.get("list"));
+
+            } break;
+            default: {
+              this.command.run(`${v.get("command")} ${v.get("list")}`);
+              focusConstellationLine(v.get("list"));
+            } break;;
+          }
+          ev.target.closest("form").setAttribute("data-previous-camera-lookat", v.get("list"));
+        } break;
+        case "custom-command":
+          switch (v.get("custom-command")) {
+            case "back to earth": {
+              if (this.isAwayFromEarth) {
+                const prevLookAt = ev.target.closest("form").getAttribute("data-previous-camera-lookat");
+                this.command.run(`set mode=async; goto Origin; targetto Origin; ${(prevLookAt !== null) ? `lookat ${prevLookAt};` : ""} set mode=sync;`);
+              }
+            } break;
+            default: {
+              this.command.run(`${v.get("command")}`);
+            } break;
+          }
         default: {
-          this.command.run(`${v.get("command")} ${v.get("list")}`);
         } break;
       }
     }));
@@ -789,7 +824,7 @@ class Constellations {
       constellation: {
         label: constants.symbols[symbol][this.options.lang == "en" ? "label_en" : "label"],
         symbol: symbol,
-        coordinates: starData[0].coordinates
+        coordinates: this.getCenterCoordinate([starData.map(s => s.coordinates)])
       },
       stars: starData
     }
@@ -816,6 +851,13 @@ class Constellations {
       y: (acc.y * i + curr.y)/(i + 1),
       z: (acc.z * i + curr.z)/(i + 1),
     }});
+  }
+  getCenterCoordinateWithFixedLength = (points, length) => {
+    return this.getCenterCoordinate(points.map((point) => point.map((p) => {
+      let coordinate = new THREE.Vector3(p.x, p.y, p.z);
+      coordinate.setLength(length);
+      return {x:coordinate.x, y:coordinate.y, z:coordinate.z};
+    })));
   }
   loadGuideLineData = async (symbol, target = "guide") => {
     // usage: await constellations.loadGuideLineData("Summer Triangle", (await Promise.all(["Lyr", "Cyg", "Aql"].map(s => constellations.loadStarData(s,()=>{})))).map(s => s.stars).reduce((a,c) => a.concat(c)))
@@ -874,7 +916,7 @@ class Constellations {
     let options = this.options;
     let world = new THREE.Group();
     this.data = {stars: stars, constellations: constellationInfo, lines: linePaths}
-
+    this.labels = [];
     // navigation
     if (options.nav) {
       document.querySelector("#navigation-menu-container").style.display = "block";
@@ -959,9 +1001,12 @@ class Constellations {
       let size = 100
       scene.add(new THREE.GridHelper( size * 100, size * 10, 0xfa0a0a, 0x333333))
       scene.add(new THREE.AxesHelper(size));
-      let label_x = createLabel ("x", {r: 255, g:100, b: 100}, 24, 1);
-      let label_y = createLabel ("y", {r: 100, g:255, b: 100}, 24, 1);
-      let label_z = createLabel ("z", {r: 100, g:100, b: 255}, 24, 1);
+      //let label_x = this.createLabel ("x", {r: 255, g:100, b: 100}, 24, 1);
+      //let label_y = this.createLabel ("y", {r: 100, g:255, b: 100}, 24, 1);
+      //let label_z = this.createLabel ("z", {r: 100, g:100, b: 255}, 24, 1);
+      let label_x = this.createTroikaText ("x", {r: 255, g:100, b: 100}, 24);
+      let label_y = this.createTroikaText ("y", {r: 100, g:255, b: 100}, 24);
+      let label_z = this.createTroikaText ("z", {r: 100, g:100, b: 255}, 24);
       label_x.position.set(size / 2, 0.5, 0.5);
       label_y.position.set(0.5, size / 2, 0.5);
       label_z.position.set(0.5, 0.5, size / 2);
@@ -993,7 +1038,8 @@ class Constellations {
     if (options.showConstellationName) {
       constellationInfo.forEach(c => {
         let constellationName = `${c.label} (${c.symbol})`;
-        let label = createLabel(constellationName, {r:0, g:125, b:255}, constellatinNameFontSize, constellatinNameOpacity, constellatinNameScalorFactor)
+        //let label = this.createLabel(constellationName, {r:0, g:125, b:255}, constellatinNameFontSize, constellatinNameOpacity, constellatinNameScalorFactor)
+        let label = this.createTroikaText(constellationName, {r:0, g:125, b:255}, constellatinNameFontSize * constellatinNameScalorFactor);
         let labelCoordinate = new THREE.Vector3(c.coordinates.x, c.coordinates.y, c.coordinates.z);
         labelCoordinate.setLength(constellatinNamePositionOffset);
         label.position.set(labelCoordinate.x, labelCoordinate.y, labelCoordinate.z);
@@ -1032,7 +1078,8 @@ class Constellations {
               }});
               let labelCoordinate = new THREE.Vector3(centerCoordinate.x, centerCoordinate.y, centerCoordinate.z);
               labelCoordinate.setLength(constellatinNamePositionOffset);
-              let label = createLabel(constants.additionalConstellations[c][this.options.lang == "en" ? "label_en" : "label"], {r:0xff, g:0x55, b:0x00}, constellatinNameFontSize, constellatinNameOpacity, constellatinNameScalorFactor);
+              //let label = this.createLabel(constants.additionalConstellations[c][this.options.lang == "en" ? "label_en" : "label"], {r:0xff, g:0x55, b:0x00}, constellatinNameFontSize, constellatinNameOpacity, constellatinNameScalorFactor);
+              let label = this.createTroikaText(constants.additionalConstellations[c][this.options.lang == "en" ? "label_en" : "label"], {r:0xff, g:0x55, b:0x00}, constellatinNameFontSize * constellatinNameScalorFactor)
               label.position.set(labelCoordinate.x, labelCoordinate.y, labelCoordinate.z);
               world.add(label);
             }
@@ -1045,14 +1092,11 @@ class Constellations {
 
             // 星座名
             if (options.showConstellationName) {
-              let centerCoordinate = points.reduce((acc, curr, i) => {return {
-                x: (((acc.center ?? {}).x ?? acc.x) * i + curr.x)/(i + 1),
-                y: (((acc.center ?? {}).y ?? acc.y) * i + curr.y)/(i + 1),
-                z: (((acc.center ?? {}).z ?? acc.z) * i + curr.z)/(i + 1),
-              }});
+              let centerCoordinate = this.getCenterCoordinateWithFixedLength([Array.from(new Set(points))], constellatinNamePositionOffset);
               let labelCoordinate = new THREE.Vector3(centerCoordinate.x, centerCoordinate.y, centerCoordinate.z);
               labelCoordinate.setLength(constellatinNamePositionOffset);
-              let label = createLabel(constants.additionalConstellations[c][this.options.lang == "en" ? "label_en" : "label"], {r:0xff, g:0xaa, b:0x00}, constellatinNameFontSize, constellatinNameOpacity, constellatinNameScalorFactor);
+              //let label = this.createLabel(constants.additionalConstellations[c][this.options.lang == "en" ? "label_en" : "label"], {r:0xff, g:0xaa, b:0x00}, constellatinNameFontSize, constellatinNameOpacity, constellatinNameScalorFactor);
+              let label = this.createTroikaText(constants.additionalConstellations[c][this.options.lang == "en" ? "label_en" : "label"], {r:0xff, g:0xaa, b:0x00}, constellatinNameFontSize * constellatinNameScalorFactor);
               label.position.set(labelCoordinate.x, labelCoordinate.y, labelCoordinate.z);
               world.add(label);
             }
@@ -1097,7 +1141,7 @@ class Constellations {
           
           // 星名の表示
           if (options.showStarName) {
-            let label = createLabel(s.name, s.color);
+            let label = this.createLabel(s.name, s.color);
             label.position.copy(light.position);
             world.add(label);
           }
@@ -1134,7 +1178,8 @@ class Constellations {
 
           // 星名の表示
           if (options.showStarName) {
-            let label = createLabel(s.name, s.color, 38, 1, 0.001);
+            //let label = this.createLabel(s.name, s.color, 38, 1, 0.001);
+            let label = this.createTroikaText(s.name, s.color, 0.15);
             label.position.set(dummy.position.x, dummy.position.y + radius * 1.5, dummy.position.z);
             world.add(label)
           }
@@ -1206,30 +1251,6 @@ class Constellations {
     finalComposer.addPass(renderScene);
     finalComposer.addPass(finalPass);
 
-    function createLabel(text, color, size = 16, opacity = 0.4, scaleFactor = 1/25) {
-      const width = size * 30;
-      const height = size * 5;
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
-      context.canvas.width = width;
-      context.canvas.height = height;
-      context.fillStyle = 'rgba(0, 0, 255, 0.5)'
-      context.font = `${size}px 'Klee One', 'Zen Maru Gothic', 'Noto Sans JP', san-serif`
-      context.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${opacity})`;
-      context.fillText(text, width / 2 - (text.length / 2 * size), height / 2 - size);
-    
-      const texture = new THREE.CanvasTexture(canvas);
-      //texture.minFilter = THREE.LinearFilter;
-      //texture.wrapS = THREE.ClampToEdgeWrapping;
-      //texture.wrapT = THREE.ClampToEdgeWrapping;
-    
-      const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
-      const sprite = new THREE.Sprite(spriteMaterial);
-      sprite.scale.set(width *scaleFactor, height * scaleFactor, 1);
-    
-      return sprite;
-    }
-
     composer.addPass( renderScene );
     renderer.setAnimationLoop((_) => {
       if (options.twincle) {
@@ -1248,6 +1269,16 @@ class Constellations {
         starMesh.instanceColor.needsUpdate = true; // Ensure color updates are reflected
       }
 
+      // rotate direction (if pos is inside of constellation name (15) => set negative dir)
+      this.isAwayFromEarth = Math.sqrt(
+        Math.pow(this.perspectiveCamera.position.x,2) + 
+        Math.pow(this.perspectiveCamera.position.y,2) + 
+        Math.pow(this.perspectiveCamera.position.z,2)) > 15;
+      this.trackballControls.rotateSpeed = (!this.isAwayFromEarth && this.symbol.length >= 48) ? -0.5 : 0.5;
+
+      // labels to face to cameara
+      this.labels.forEach(l => l.quaternion.copy(this.perspectiveCamera.quaternion));
+
       renderer.render(scene, this.perspectiveCamera);
       composer.render();
       bloomComposer.render();
@@ -1264,12 +1295,69 @@ class Constellations {
 
     // initial lookat and target
     if (options.earthView || this.symbol.length >= 48) {
-      this.command.run(`set duration=5000; lookat ${Object.keys(this.predefinedLocations)[1]}; set duration=${this.command.options.duration}`);
+      this.command.run(`set duration=100; lookat ${Object.keys(this.predefinedLocations)[1]}; set duration=${this.command.options.duration}`);
     } else {
-      this.command.run(`set duration=5000; targetto (${this.initialDirection.x},${this.initialDirection.y},${this.initialDirection.z})`);
+      this.command.run(`set duration=100; targetto (${this.initialDirection.x},${this.initialDirection.y},${this.initialDirection.z}); set duration=${this.command.options.duration}`);
     }
   }
+  
+  createLabel = (text, color, size = 16, opacity = 0.4, scaleFactor = 1/25) => {
+    const width = size * 30;
+    const height = size * 5;
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    context.canvas.width = width;
+    context.canvas.height = height;
+    context.fillStyle = 'rgba(0, 0, 255, 0.5)'
+    context.font = `${size}px 'Klee One', 'Zen Maru Gothic', 'Noto Sans JP', san-serif`
+    context.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${opacity})`;
+    context.fillText(text, width / 2 - (text.length / 2 * size), height / 2 - size);
+  
+    const texture = new THREE.CanvasTexture(canvas);
+    //texture.minFilter = THREE.LinearFilter;
+    //texture.wrapS = THREE.ClampToEdgeWrapping;
+    //texture.wrapT = THREE.ClampToEdgeWrapping;
+  
+    const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
+    const sprite = new THREE.Sprite(spriteMaterial);
+    sprite.scale.set(width *scaleFactor, height * scaleFactor, 1);
+  
+    return sprite;
+  }
 
+  createTroikaText = (text, color, size = 16) => {
+    const textMesh = new Text();
+    
+    const fillColor = parseInt(
+      `00${Math.floor((color.r + 0xff) / 2).toString(16)}`.slice(-2) + 
+      `00${Math.floor((color.g + 0xff) / 2).toString(16)}`.slice(-2) + 
+      `00${Math.floor((color.b + 0xff) / 2).toString(16)}`.slice(-2),16);
+    const blurColor = parseInt(
+      `00${color.r.toString(16)}`.slice(-2) + 
+      `00${color.g.toString(16)}`.slice(-2) + 
+      `00${color.b.toString(16)}`.slice(-2),16);
+    textMesh.text = text;
+    textMesh.anchorX = "center";
+    textMesh.anchorY = "middle";
+    textMesh.textAlign = "center";
+    textMesh.fontSize = size;
+    textMesh.font = (this.options.lang === "en") ? `./src/fonts/Barlow_Condensed/BarlowCondensed-Regular.ttf` : `./src/fonts/Klee_One/KleeOne-Regular.ttf`;
+    textMesh.color = fillColor
+    textMesh.fillOpacity = 1;
+    
+    //stroke
+    //textMesh.strokeColor = 0xffffff
+    //textMesh.strokeWidth = "1%";
+    //textMesh.strokeOpacity = 1;
+
+    // outline
+    textMesh.outlineColor = blurColor;
+    textMesh.outlineWidth = "0%";
+    textMesh.outlineOpacity = 0.1;
+    textMesh.outlineBlur = "50%";
+    this.labels.push(textMesh);
+    return textMesh;
+  }
   reset =  () => {
     this.data = new Array();
     this.isInitialized = false;
