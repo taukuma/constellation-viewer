@@ -144,7 +144,6 @@ let UI = {
           let startY = 0;
           let endY = 0;
           let updateActive = (index) => {
-            console.log(`updateActive -> ${index}`);
             items.forEach((item, i) => {
               item.classList.toggle('active', i === index);
             });
@@ -292,8 +291,9 @@ let UI = {
             align-content: center;
             justify-content: center;
             align-items: flex-start;
-            backdrop-filter: blur(5px);
             font-family: "Barlow Condensed", sans-serif;
+            top: calc(50% - 500px / 2);
+            height: 500px;
           }
           .horizontalscroll-switch {
             display: block;
@@ -304,6 +304,7 @@ let UI = {
             font-size: 18px;
             line-height: 50px;
             background: repeating-linear-gradient(-45deg, #ffffff05 0px, #ffffff05 5px, #ffffff15 5px, #ffffff15 10px);
+            backdrop-filter: blur(5px);
             margin: 2px;
             -webkit-transition: all 0.1s ease-in-out;
             -moz-transition: all 0.1s ease-in-out;
@@ -329,7 +330,6 @@ let UI = {
 
           .horizontalscroll-container {
             display:flex;
-            padding-left: 200px;
             flex-direction: row;
             flex-wrap: nowrap;
             justify-content: flex-start;
@@ -378,7 +378,8 @@ let UI = {
               -o-transition: all 0.1s ease-in-out;
               transition: all 0.1s ease-in-out;
           }
-          .horizontalscroll-container .horizontalscroll-item-container:has(input:checked) .horizontalscroll-item{
+          .horizontalscroll-container .horizontalscroll-item-container:has(input:checked) .horizontalscroll-item,
+          .horizontalscroll-container .horizontalscroll-item-container:has(input[type=checkbox]) .horizontalscroll-item{
             height:${maxHeight}px;
             width: ${maxHeight}px;
             cursor: pointer;
@@ -399,16 +400,23 @@ let UI = {
               -o-transition: all 0.1s ease-in-out;
               transition: all 0.1s ease-in-out;
           }
-          .horizontalscroll-container .horizontalscroll-item-container input[type=radio] {
+          .horizontalscroll-container .horizontalscroll-item-container input[type=radio],
+          .horizontalscroll-container .horizontalscroll-item-container input[type=checkbox] {
             visibility: hidden;
             display: none;
           }
           `);
 
           toggle.innerHTML = `
-            <label class="horizontalscroll-switch"><input name="command" type="radio" value="lookat" checked>Look At</label>
-            <label class="horizontalscroll-switch"><input name="command" type="radio" value="goto">Go To</label>
-            <label class="horizontalscroll-switch"><input name="command" type="radio" value="targetto">Rotate Around</label>
+            <div>
+              <label class="horizontalscroll-switch"><input name="command" type="radio" data-exec-callback="false" value="lookat" checked>Look At</label>
+              <label class="horizontalscroll-switch"><input name="command" type="radio" data-exec-callback="false" value="goto">Go To</label>
+              <label class="horizontalscroll-switch"><input name="command" type="radio" data-exec-callback="false" value="targetto">Rotate Around</label>
+              <label class="horizontalscroll-switch"><input name="command" type="radio" data-exec-callback="false" value="polarto">Polar to</label>
+            </div>
+            <div style="margin-top:50px">
+              <label class="horizontalscroll-switch"><input name="custom-command" type="checkbox" data-exec-callback="true" value="back to earth" onclick="this.checked=true;" checked>Back to Earth</label>
+            </div>
           `;
           style.appendChild(css);
           wrapper.append(style);
@@ -435,13 +443,11 @@ let UI = {
             const target = container.querySelector(".horizontalscroll-item-container input:checked");
             const translateY = target.offsetTop - container.offsetHeight / 2 + target.offsetHeight / 2
             //content.style.transform = `translateY(-${translateY}px)`;
-            console.log(content.item(index))
           }
           
           container.addEventListener("change", (ev) => {
-            let data = new FormData(container)
-            console.log()
-            callback(new FormData(container));
+            console.log("onchage")
+            callback(ev, new FormData(container));
           })
 
           // init selection
