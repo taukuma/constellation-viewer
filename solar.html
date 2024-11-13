@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Solar</title>
+    <meta charset="UTF-8" />
+    <meta name="theme-color" content="#000000" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Yomogi&family=Klee+One&family=Noto+Sans+JP:wght@100..900&family=Zen+Maru+Gothic&family=Barlow+Condensed&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="src/css/styles.css">
+  </head>
+  <body class="black">
+    <script type="importMap">
+			{
+				"imports": {
+					"three": "./src/js/three.js-dev/build/three.module.js",
+					"three/addons/": "./src/js/three.js-dev/examples/jsm/",
+                    "solar": "./src/js/solar.js",
+                    "trioka-three-text": "./src/js/troika/troika-three-text.cdn.min.js",
+                    "troika-three-utils": "./src/js/troika/troika-three-utils.cdn.min.js",
+                    "troika-worker-utils": "./src/js/troika/troika-worker-utils.cdn.min.js",
+                    "webgl-sdf-generator": "./src/js/troika/webgl-sdf-generator.cdn.min.js",
+                    "bidi-js": "./src/js/troika/bidi-js.cdn.min.js"
+				}
+			}
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="src/js/constants.js"></script>
+    <script src="src/js/converters.js"></script>
+    <script src="src/js/solar.js" type="module"></script>
+    <script src="src/js/ui-component.js"></script>
+    <script src="src/js/index_solar.js" type="module"></script>
+  </body>
+</html>
