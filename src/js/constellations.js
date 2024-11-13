@@ -737,12 +737,16 @@ class Constellations {
           ev.target.closest("form").setAttribute("data-previous-camera-lookat", v.get("list"));
         } break;
         case "custom-command":
+          console.log(v.get("custom-command"), ev)
           switch (v.get("custom-command")) {
             case "back to earth": {
               if (this.isAwayFromEarth) {
                 const prevLookAt = ev.target.closest("form").getAttribute("data-previous-camera-lookat");
                 this.command.run(`set mode=async; goto Origin; targetto Origin; ${(prevLookAt !== null) ? `lookat ${prevLookAt};` : ""} set mode=sync;`);
               }
+            } break;
+            case "polar to north": {
+              this.command.run(`polarto (0,1,0)`);
             } break;
             default: {
               this.command.run(`${v.get("command")}`);
@@ -807,7 +811,7 @@ class Constellations {
       }
 
       return {
-        name:s["名前"],
+        name: s["名前"],
         symbol: symbol,
         coordinates: coordinates.coordinate,
         distance: coordinates.distance,
@@ -817,7 +821,8 @@ class Constellations {
         "スペクトル分類": spectralClassString, 
         absoluteMagnitude: absoluteMagnitude,
         magnitude: magnitude,
-        id: hip
+        id: hip,
+        additional_info: s.additional_info
       }
     }).filter(s => s !== undefined);
     return {
@@ -840,7 +845,7 @@ class Constellations {
       .ConstellationLines
       .filter(l => l.Key === `CNST_${symbol}`)[0].Lines
     let lines = lineData
-      .map(l => l.map(hip => (stars.filter(s => s.id === hip)[0] ?? {}).coordinates).filter(s => s !== undefined))
+      .map(l => l.map(hip => (stars.filter(s => s.id === hip).map(s => {s.isPartOfLine = true; return s;})[0] ?? {}).coordinates).filter(s => s !== undefined))
     this.predefinedLocations[symbol] = this.getCenterCoordinate(lines);
     return lines;
   };
@@ -959,7 +964,7 @@ class Constellations {
     this.perspectiveCamera = new THREE.PerspectiveCamera(
       options.focalLength ?? 45,
       ASPECT,
-      1,
+      0.001,
       999999
     );
 
@@ -974,6 +979,7 @@ class Constellations {
     renderer.toneMappingExposure = Math.pow(0.8, 2.0);
     renderer.setClearColor( 0x000000, 0.5 )
     renderer.domElement.style.transform = `scale(${((window.innerHeight < window.innerWidth)? 1 : window.innerHeight / windowSize.height)})`;
+    renderer.domElement.setAttribute("id","three");
     renderElement.appendChild(renderer.domElement);
 
     // コントローラーの定義
@@ -1177,10 +1183,10 @@ class Constellations {
           starMesh.setMatrixAt(i, dummy.matrix);
 
           // 星名の表示
-          if (options.showStarName) {
+          if (options.showStarName && s.isPartOfLine) {
             //let label = this.createLabel(s.name, s.color, 38, 1, 0.001);
             let label = this.createTroikaText(s.name, s.color, 0.15);
-            label.position.set(dummy.position.x, dummy.position.y + radius * 1.5, dummy.position.z);
+            label.position.set(dummy.position.x, dummy.position.y + radius * 5, dummy.position.z);
             world.add(label)
           }
     
@@ -1200,7 +1206,7 @@ class Constellations {
     world.rotation.y = options.worldRotateY;
     world.rotation.z = options.worldRotateZ;
     scene.add(world);
-    
+
     // composer setting
     const renderScene   = new RenderPass( scene, this.perspectiveCamera );
     const composer      = new EffectComposer( renderer );

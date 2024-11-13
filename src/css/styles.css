@@ -545,14 +545,13 @@ cursor: pointer;
 
 #navigation-menu-container {
  background-color: #000;
- z-index: 10;
 }
 #navigation-menu-trigger {
   position: fixed; 
   transform: scale(0.8);
   right: 15px; 
   top:15px;
-  z-index: 1;
+  z-index: 102;
 }
 #navigation-menu-container .settings {
   height: 0;
@@ -569,16 +568,20 @@ cursor: pointer;
 }
 #navigation-menu-container .menu-trigger.active + .settings {
   opacity: 1;
+  z-index: 101;
   /*
   height: calc(100vh - 45px);
   box-shadow: 0 0 120px 20px #b6b6b61a;
   border: 1px solid #000;
+  */
   -webkit-transition: all 0.3s ease-in-out;
   -moz-transition: all 0.3s ease-in-out;
   -ms-transition: all 0.3s ease-in-out;
   -o-transition: all 0.3s ease-in-out;
   transition: all 0.3s ease-in-out;
-  */
+}
+#three {
+  z-index:100;
 }
 
 #navigation-menu {
