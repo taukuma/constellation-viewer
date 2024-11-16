@@ -7,6 +7,7 @@ import {UnrealBloomPass} from 'three/addons/postprocessing/UnrealBloomPass.js';
 import {ShaderPass} from 'three/addons/postprocessing/ShaderPass.js';
 import {Lensflare, LensflareElement} from 'three/addons/objects/Lensflare.js';
 import {Text} from 'trioka-three-text';
+import Solar from 'solar';
 
 class Constellations {
   constructor() {
@@ -592,6 +593,7 @@ class Constellations {
       focalLength : parseFloat(renderParams.focalLength ?? 45),
       grid        : renderParams.grid == '1',
       earthView   : renderParams.earthView == '1',
+      showEarth   : renderParams.showEarth == '1',
       showLine    :renderParams.showLine != '0',
       showStarName: renderParams.showStarName == '1',
       showConstellationName: renderParams.showConstellationName == '1',
@@ -605,7 +607,7 @@ class Constellations {
       autoRotate  : renderParams.autoRotate == '1',
       autoRotateSpeed: renderParams.autoRotateSpeed,
       distance    : renderParams.distance != '0',
-      distanceMultiplyScalar: parseFloat(renderParams.distanceMultiplyScalar ?? 1/5),
+      distanceMultiplyScalar: Math.pow(10, parseFloat(renderParams.distanceMultiplyScalar ?? 0)),
       nav         : renderParams.nav == '1',
       renderMode  : renderParams.renderMode,
       twincle     : renderParams.twincle == '1',
@@ -746,7 +748,8 @@ class Constellations {
               }
             } break;
             case "polar to north": {
-              this.command.run(`polarto (0,1,0)`);
+              const prevEasing = this.command.options.easing;
+              this.command.run(`set easing=none; polarto (0,1,0); set easing=${prevEasing}`);
             } break;
             default: {
               this.command.run(`${v.get("command")}`);
@@ -1202,6 +1205,12 @@ class Constellations {
       } break;
     }
 
+    // 太陽系（地球）
+    if (this.options.showEarth) {
+      const solar = new Solar();
+      world.add(solar.getObjects(solar.planets.earth, 0.05));
+    }
+
     world.rotation.x = options.worldRotateX;
     world.rotation.y = options.worldRotateY;
     world.rotation.z = options.worldRotateZ;
@@ -1275,11 +1284,14 @@ class Constellations {
         starMesh.instanceColor.needsUpdate = true; // Ensure color updates are reflected
       }
 
-      // rotate direction (if pos is inside of constellation name (15) => set negative dir)
-      this.isAwayFromEarth = Math.sqrt(
+      // rotate direction (if pos is inside of constellation name (5~15) => set negative dir)
+      const cameraDistanceFromOrigin = Math.sqrt(
         Math.pow(this.perspectiveCamera.position.x,2) + 
         Math.pow(this.perspectiveCamera.position.y,2) + 
-        Math.pow(this.perspectiveCamera.position.z,2)) > 15;
+        Math.pow(this.perspectiveCamera.position.z,2));
+      this.isAwayFromEarth = 
+        (options.showEarth && cameraDistanceFromOrigin > 0.05) ||
+        (!options.showEarth && cameraDistanceFromOrigin > 10);
       this.trackballControls.rotateSpeed = (!this.isAwayFromEarth && this.symbol.length >= 48) ? -0.5 : 0.5;
 
       // labels to face to cameara

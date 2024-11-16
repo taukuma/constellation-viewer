@@ -26,7 +26,7 @@ class Solar {
         this.planets = planets;
     };
 
-    getObjects = (planets) => {
+    getObjects = (planets, baseRadius = 2) => {
       const planetGroup = new THREE.Group();
       switch (planets) {
         case this.planets.sun: {} break;
@@ -36,14 +36,14 @@ class Solar {
 
           // planets
           // Load Textures
-          const earthRadius = 2;
-          const cloudRadius = earthRadius * 1.015
-          const atmosphereRadius = earthRadius * 1.03;
+          const earthRadius = baseRadius || 2;
+          const cloudRadius = earthRadius * (1 + earthRadius * 0.3)
+          const atmosphereRadius = earthRadius * 1;
           const numberOfMesh = 256
           const textureLoader = new THREE.TextureLoader();
           const diffuseMap = textureLoader.load('./src/img/textures/earth/Earth_Diffuse_6K.jpg');
-          const glossinessMap = textureLoader.load('./src/img/textures/earth/Earth_Glossiness_6K.jpg');
-          const illuminationMap = textureLoader.load('./src/img/textures/earth/Earth_Illumination_6K.jpg');
+          //const glossinessMap = textureLoader.load('./src/img/textures/earth/Earth_Glossiness_6K.jpg');
+          //const illuminationMap = textureLoader.load('./src/img/textures/earth/Earth_Illumination_6K.jpg');
           const normalMap = textureLoader.load('./src/img/textures/earth/Earth_NormalNRM_6K.jpg');
           const cloudMap = textureLoader.load('./src/img/textures/earth/Earth_Clouds_6K.jpg');
 
@@ -51,11 +51,14 @@ class Solar {
           const earthMaterial = new THREE.MeshStandardMaterial({
             map: diffuseMap,
             //roughnessMap: glossinessMap,  // Might need to adjust depending on map type
-            //roughness: -0.1,
+            //roughness: -1000,
             //emissiveMap: illuminationMap,
             //emissiveIntensity: 0.1,       // Adjust based on how bright you want city lights
             displacementMap: normalMap,
-            displacementScale: 0.05
+            displacementScale: earthRadius * 0.025,
+            transparent: false,
+            opacity: 1,
+            //blending: THREE.NoBlending,
           });
 
           // Earth Sphere
@@ -66,7 +69,7 @@ class Solar {
           const cloudMaterial = new THREE.MeshStandardMaterial({
             map: cloudMap,
             displacementMap: cloudMap,
-            displacementScale: 0.01,
+            displacementScale: cloudRadius * 0.01,
             transparent: true,
             blending: THREE.AdditiveBlending,
             opacity: 0.6,                 // Adjust for desired cloud density
@@ -79,8 +82,8 @@ class Solar {
           const hazeShaderMaterial = new THREE.ShaderMaterial({
             uniforms: {
               color: { value: new THREE.Color(0x0055ff) },
-              opacity: { value: 0.8 },
-              blurAmount: { value: 1 } // Control the blur intensity
+              opacity: { value: 1 },
+              blurAmount: { value: 0.5 } // Control the blur intensity
             },
             vertexShader: `
               varying vec3 vPosition;
@@ -109,17 +112,17 @@ class Solar {
           
           // Group Earth and Clouds
           const earthGroup = new THREE.Group();
-          earthGroup.add(atmosphereHaze);
+          //earthGroup.add(atmosphereHaze);
           earthGroup.add(earth);
           earthGroup.add(clouds);
 
           const ambientLight = new THREE.AmbientLight(0xaaaaaa);  // Soft light
-          const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-          directionalLight.position.set(3, 5, 3);
+          //const light = new THREE.SpotLight(0xeeaaee, 4, 0, Math.PI / 4, 10, 0.5);
+          //light.position.set(3, 50, 3);
     
           planetGroup.add(earthGroup);
           planetGroup.add(ambientLight);
-          planetGroup.add(directionalLight);
+          //planetGroup.add(light);
 
 /*    
           // Load Textures
