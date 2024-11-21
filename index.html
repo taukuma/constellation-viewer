@@ -4,6 +4,7 @@
     <title>Constellations</title>
     <meta charset="UTF-8" />
     <meta name="theme-color" content="#000000" />
+    <link rel="preconnect" href="src/fonts/Barlow_Condensed/BarlowCondensed-Medium.ttf" type="font/ttf" crossorigin="anonymous" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Yomogi&family=Klee+One&family=Noto+Sans+JP:wght@100..900&family=Zen+Maru+Gothic&family=Barlow+Condensed&display=swap" rel="stylesheet">
@@ -29,7 +30,7 @@
     </div>
     <div id="constellation_list" class="hide">
       <div id="index-title-frame-top"></div>
-      <h1 id="index-title">星座<br><span style="font-size:0.5em;display: block;line-height: 14px;">Constellation</span></h1>
+      <h1 id="index-title">星座<span style="font-size:0.5em;display: block; font-family:'Klee One'">Constellation</span></h1>
       <div id="index-title-frame-bottom"></div>
       <div id="param-list">
         <button class="menu-trigger">
@@ -148,6 +149,9 @@
             <div class="param-items">星座線を表示<input class="tgl tgl-ios params" id="param-showLine" type="checkbox" name="param-showLine" checked/><label class="tgl-btn" for="param-showLine"></label></div>
             <div class="param-items">星座名を表示<input class="tgl tgl-ios params" id="param-showConstellationName" type="checkbox" name="param-showConstellationName" checked/><label class="tgl-btn" for="param-showConstellationName"></label></div>
             <div class="param-items">星名を表示<input class="tgl tgl-ios params" id="param-showStarName" type="checkbox" name="param-showStarName"/><label class="tgl-btn" for="param-showStarName"></label></div>
+          </div>
+          <div>
+            <div class="param-items">地球を表示<input class="tgl tgl-ios params" id="param-showEarth" type="checkbox" name="param-showEarth" checked/><label class="tgl-btn" for="param-showEarth"></label></div>
             <div class="param-items">ガイド星座<input class="tgl tgl-ios params" id="param-showGuideConstellations" type="checkbox" name="param-showGuideConstellations" checked/><label class="tgl-btn" for="param-showGuideConstellations"></label></div>
             <div class="param-items">グリッド表示<input class="tgl tgl-ios params" id="param-grid" type="checkbox" name="param-grid"/><label class="tgl-btn" for="param-grid"></label></div>
           </div>
@@ -159,7 +163,7 @@
             <div class="param-items">瞬き<input class="tgl tgl-ios params" id="param-twincle" type="checkbox" name="param-twincle"/><label class="tgl-btn" for="param-twincle"></label></div>
           </div>
           <div>
-            <div class="param-items" style="width: 80%">距離倍率<div class="range-ios"><input class=" params" id="param-distance-scalor" type="range" name="param-distance-scalor" value="0.2" min="0.1" max="1" step="0.0125"/></div></div>
+            <div class="param-items" style="width: 80%">距離倍率<div class="range-ios"><input class=" params" id="param-distance-scalor" type="range" name="param-distance-scalor" value="0" min="-1" max="1" step="0.0125"/></div></div>
           </div>
           <div class="hide">
             <div class="param-items">X軸回転
@@ -296,6 +300,7 @@
 					"three": "./src/js/three.js-dev/build/three.module.js",
 					"three/addons/": "./src/js/three.js-dev/examples/jsm/",
           "constellations": "./src/js/constellations.js",
+          "solar": "./src/js/solar.js",
           "trioka-three-text": "./src/js/troika/troika-three-text.cdn.min.js",
           "troika-three-utils": "./src/js/troika/troika-three-utils.cdn.min.js",
           "troika-worker-utils": "./src/js/troika/troika-worker-utils.cdn.min.js",

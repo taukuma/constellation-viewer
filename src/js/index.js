@@ -92,6 +92,7 @@ let updateLink = (target) => {
   let showConstellationName = document.querySelector("input[name=param-showConstellationName]").checked ? 1 : 0;
   let showGuideConstellations = document.querySelector("input[name=param-showGuideConstellations]").checked ? 1 : 0;
   let showStarName = document.querySelector("input[name=param-showStarName]").checked ? 1 : 0;
+  let showEarth = document.querySelector("input[name=param-showEarth]").checked ? 1 : 0;
   let autoLoad = document.querySelector("input[name=param-autoLoad]").checked ? 1 : 0;
   let grid = document.querySelector("input[name=param-grid]").checked ? 1 : 0;
   let autoRotate = document.querySelector("input[name=param-autoRotate]").checked ? 1 : 0;
@@ -104,7 +105,7 @@ let updateLink = (target) => {
   let worldRotateZ = document.querySelector("select[name=worldRotateZ]").value;
   let cons = [];
   document.querySelectorAll("input.constellation-link:checked").forEach(v => cons.push(v.value))
-  return `index.html?constellations=${cons.join("+")}&focalLength=${focalLength}&rotateX=${rotateX}&rotateY=${rotateY}&rotateZ=${rotateZ}&showLine=${showLine}&showConstellationName=${showConstellationName}&showGuideConstellations=${showGuideConstellations}&showStarName=${showStarName}&autoLoad=${autoLoad}&grid=${grid}&autoRotate=${autoRotate}&distance=${distance}&distanceMultiplyScalar=${distanceMultiplyScalar}&nav=${nav}&twincle=${twincle}&worldRotateX=${worldRotateX}&worldRotateY=${worldRotateY}&worldRotateZ=${worldRotateZ}&lang=${params.lang || "ja"}`;
+  return `index.html?constellations=${cons.join("+")}&focalLength=${focalLength}&rotateX=${rotateX}&rotateY=${rotateY}&rotateZ=${rotateZ}&showLine=${showLine}&showConstellationName=${showConstellationName}&showGuideConstellations=${showGuideConstellations}&showStarName=${showStarName}&autoLoad=${autoLoad}&showEarth=${showEarth}&grid=${grid}&autoRotate=${autoRotate}&distance=${distance}&distanceMultiplyScalar=${distanceMultiplyScalar}&nav=${nav}&twincle=${twincle}&worldRotateX=${worldRotateX}&worldRotateY=${worldRotateY}&worldRotateZ=${worldRotateZ}&lang=${params.lang || "ja"}`;
 };
 
 let setFilter = (e) => {
