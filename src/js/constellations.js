@@ -710,6 +710,7 @@ class Constellations {
           }
         }, 100)
       };
+
       switch (ev.target.name) {
         case "command": {
           if (ev.target.getAttribute("data-exec-callback") === "false") {
@@ -737,7 +738,16 @@ class Constellations {
             } break;;
           }
           ev.target.closest("form").setAttribute("data-previous-camera-lookat", v.get("list"));
-        } break;
+/* ********************************************************/
+          console.log(v.get("list"), this.data.stars.filter(s => s.symbol === v.get("list") && s.name !== ""));
+          let starListHtml = this.data.stars.filter(s => s.symbol === v.get("list") && s.name !== "").map(s => `
+              <label class="horizontalscroll-switch">
+                <input name="custom-command" type="checkbox" data-exec-callback="true" value="set stopoffset=5; set mode=async; ##_COMMAND_## (${s.coordinates.x},${s.coordinates.y},${s.coordinates.z}); targetto (${s.coordinates.x},${s.coordinates.y},${s.coordinates.z}); set mode=sync; set stopoffset=${this.command.options.stopoffset}" onclick="setTimeout(()=>{this.checked=false;},500)">${s.name}
+              </label>  
+          `).join("")
+          document.querySelector("#ui-component-star-lists").innerHTML = starListHtml;
+/* *********************************************************/
+          } break;
         case "custom-command":
           console.log(v.get("custom-command"), ev)
           switch (v.get("custom-command")) {
@@ -752,7 +762,7 @@ class Constellations {
               this.command.run(`set easing=none; polarto (0,1,0); set easing=${prevEasing}`);
             } break;
             default: {
-              this.command.run(`${v.get("command")}`);
+              this.command.run(`${v.get("custom-command").replace(/##_COMMAND_##/g, v.get("command"))}`);
             } break;
           }
         default: {

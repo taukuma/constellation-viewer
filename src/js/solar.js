@@ -37,8 +37,8 @@ class Solar {
           // planets
           // Load Textures
           const earthRadius = baseRadius || 2;
-          const cloudRadius = earthRadius * (1 + earthRadius * 0.3)
-          const atmosphereRadius = earthRadius * 1;
+          const cloudRadius = earthRadius * (1 + earthRadius * 0.00025)
+          const atmosphereRadius = earthRadius * (1 + earthRadius * 0.2);
           const numberOfMesh = 256
           const textureLoader = new THREE.TextureLoader();
           const diffuseMap = textureLoader.load('./src/img/textures/earth/Earth_Diffuse_6K.jpg');
@@ -51,11 +51,11 @@ class Solar {
           const earthMaterial = new THREE.MeshStandardMaterial({
             map: diffuseMap,
             //roughnessMap: glossinessMap,  // Might need to adjust depending on map type
-            //roughness: -1000,
+            //roughness: 10,
             //emissiveMap: illuminationMap,
-            //emissiveIntensity: 0.1,       // Adjust based on how bright you want city lights
+            //emissiveIntensity: 1,       // Adjust based on how bright you want city lights
             displacementMap: normalMap,
-            displacementScale: earthRadius * 0.025,
+            displacementScale: earthRadius * 0.0025,
             transparent: false,
             opacity: 1,
             //blending: THREE.NoBlending,
@@ -72,7 +72,7 @@ class Solar {
             displacementScale: cloudRadius * 0.01,
             transparent: true,
             blending: THREE.AdditiveBlending,
-            opacity: 0.6,                 // Adjust for desired cloud density
+            opacity: 0.9,                 // Adjust for desired cloud density
           });
           const cloudGeometry = new THREE.SphereGeometry(cloudRadius, numberOfMesh, numberOfMesh);  // Slightly larger than Earth
           const clouds = new THREE.Mesh(cloudGeometry, cloudMaterial);
@@ -82,8 +82,8 @@ class Solar {
           const hazeShaderMaterial = new THREE.ShaderMaterial({
             uniforms: {
               color: { value: new THREE.Color(0x0055ff) },
-              opacity: { value: 1 },
-              blurAmount: { value: 0.5 } // Control the blur intensity
+              opacity: { value: 0.5 },
+              blurAmount: { value: 1.0 } // Control the blur intensity
             },
             vertexShader: `
               varying vec3 vPosition;
@@ -112,9 +112,9 @@ class Solar {
           
           // Group Earth and Clouds
           const earthGroup = new THREE.Group();
-          //earthGroup.add(atmosphereHaze);
           earthGroup.add(earth);
           earthGroup.add(clouds);
+          earthGroup.add(atmosphereHaze);
 
           const ambientLight = new THREE.AmbientLight(0xaaaaaa);  // Soft light
           //const light = new THREE.SpotLight(0xeeaaee, 4, 0, Math.PI / 4, 10, 0.5);
@@ -231,6 +231,7 @@ class Solar {
           earthGroup.add(atmosphereHaze);
           planetGroup.add(earthGroup);
 */
+
         } break;
         case this.planets.mars: {} break;
         case this.planets.jupitor: {} break;
