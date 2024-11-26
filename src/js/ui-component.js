@@ -423,7 +423,6 @@ let UI = {
           }
           #ui-component-star-lists label {
             margin: 2px;
-            display:block;
             white-space: nowrap;
             background:repeating-linear-gradient(-45deg, #ffffff05 0px, #ffffff05 5px, #ffffff10 5px, #ffffff10 10px);
             filter: brightness(2);
@@ -431,6 +430,13 @@ let UI = {
             text-align: center;
             margin: 0 1px;
             width: inherit;
+            line-height:23px;
+            display: flex;
+            flex-direction: column;
+            flex-wrap: nowrap;
+            align-content: center;
+            justify-content: center;
+            align-items: center;
           }
           #ui-component-star-lists label:first-child {
             border-radius: 10px 0px 0px 10px;

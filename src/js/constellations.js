@@ -742,7 +742,7 @@ class Constellations {
           console.log(v.get("list"), this.data.stars.filter(s => s.symbol === v.get("list") && s.name !== ""));
           let starListHtml = this.data.stars.filter(s => s.symbol === v.get("list") && s.name !== "").map(s => `
               <label class="horizontalscroll-switch">
-                <input name="custom-command" type="checkbox" data-exec-callback="true" value="set stopoffset=5; set mode=async; ##_COMMAND_## (${s.coordinates.x},${s.coordinates.y},${s.coordinates.z}); targetto (${s.coordinates.x},${s.coordinates.y},${s.coordinates.z}); set mode=sync; set stopoffset=${this.command.options.stopoffset}" onclick="setTimeout(()=>{this.checked=false;},500)">${s.name}
+                <input name="custom-command" type="checkbox" data-exec-callback="true" value="set stopoffset=5; set mode=async; ##_COMMAND_## (${s.coordinates.x},${s.coordinates.y},${s.coordinates.z}); targetto (${s.coordinates.x},${s.coordinates.y},${s.coordinates.z}); set mode=sync; set stopoffset=${this.command.options.stopoffset}" onclick="setTimeout(()=>{this.checked=false;},500)">${(this.options.lang == "en") ? `${s.name_en}${s.aka.en ? `<br>(${s.aka.en})`: ""}` : `${s.name}${s.aka.ja ? `<br>(${s.aka.ja})`: ""}`}
               </label>  
           `).join("")
           document.querySelector("#ui-component-star-lists").innerHTML = starListHtml;
@@ -823,9 +823,13 @@ class Constellations {
         return undefined;
       }
 
-      return {
+      let starInfo = {
         name: s["名前"],
+        name_en: "",
         symbol: symbol,
+        bayer_designation: (s["バイエル符号"] || "").replace(/\[.*/g,""),
+        flamsteed_designation: (s["フラムスティード番号"] || "").replace(/\[.*/g,""),
+        aka: ((s.additional_info || {})["仮符号・別名"] || ""),
         coordinates: coordinates.coordinate,
         distance: coordinates.distance,
         render_distance: coordinates.render_distance,
@@ -837,6 +841,18 @@ class Constellations {
         id: hip,
         additional_info: s.additional_info
       }
+      let aka = (starInfo.aka.split(",").map(a => a.replace(/\[.*/g, ""))) || []
+      starInfo.aka = {
+        ja: aka.filter(a => a.match(/^[ア-ン]/g))[0],
+        en: aka.filter(a => a.match(/^[A-Za-z]/g))[0]
+      }
+      starInfo.name_en = (starInfo.bayer_designation != "") 
+        ? `${starInfo.bayer_designation} ${data.info["属格形"].replace(/\[.*/g,"")}`
+        : (starInfo.flamsteed_designation != "")
+          ? `${starInfo.flamsteed_designation} ${data.info["属格形"].replace(/\[.*/g,"")}`
+          : starInfo.name;
+
+      return starInfo
     }).filter(s => s !== undefined);
     return {
       constellation: {
@@ -1198,7 +1214,7 @@ class Constellations {
           // 星名の表示
           if (options.showStarName && s.isPartOfLine) {
             //let label = this.createLabel(s.name, s.color, 38, 1, 0.001);
-            let label = this.createTroikaText(s.name, s.color, 0.15);
+            let label = this.createTroikaText(s[this.options.lang == "en"? "name_en" : "name"], s.color, 0.15);
             label.position.set(dummy.position.x, dummy.position.y + radius * 5, dummy.position.z);
             world.add(label)
           }
