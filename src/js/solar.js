@@ -41,7 +41,7 @@ class Solar {
           const atmosphereRadius = earthRadius * (1 + earthRadius * 0.2);
           const numberOfMesh = 256
           const textureLoader = new THREE.TextureLoader();
-          const diffuseMap = textureLoader.load('./src/img/textures/earth/Earth_Diffuse_6K.jpg');
+          const diffuseMap = textureLoader.load('./src/img/textures/earth/Earth_Diffuse_6K_edit.jpg');
           //const glossinessMap = textureLoader.load('./src/img/textures/earth/Earth_Glossiness_6K.jpg');
           //const illuminationMap = textureLoader.load('./src/img/textures/earth/Earth_Illumination_6K.jpg');
           const normalMap = textureLoader.load('./src/img/textures/earth/Earth_NormalNRM_6K.jpg');
