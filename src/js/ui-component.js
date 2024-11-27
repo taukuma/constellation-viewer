@@ -301,7 +301,7 @@ let UI = {
             width: 120px;
             height: 50px;
             padding: 0px 15px;
-            filter: brightness(0.4);
+            filter: brightness(0.8);
             font-size: 18px;
             line-height: 50px;
             background: repeating-linear-gradient(-45deg, #ffffff05 0px, #ffffff05 5px, #ffffff15 5px, #ffffff15 10px);
@@ -315,9 +315,11 @@ let UI = {
           }
           .horizontalscroll-switch:has(input:checked) {
             filter: brightness(2);
-            line-height: 50px;
+            line-height: 75px;
             background: repeating-linear-gradient(45deg, #ffffff05 0px, #ffffff05 5px, #ffffff15 5px, #ffffff15 10px);
             0 0 50px #000000, inset 0 0 20px #ffffff17;
+            height: 75px;
+            font-size: 22px;
             -webkit-transition: all 0.1s ease-in-out;
             -moz-transition: all 0.1s ease-in-out;
             -ms-transition: all 0.1s ease-in-out;
@@ -334,13 +336,13 @@ let UI = {
             flex-direction: row;
             flex-wrap: nowrap;
             justify-content: flex-start;
-            align-items: flex-end;
+            align-items: center;
             height: ${maxHeight}px;
             margin: 0 165px;
           }
           .horizontalscroll-container .horizontalscroll-item-container{
             background: repeating-linear-gradient(-45deg, #ffffff05 0px, #ffffff05 5px, #ffffff10 5px, #ffffff10 10px);
-            filter: brightness(0.7);
+            /*filter: brightness(0.7);*/
             backdrop-filter: blur(2px);
               -webkit-transition: all 0.1s ease-in-out;
               -moz-transition: all 0.1s ease-in-out;
@@ -450,17 +452,17 @@ let UI = {
 
           toggle.innerHTML = `
             <div style="position: fixed; bottom: 8.5%;">
-              <label class="horizontalscroll-switch" style="border-radius: 10px 10px 0px 0px"><input name="command" type="radio" data-exec-callback="false" value="lookat" checked>Look At</label>
-              <label class="horizontalscroll-switch" style="border-radius: 0px 0px 0px 0px"><input name="command" type="radio" data-exec-callback="false" value="goto">Go To</label>
-              <label class="horizontalscroll-switch" style="border-radius: 0px 0px 10px 10px"><input name="command" type="radio" data-exec-callback="false" value="targetto">Orbit Around</label>
+              <label class="horizontalscroll-switch" style="border-radius: 10px 10px 0px 0px; cursor: pointer;"><input name="command" type="radio" data-exec-callback="false" value="lookat" checked>Look At</label>
+              <label class="horizontalscroll-switch" style="border-radius: 0px 0px 0px 0px; cursor: pointer;"><input name="command" type="radio" data-exec-callback="false" value="goto">Go To</label>
+              <label class="horizontalscroll-switch" style="border-radius: 0px 0px 10px 10px; cursor: pointer;"><input name="command" type="radio" data-exec-callback="false" value="targetto">Orbit Around</label>
             </div>
             <div style="margin-top:50px">
-              <label class="horizontalscroll-switch" style="display: flex;flex-direction: row;flex-wrap: nowrap;align-content: center;justify-content: flex-end;align-items: center;background:repeating-linear-gradient(-45deg, #ffffff05 0px, #ffffff05 5px, #ffffff10 5px, #ffffff10 10px); filter: brightness(1); border-radius: 10px 10px 0 0;">
+              <label class="horizontalscroll-switch" style="display: flex;flex-direction: row;flex-wrap: nowrap;align-content: center;justify-content: flex-end;align-items: center;background:repeating-linear-gradient(-45deg, #ffffff05 0px, #ffffff05 5px, #ffffff10 5px, #ffffff10 10px); filter: brightness(1); border-radius: 10px 10px 0 0; cursor: pointer;">
                 <input name="custom-command" type="checkbox" data-exec-callback="true" value="polar to north" onclick="setTimeout(()=>{this.checked=false;},500)">
                 <div style="position: absolute;left: 0; height:45px; width:45px;">${compassSVG}</div>
                 Polar to North
               </label>
-              <label class="horizontalscroll-switch" style="display: flex;flex-direction: row;flex-wrap: nowrap;align-content: center;justify-content: flex-end;align-items: center;background:repeating-linear-gradient(-45deg, #ffffff05 0px, #ffffff05 5px, #ffffff10 5px, #ffffff10 10px); filter: brightness(1);; border-radius: 0 0 10px 10px;">
+              <label class="horizontalscroll-switch" style="display: flex;flex-direction: row;flex-wrap: nowrap;align-content: center;justify-content: flex-end;align-items: center;background:repeating-linear-gradient(-45deg, #ffffff05 0px, #ffffff05 5px, #ffffff10 5px, #ffffff10 10px); filter: brightness(1);; border-radius: 0 0 10px 10px; cursor: pointer;">
                 <input name="custom-command" type="checkbox" data-exec-callback="true" value="back to earth" onclick="setTimeout(()=>{this.checked=false;},500)">
                 <div style="position: absolute;left: 0;height:45px;width:45px;display: flex;flex-direction: column;flex-wrap: nowrap;align-content: center;justify-content: center;align-items: center;">${earthSVG}</div>
                 Back to Earth
@@ -481,7 +483,7 @@ let UI = {
           //return
           return wrapper;
         },
-        activate: (container, activeIndex, callback, options) => {
+        activate: (container, callback, options) => {
           options = options || {};
           let content = container.querySelectorAll(".horizontalscroll-item-container input");
 
@@ -499,10 +501,6 @@ let UI = {
           container.addEventListener("change", (ev) => {
             callback(ev, new FormData(container));
           })
-
-          // init selection
-          activeIndex = (activeIndex < 0) ? 0 : activeIndex;
-          updateActive(activeIndex)
         }
       }
     }
