@@ -678,7 +678,7 @@ class Constellations {
     const lookAtControl = UI.Component.horizontalscroll.get(constellationList);
     lookAtControl.style.fontFamily = "Klee One";
     navMenu.append(lookAtControl);
-    UI.Component.horizontalscroll.activate(lookAtControl, 0, ((ev,v) => {
+    UI.Component.horizontalscroll.activate(lookAtControl, ((ev,v) => {
       let focusConstellationLine = (target) => {
         let timeRemains = 5000;
         let iter = 0;
@@ -741,7 +741,7 @@ class Constellations {
 /* ********************************************************/
           console.log(v.get("list"), this.data.stars.filter(s => s.symbol === v.get("list") && s.name !== ""));
           let starListHtml = this.data.stars.filter(s => s.symbol === v.get("list") && s.name !== "").map(s => `
-              <label class="horizontalscroll-switch">
+              <label class="horizontalscroll-switch" style="cursor: pointer;">
                 <input name="custom-command" type="checkbox" data-exec-callback="true" value="set stopoffset=5; set mode=async; ##_COMMAND_## (${s.coordinates.x},${s.coordinates.y},${s.coordinates.z}); targetto (${s.coordinates.x},${s.coordinates.y},${s.coordinates.z}); set mode=sync; set stopoffset=${this.command.options.stopoffset}" onclick="setTimeout(()=>{this.checked=false;},500)">${(this.options.lang == "en") ? `${s.name_en}${s.aka.en ? `<br>(${s.aka.en})`: ""}` : `${s.name}${s.aka.ja ? `<br>(${s.aka.ja})`: ""}`}
               </label>  
           `).join("")
@@ -759,7 +759,8 @@ class Constellations {
             } break;
             case "polar to north": {
               const prevEasing = this.command.options.easing;
-              this.command.run(`set easing=none; polarto (0,1,0); set easing=${prevEasing}`);
+              const prevDuration = this.command.options.duration;
+              this.command.run(`set duration=1000; set easing=linear; polarto (0,1,0); set easing=${prevEasing}; set duration=${prevDuration}`);
             } break;
             default: {
               this.command.run(`${v.get("custom-command").replace(/##_COMMAND_##/g, v.get("command"))}`);
@@ -841,7 +842,7 @@ class Constellations {
         id: hip,
         additional_info: s.additional_info
       }
-      let aka = (starInfo.aka.split(",").map(a => a.replace(/\[.*/g, ""))) || []
+      let aka = (starInfo.aka.split(",").map(a => a.replace(/\[.*/g, "").trim())) || []
       starInfo.aka = {
         ja: aka.filter(a => a.match(/^[ア-ン]/g))[0],
         en: aka.filter(a => a.match(/^[A-Za-z]/g))[0]
@@ -1339,7 +1340,7 @@ class Constellations {
 
     // initial lookat and target
     if (options.earthView || this.symbol.length >= 48) {
-      this.command.run(`set duration=100; lookat ${Object.keys(this.predefinedLocations)[1]}; set duration=${this.command.options.duration}`);
+      this.command.run(`set duration=100; lookat (${this.initialDirection.x},${this.initialDirection.y},${this.initialDirection.z}); set duration=${this.command.options.duration}`);
     } else {
       this.command.run(`set duration=100; targetto (${this.initialDirection.x},${this.initialDirection.y},${this.initialDirection.z}); set duration=${this.command.options.duration}`);
     }

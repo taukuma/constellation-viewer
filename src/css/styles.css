@@ -437,13 +437,13 @@ cursor: pointer;
 .range-ios input[type=range]::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 0;
-  box-shadow: -20rem 0 0 20rem #000, -0.9rem 0 0 1rem #0af;
+  box-shadow: -20rem 0 10rem 5rem #1641b9, -20rem 0 0 20rem #3190d8;
   mix-blend-mode: screen;
 }
 .range-ios input[type=range]::-moz-range-thumb {
   border: none;
   width: 0;
-  box-shadow: -20rem 0 0 20rem #0afa;
+  box-shadow: -20rem 0 0 20rem #2c74ee;
 }
 
 .menu-trigger,
@@ -545,6 +545,8 @@ cursor: pointer;
 
 #navigation-menu-container {
  background-color: #000;
+ user-select: none;
+ cursor: pointer;
 }
 #navigation-menu-trigger {
   position: fixed; 
