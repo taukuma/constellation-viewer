@@ -21,7 +21,7 @@ let UI = {
             height: 500px;
             top: calc(50% - 500px / 2);
             position: fixed;
-            right: 2.5%;
+            right: 30px;
             overflow: hidden;
             border: none;
             font-family: "Barlow Condensed", sans-serif;
@@ -264,8 +264,8 @@ let UI = {
             place-content: center;
             flex-flow: column;
             position: fixed;
-            left: 2.5%;
-            bottom: 6%;
+            left: 30px;
+            bottom: 60px;
           }
           .horizontalscroll-warpper::-webkit-scrollbar {
             width: 16px;
@@ -306,7 +306,6 @@ let UI = {
             line-height: 50px;
             background: repeating-linear-gradient(-45deg, #ffffff05 0px, #ffffff05 5px, #ffffff15 5px, #ffffff15 10px);
             backdrop-filter: blur(5px);
-            margin: 2px;
             -webkit-transition: all 0.1s ease-in-out;
             -moz-transition: all 0.1s ease-in-out;
             -ms-transition: all 0.1s ease-in-out;
@@ -315,11 +314,13 @@ let UI = {
           }
           .horizontalscroll-switch:has(input:checked) {
             filter: brightness(2);
-            line-height: 75px;
             background: repeating-linear-gradient(45deg, #ffffff05 0px, #ffffff05 5px, #ffffff15 5px, #ffffff15 10px);
             0 0 50px #000000, inset 0 0 20px #ffffff17;
-            height: 75px;
-            font-size: 22px;
+            pading 0px 15px;
+            box-shadow: inset 0 0 200px #ffffff22;
+            border-left: 3px solid #005bff;
+            border-right: 3px solid #005bff;
+            margin-left: -6px;
             -webkit-transition: all 0.1s ease-in-out;
             -moz-transition: all 0.1s ease-in-out;
             -ms-transition: all 0.1s ease-in-out;
@@ -418,9 +419,9 @@ let UI = {
             overflow-x: auto;
             overflow-y: hidden;
             position: fixed;
-            max-width: calc(100vw - 2.5%);
-            bottom: calc(5% - 20px);
-            left: calc(2.5%);
+            max-width: calc(100vw - 30px);
+            bottom: calc(50px - 20px);
+            left: calc(30px);
             scrollbar-width: none;
           }
           #ui-component-star-lists label {
@@ -441,10 +442,10 @@ let UI = {
             align-items: center;
           }
           #ui-component-star-lists label:first-child {
-            border-radius: 10px 0px 0px 10px;
+            border-radius: 0px 0px 0px 0px;
           }
           #ui-component-star-lists label:last-child {
-            border-radius: 0px 10px 10px 0px;
+            border-radius: 0px 0px 0px 0px;
           }
           `);
           let compassSVG = `<svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 5333.3335 5333.3335" height="45px" width="45px" xml:space="preserve" id="svg2" version="1.1"><metadata id="metadata8"><rdf:RDF><cc:Work rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/></cc:Work></rdf:RDF></metadata><defs id="defs6"/><g transform="matrix(1.3333333,0,0,-1.3333333,0,5333.3333)" id="g10"><g transform="scale(0.1)" id="g12"><g transform="scale(2.00552)" id="g18"><path id="path20" style="fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none" d="m 13367.3,8985.04 -1929.9,4473.66 c 1277.3,-492.4 2183.9,-1730.8 2183.9,-3181.8 0,-457.31 -90.7,-893.31 -254,-1291.86 z m -3155.6,1035.46 v 5209 l 3291.2,-7804.45 z m 0,-3153.11 c -796.94,0 -1529.37,274.14 -2109.92,732.28 l 2109.92,1423.07 2109.9,-1423.07 c -580.5,-458.14 -1313,-732.28 -2109.9,-732.28 z M 7056.12,8985.04 c -163.35,398.55 -254.05,834.55 -254.05,1291.86 0,1451 906.65,2689.5 2183.97,3181.8 z m 7448.38,561.75 1692.7,730.11 -1692.7,730.3 c -306.4,1813.9 -1733.7,3245.8 -3545.1,3559.4 L 10211.7,16300 9463.92,14566.6 C 7652.52,14253 6225.31,12821.1 5918.91,11007.2 L 4226.18,10276.9 5918.86,9546.79 C 6021.73,8937.92 6250.45,8372.09 6578.14,7877 l -793.96,-1840.47 1503,1013.71 c 601.99,-545.95 1357.8,-924.7 2194.29,-1066.01 l 730.23,-1692.78 730.2,1692.78 c 836.5,141.31 1592.3,520.06 2194.3,1066.06 l 1503.1,-1013.76 -794,1840.52 c 327.6,495.04 556.4,1060.87 659.2,1669.74"/></g></g></g></svg>`;
@@ -452,17 +453,17 @@ let UI = {
 
           toggle.innerHTML = `
             <div style="position: fixed; bottom: 8.5%;">
-              <label class="horizontalscroll-switch" style="border-radius: 10px 10px 0px 0px; cursor: pointer;"><input name="command" type="radio" data-exec-callback="false" value="lookat" checked>Look At</label>
+              <label class="horizontalscroll-switch" style="border-radius: 0px 0px 0px 0px; cursor: pointer;"><input name="command" type="radio" data-exec-callback="false" value="lookat" checked>Look At</label>
               <label class="horizontalscroll-switch" style="border-radius: 0px 0px 0px 0px; cursor: pointer;"><input name="command" type="radio" data-exec-callback="false" value="goto">Go To</label>
-              <label class="horizontalscroll-switch" style="border-radius: 0px 0px 10px 10px; cursor: pointer;"><input name="command" type="radio" data-exec-callback="false" value="targetto">Orbit Around</label>
+              <label class="horizontalscroll-switch" style="border-radius: 0px 0px 0px 0px; cursor: pointer;"><input name="command" type="radio" data-exec-callback="false" value="targetto">Orbit Around</label>
             </div>
             <div style="margin-top:50px">
-              <label class="horizontalscroll-switch" style="display: flex;flex-direction: row;flex-wrap: nowrap;align-content: center;justify-content: flex-end;align-items: center;background:repeating-linear-gradient(-45deg, #ffffff05 0px, #ffffff05 5px, #ffffff10 5px, #ffffff10 10px); filter: brightness(1); border-radius: 10px 10px 0 0; cursor: pointer;">
+              <label class="horizontalscroll-switch" style="display: flex;flex-direction: row;flex-wrap: nowrap;align-content: center;justify-content: flex-end;align-items: center;background:repeating-linear-gradient(-45deg, #ffffff05 0px, #ffffff05 5px, #ffffff10 5px, #ffffff10 10px); filter: brightness(2); border-radius: 0 0 0 0; cursor: pointer;">
                 <input name="custom-command" type="checkbox" data-exec-callback="true" value="polar to north" onclick="setTimeout(()=>{this.checked=false;},500)">
                 <div style="position: absolute;left: 0; height:45px; width:45px;">${compassSVG}</div>
                 Polar to North
               </label>
-              <label class="horizontalscroll-switch" style="display: flex;flex-direction: row;flex-wrap: nowrap;align-content: center;justify-content: flex-end;align-items: center;background:repeating-linear-gradient(-45deg, #ffffff05 0px, #ffffff05 5px, #ffffff10 5px, #ffffff10 10px); filter: brightness(1);; border-radius: 0 0 10px 10px; cursor: pointer;">
+              <label class="horizontalscroll-switch" style="display: flex;flex-direction: row;flex-wrap: nowrap;align-content: center;justify-content: flex-end;align-items: center;background:repeating-linear-gradient(-45deg, #ffffff05 0px, #ffffff05 5px, #ffffff10 5px, #ffffff10 10px); filter: brightness(2); border-radius: 0 0 0 0; cursor: pointer;">
                 <input name="custom-command" type="checkbox" data-exec-callback="true" value="back to earth" onclick="setTimeout(()=>{this.checked=false;},500)">
                 <div style="position: absolute;left: 0;height:45px;width:45px;display: flex;flex-direction: column;flex-wrap: nowrap;align-content: center;justify-content: center;align-items: center;">${earthSVG}</div>
                 Back to Earth

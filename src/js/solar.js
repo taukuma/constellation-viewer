@@ -37,7 +37,7 @@ class Solar {
           // planets
           // Load Textures
           const earthRadius = baseRadius || 2;
-          const cloudRadius = earthRadius * (1 + earthRadius * 0.00025)
+          const cloudRadius = earthRadius * (1 + earthRadius * 0.025)
           const atmosphereRadius = earthRadius * (1 + earthRadius * 0.2);
           const numberOfMesh = 256
           const textureLoader = new THREE.TextureLoader();

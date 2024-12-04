@@ -110,6 +110,8 @@ let updateLink = (target) => {
 
 let setFilter = (e) => {
   let f = e.target.getAttribute("data-filter-target");
+  console.log(f, e)
+
   if (f === "") {
     document.querySelectorAll("input.constellation-link:checked").forEach(i => i.checked=false);
     document.querySelectorAll("#constellation-link-container li").forEach(i => i.classList.remove("hide"));
@@ -134,6 +136,14 @@ let setFilter = (e) => {
 let showStartButton = () => {document.querySelector("#draw-constellation").setAttribute("class", (document.querySelectorAll("input.constellation-link:checked").length) ? "bn632-hover bn26" : "hide");}
 
 let init = () => {
+  //lang
+  switch (params.lang) {
+    case "en": 
+      document.querySelectorAll(".multi-lang").forEach(e => e.innerText = (e.getAttribute(`data-${params.lang}`) ? e.getAttribute(`data-${params.lang}`) : e.innerText));
+    default:
+      break;
+  }
+
   //main
   if (params.constellations) {
     if (params.autoLoad === "1") {
@@ -143,7 +153,8 @@ let init = () => {
       let targetConstellationLabels = constellationList.map(s => constants.symbols[s][params.lang == "en" ? "label_en" : "label"]);
       document.querySelector("#title-box-top-frame-container").innerHTML = frame.top;
       document.querySelector("#title-box-bottom-frame-container").innerHTML = frame.bottom;
-      document.querySelector("#title-text").innerHTML = targetConstellationLabels.filter((v,i) => i < 5).join("</br>") + ((targetConstellationLabels.length > 5) ? `<br>...他 ${targetConstellationLabels.length - 5} 星座` : "");
+      //document.querySelector("#title-text").innerHTML = targetConstellationLabels.filter((v,i) => i < 5).join("</br>") + ((targetConstellationLabels.length > 5) ? `<br>...他 ${targetConstellationLabels.length - 5} 星座` : "");
+      document.querySelector("#title-text").innerHTML = targetConstellationLabels.map(l => `<span style="font-size:16px; padding: 3px; margin: 3px;">${l}</span>`).join("");
       playButton.addEventListener(touchEvent, initApp, false);
     }
 
