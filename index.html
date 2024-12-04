@@ -19,7 +19,7 @@
         <div id="title-box">
           <div id="title-box-top-frame-container"></div>
           <div id="title-text"></div>
-          <button class="play bn632-hover bn26">星座 を描く</button>
+          <button class="play bn632-hover bn26 multi-lang" data-en="OK">星座を描く</button>
           <div id="title-box-bottom-frame-container"></div>
         </div>
       </div>
@@ -39,7 +39,7 @@
           <span></span>
         </button>
         <div class="settings">
-          <div class="param-items" style="display: block; padding-top:50px">焦点距離</div>
+          <div class="param-items" style="display: block; padding-top:50px"><span class="multi-lang" data-en="Focal Length">焦点距離</span></div>
           <div class="inline-radio">
             <div><input class="params" type="radio" name="focalLength" value=8><label>8mm</label></div>
             <div><input class="params" type="radio" name="focalLength" value=14><label>14mm</label></div>
@@ -57,7 +57,7 @@
             <div><input class="params" type="radio" name="focalLength" value=400><label>400mm</label></div>
           </div>
           <div class="hide">
-            <div class="param-items">X軸回転
+            <div class="param-items"><span class="multi-lang" data-en="Rotate X">X軸回転</span>
               <select class="params" name="rotateX" value="0">
                 <option value="360">360°</option>
                 <option value="330">330°</option>
@@ -86,7 +86,7 @@
                 <option value="-360">-360°</option>
               </select>
             </div>
-            <div class="param-items">Y軸回転
+            <div class="param-items"><span class="multi-lang" data-en="Rotate Y">Y軸回転</span>
               <select class="params" name="rotateY" value="0">
                 <option value="360">360°</option>
                 <option value="330">330°</option>
@@ -115,7 +115,7 @@
                 <option value="-360">-360°</option>
               </select>
             </div>
-            <div class="param-items">Z軸回転
+            <div class="param-items"><span class="multi-lang" data-en="Rotate Z">Z軸回転</span>
               <select class="params" name="rotateZ" value="0">
                 <option value="360">360°</option>
                 <option value="330">330°</option>
@@ -146,24 +146,48 @@
             </div>
           </div>
           <div>
-            <div class="param-items">星座線を表示<input class="tgl tgl-ios params" id="param-showLine" type="checkbox" name="param-showLine" checked/><label class="tgl-btn" for="param-showLine"></label></div>
-            <div class="param-items">星座名を表示<input class="tgl tgl-ios params" id="param-showConstellationName" type="checkbox" name="param-showConstellationName" checked/><label class="tgl-btn" for="param-showConstellationName"></label></div>
-            <div class="param-items">星名を表示<input class="tgl tgl-ios params" id="param-showStarName" type="checkbox" name="param-showStarName"/><label class="tgl-btn" for="param-showStarName"></label></div>
+            <div class="param-items"><span class="multi-lang" data-en="Show Lines">星座線を表示</span>
+              <input class="tgl tgl-ios params" id="param-showLine" type="checkbox" name="param-showLine" checked/><label class="tgl-btn" for="param-showLine"></label>
+            </div>
+            <div class="param-items"><span class="multi-lang" data-en="Show Names">星座名を表示</span>
+              <input class="tgl tgl-ios params" id="param-showConstellationName" type="checkbox" name="param-showConstellationName" checked/><label class="tgl-btn" for="param-showConstellationName"></label>
+            </div>
+            <div class="param-items"><span class="multi-lang" data-en="Star Names">星名を表示</span>
+              <input class="tgl tgl-ios params" id="param-showStarName" type="checkbox" name="param-showStarName"/><label class="tgl-btn" for="param-showStarName"></label>
+            </div>
           </div>
           <div>
-            <div class="param-items">地球を表示<input class="tgl tgl-ios params" id="param-showEarth" type="checkbox" name="param-showEarth" checked/><label class="tgl-btn" for="param-showEarth"></label></div>
-            <div class="param-items">ガイド星座<input class="tgl tgl-ios params" id="param-showGuideConstellations" type="checkbox" name="param-showGuideConstellations" checked/><label class="tgl-btn" for="param-showGuideConstellations"></label></div>
-            <div class="param-items">グリッド表示<input class="tgl tgl-ios params" id="param-grid" type="checkbox" name="param-grid"/><label class="tgl-btn" for="param-grid"></label></div>
+            <div class="param-items"><span class="multi-lang" data-en="Show Earth">地球を表示</span>
+              <input class="tgl tgl-ios params" id="param-showEarth" type="checkbox" name="param-showEarth" checked/><label class="tgl-btn" for="param-showEarth"></label>
+            </div>
+            <div class="param-items"><span class="multi-lang" data-en="Show Guide">ガイド星座</span>
+              <input class="tgl tgl-ios params" id="param-showGuideConstellations" type="checkbox" name="param-showGuideConstellations" checked/><label class="tgl-btn" for="param-showGuideConstellations"></label>
+            </div>
+            <div class="param-items"><span class="multi-lang" data-en="Show Grid">グリッド表示</span>
+              <input class="tgl tgl-ios params" id="param-grid" type="checkbox" name="param-grid"/><label class="tgl-btn" for="param-grid"></label>
+            </div>
           </div>
           <div>
-            <div class="param-items">距離<input class="tgl tgl-ios params" id="param-distance" type="checkbox" name="param-distance" checked/><label class="tgl-btn" for="param-distance"></label></div>
-            <div class="param-items">ナビ<input class="tgl tgl-ios params" id="param-nav" type="checkbox" name="param-nav" checked/><label class="tgl-btn" for="param-nav"></label></div>
-            <div class="param-items">自動回転<input class="tgl tgl-ios params" id="param-autoRotate" type="checkbox" name="param-autoRotate"/><label class="tgl-btn" for="param-autoRotate"></label></div>
-            <div class="param-items">オートロード<input class="tgl tgl-ios params" id="param-autoLoad" type="checkbox" name="param-autoLoad"/><label class="tgl-btn" for="param-autoLoad"></label></div>
-            <div class="param-items">瞬き<input class="tgl tgl-ios params" id="param-twincle" type="checkbox" name="param-twincle"/><label class="tgl-btn" for="param-twincle"></label></div>
+            <div class="param-items"><span class="multi-lang" data-en="Distance">距離</span>
+              <input class="tgl tgl-ios params" id="param-distance" type="checkbox" name="param-distance" checked/><label class="tgl-btn" for="param-distance"></label>
+            </div>
+            <div class="param-items"><span class="multi-lang" data-en="Navigation">ナビ</span>
+              <input class="tgl tgl-ios params" id="param-nav" type="checkbox" name="param-nav" checked/><label class="tgl-btn" for="param-nav"></label>
+            </div>
+            <div class="param-items"><span class="multi-lang" data-en="Auto Rotate">自動回転</span>
+              <input class="tgl tgl-ios params" id="param-autoRotate" type="checkbox" name="param-autoRotate"/><label class="tgl-btn" for="param-autoRotate"></label>
+            </div>
+            <div class="param-items"><span class="multi-lang" data-en="Auto Load">オートロード</span>
+              <input class="tgl tgl-ios params" id="param-autoLoad" type="checkbox" name="param-autoLoad"/><label class="tgl-btn" for="param-autoLoad"></label>
+            </div>
+            <div class="param-items"><span class="multi-lang" data-en="Twincle">瞬き</span>
+              <input class="tgl tgl-ios params" id="param-twincle" type="checkbox" name="param-twincle"/><label class="tgl-btn" for="param-twincle"></label>
+            </div>
           </div>
           <div>
-            <div class="param-items" style="width: 80%">距離倍率<div class="range-ios"><input class=" params" id="param-distance-scalor" type="range" name="param-distance-scalor" value="0" min="-1" max="1" step="0.0125"/></div></div>
+            <div class="param-items" style="width: 80%"><span class="multi-lang" data-en="Distance Amount">距離倍率</span>
+              <div class="range-ios"><input class=" params" id="param-distance-scalor" type="range" name="param-distance-scalor" value="0" min="-1" max="1" step="0.0125"/></div>
+            </div>
           </div>
           <div class="hide">
             <div class="param-items">X軸回転
@@ -257,32 +281,32 @@
         </div>
       </div>
       <ul class="constellation-link-filter">
-        <li><button class="filter-item" data-filter-target="十二星座">十二星座</button></li>
-        <li><button class="filter-item" data-filter-target="春の星座">春の星座</button></li>
-        <li><button class="filter-item" data-filter-target="夏の星座">夏の星座</button></li>
-        <li><button class="filter-item" data-filter-target="秋の星座">秋の星座</button></li>
-        <li><button class="filter-item" data-filter-target="冬の星座">冬の星座</button></li>
+        <li><button class="filter-item multi-lang" data-filter-target="十二星座" data-en="Zodiac">十二星座</button></li>
+        <li><button class="filter-item multi-lang" data-filter-target="春の星座" data-en="Spring">春の星座</button></li>
+        <li><button class="filter-item multi-lang" data-filter-target="夏の星座" data-en="Summer">夏の星座</button></li>
+        <li><button class="filter-item multi-lang" data-filter-target="秋の星座" data-en="Autumn">秋の星座</button></li>
+        <li><button class="filter-item multi-lang" data-filter-target="冬の星座" data-en="Winter">冬の星座</button></li>
       </ul>
       <ul class="constellation-link-filter hide">
-        <li><button class="filter-item" data-filter-target="春の大三角">春の大三角</button></li>
-        <li><button class="filter-item" data-filter-target="夏の大三角">夏の大三角</button></li>
-        <li><button class="filter-item" data-filter-target="冬の大三角">冬の大三角</button></li>
+        <li><button class="filter-item multi-lang" data-filter-target="春の大三角" data-en="Spring Triangle">春の大三角</button></li>
+        <li><button class="filter-item multi-lang" data-filter-target="夏の大三角" data-en="Summer Triangle">夏の大三角</button></li>
+        <li><button class="filter-item multi-lang" data-filter-target="冬の大三角" data-en="Winter Triangle">冬の大三角</button></li>
       </ul>
       <ul class="constellation-link-filter hide">
-        <li><button class="filter-item" data-filter-target="春の大曲線">春の大曲線</button></li>
-        <li><button class="filter-item" data-filter-target="秋の四辺形">秋の四辺形</button></li>
-        <li><button class="filter-item" data-filter-target="北斗七星">北斗七星</button></li>
-        <li><button class="filter-item" data-filter-target="北天の星座">北天の星座</button></li>
-        <li><button class="filter-item" data-filter-target="南天の星座">南天の星座</button></li>
-        <li><button class="filter-item" data-filter-target="アルゴ4星座">アルゴ4星座</button></li>
+        <li><button class="filter-item multi-lang" data-filter-target="春の大曲線" data-en="Great Spring Arc">春の大曲線</button></li>
+        <li><button class="filter-item multi-lang" data-filter-target="秋の四辺形" data-en="Great Square of Pegasus">秋の四辺形</button></li>
+        <li><button class="filter-item multi-lang" data-filter-target="北斗七星" data-en="Big Dipper">北斗七星</button></li>
+        <li><button class="filter-item multi-lang" data-filter-target="北天の星座" data-en="Northern sky">北天の星座</button></li>
+        <li><button class="filter-item multi-lang" data-filter-target="南天の星座" data-en="Southern sky">南天の星座</button></li>
+        <li><button class="filter-item multi-lang" data-filter-target="アルゴ4星座" data-en="Argo">アルゴ4星座</button></li>
       </ul>
       <ul class="constellation-link-filter">
-        <li><button class="filter-item" data-filter-target="ALL">全選択</button></li>
-        <li><button class="filter-item" data-filter-target="">リセット</button></li>
+        <li><button class="filter-item multi-lang" data-filter-target="ALL" data-en="Select All">全選択</button></li>
+        <li><button class="filter-item multi-lang" data-filter-target="" data-en="Reset">リセット</button></li>
       </ul>
       <ul id="constellation-link-container" class="block">
       </ul>
-      <button id="draw-constellation" class="hide bn632-hover bn26">スタート</button>
+      <button id="draw-constellation" class="hide bn632-hover bn26 multi-lang" data-en="Start">スタート</button>
     </div>
     <div id="navigation-menu-container" style="display: none;">
       <button id="navigation-menu-trigger" class="menu-trigger">
