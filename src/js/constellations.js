@@ -688,7 +688,7 @@ class Constellations {
         let g = 0x55;
         const rDelta = 0xff / (timeRemains / 100);
         const gDelta = 0x99 / (timeRemains / 100);
-        let focusInterval = setInterval(() => {
+        let focusInterval = this.options.showLine ? setInterval(() => {
           if (timeRemains - (iter++) * 100 < 0) {
             clearInterval(focusInterval);
             let unfocusInterval = setInterval(() => {
@@ -708,7 +708,7 @@ class Constellations {
             //new THREE.LineBasicMaterial({color: 0x0055ff});
             this.constellationLineGroup[target].forEach(l => l.material = new THREE.LineBasicMaterial({color: parseInt(`0x${Math.ceil(r).toString(16)}${Math.ceil(g).toString(16)}ff`, 16)}))
           }
-        }, 100)
+        }, 100) : undefined;
       };
 
       switch (ev.target.name) {
@@ -940,7 +940,7 @@ class Constellations {
     this.orbitControls.minAzimuthAngle = -Infinity;
     this.orbitControls.enableDamping = true;
     this.orbitControls.dampingFactor = 0.02;
-    this.orbitControls.enablePan = false;
+    this.orbitControls.enablePan = true;
     this.orbitControls.enableZoom = false;
     this.orbitControls.enableRotate = false;
     this.orbitControls.autoRotate = this.options.autoRotate;
