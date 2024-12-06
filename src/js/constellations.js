@@ -924,7 +924,7 @@ class Constellations {
     this.trackballControls.noZoom = false;
     this.trackballControls.zoomSpeed = 2;
     this.trackballControls.noPan = false;
-    this.trackballControls.panSpeed = 0.02;
+    this.trackballControls.panSpeed = 0.1;
     this.trackballControls.noRotate = false;
     this.trackballControls.rotateSpeed = 0.5; // to make it opposite set -0.5
     this.trackballControls.staticMoving = false;
@@ -940,7 +940,7 @@ class Constellations {
     this.orbitControls.minAzimuthAngle = -Infinity;
     this.orbitControls.enableDamping = true;
     this.orbitControls.dampingFactor = 0.02;
-    this.orbitControls.enablePan = true;
+    this.orbitControls.enablePan = false;
     this.orbitControls.enableZoom = false;
     this.orbitControls.enableRotate = false;
     this.orbitControls.autoRotate = this.options.autoRotate;
