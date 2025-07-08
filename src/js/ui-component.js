@@ -468,6 +468,14 @@ let UI = {
                 <div style="position: absolute;left: 0;height:45px;width:45px;display: flex;flex-direction: column;flex-wrap: nowrap;align-content: center;justify-content: center;align-items: center;">${earthSVG}</div>
                 Back to Earth
               </label>
+              <label class="horizontalscroll-switch" style="display: flex;flex-direction: row;flex-wrap: nowrap;align-content: center;justify-content: flex-end;align-items: center;background:repeating-linear-gradient(-45deg, #ffffff05 0px, #ffffff05 5px, #ffffff10 5px, #ffffff10 10px); filter: brightness(2); border-radius: 0 0 0 0; cursor: pointer;"><input name="snippet" type="checkbox" data-exec-callback="true" value="fullscreen" onclick="(function(){document.querySelector('body').requestFullscreen();})();">
+                <div style="position: absolute;left: 0;height:45px;width:45px;display: flex;flex-direction: column;flex-wrap: nowrap;align-content: center;justify-content: center;align-items: center;">
+                  <svg width="800px" height="800px" viewBox="0 0 32 32" id="i-fullscreen" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentcolor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" style="margin: 8px;">
+                    <path d="M4 12 L4 4 12 4 M20 4 L28 4 28 12 M4 20 L4 28 12 28 M28 20 L28 28 20 28"></path>
+                  </svg>
+                </div>
+                Full Screen
+              </label>
             </div>
           `;
           style.appendChild(css);
