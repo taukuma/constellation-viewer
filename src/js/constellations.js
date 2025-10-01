@@ -51,7 +51,7 @@ class Constellations {
         const setDurationPattern = /^set\s+duration\s*=\s*(\d+)$/;
         const setEasingPattern = /^set\s+easing\s*=\s*([\w\d]+\.[\w\d]+|\w+)$/;
         const setModePattern = /^set\s+mode\s*=\s*(async|sync)$/;
-        const setStopOffsetPattern = /^set\s+stopoffset\s*=\s*(\d+)$/;
+        const setStopOffsetPattern = /^set\s+stopoffset\s*=\s*(\d+|\d+\.\d+)$/;
         const setRotationOriginPattern = /^set\s+rotationorigin\s*=\s*(\(([^,]+),([^,]+),([^)]+)\)|.*)$/;
         const enableAutoRotatePattern = /^(enable|start)\s+(autorotate|autoRotate|AutoRotate)$/;
         const disableAutoRotatePattern = /^(disable|stop)\s+(autorotate|autoRotate|AutoRotate)$/;
@@ -174,7 +174,7 @@ class Constellations {
             }
             // set stopoffset
             else if (match = command.match(setStopOffsetPattern)) {
-              const offset = parseInt(match[1].trim(), 10);
+              const offset = parseFloat(match[1].trim(), 10);
               parsedCommands.push({
                 action: 'set stopoffset',
                 value: offset
@@ -611,6 +611,7 @@ class Constellations {
       nav         : renderParams.nav == '1',
       renderMode  : renderParams.renderMode,
       twincle     : renderParams.twincle == '1',
+      orbit       : renderParams.orbit == "1",
       lang        : renderParams.lang || "ja"
     };
   };
@@ -952,6 +953,11 @@ class Constellations {
     let world = new THREE.Group();
     this.data = {stars: stars, constellations: constellationInfo, lines: linePaths}
     this.labels = [];
+    const orbitScale = Math.pow(10, (4/11) * Math.log10(options.distanceMultiplyScalar) - 40/11);
+    const baseRadius = 0.05;
+
+    /* let planetNum = 8; let planetPos = `(${planets[planetNum].position.x},${planets[planetNum].position.y},${planets[planetNum].position.z})`; constellations.command.run(`set stopoffset = 1; set mode=async; set duration = 3000; lookat ${planetPos};goto ${planetPos};targetto ${planetPos}`) */
+    console.log(options.distanceMultiplyScalar, orbitScale)
     // navigation
     if (options.nav) {
       document.querySelector("#navigation-menu-container").style.display = "block";
@@ -995,7 +1001,7 @@ class Constellations {
       options.focalLength ?? 45,
       ASPECT,
       0.001,
-      999999
+      Math.pow(10,20)
     );
 
     this.renderer = new THREE.WebGLRenderer({alpha: true, antialias: true});
@@ -1046,9 +1052,9 @@ class Constellations {
       label_x.position.set(size / 2, 0.5, 0.5);
       label_y.position.set(0.5, size / 2, 0.5);
       label_z.position.set(0.5, 0.5, size / 2);
-      world.add(label_x);
-      world.add(label_y);
-      world.add(label_z);
+      //world.add(label_x);
+      //world.add(label_y);
+      //world.add(label_z);
     }
 
     // 星座線の描画
@@ -1195,6 +1201,7 @@ class Constellations {
       //using InstancedMesh
       case 'InstancedMesh':
       default: {
+        let tempX = 0;
         stars.forEach((s, i) => {
           let radius = 0;
           let magnitude = Math.pow(1/2.5, (s.magnitude));
@@ -1233,9 +1240,31 @@ class Constellations {
     }
 
     // 太陽系（地球）
+    let planets = [];
     if (this.options.showEarth) {
       const solar = new Solar();
-      world.add(solar.getObjects(solar.planets.earth, 0.05));
+      const planetRadiusScale = 1;
+      planets = [
+        solar.getObjects(solar.planets.sun, baseRadius, planetRadiusScale),
+        solar.getObjects(solar.planets.mercury, baseRadius, planetRadiusScale),
+        solar.getObjects(solar.planets.venus, baseRadius, planetRadiusScale),
+        solar.getObjects(solar.planets.earth, baseRadius, planetRadiusScale),
+        solar.getObjects(solar.planets.mars, baseRadius, planetRadiusScale),
+        solar.getObjects(solar.planets.jupiter, baseRadius, planetRadiusScale),
+        solar.getObjects(solar.planets.saturn, baseRadius, planetRadiusScale),
+        solar.getObjects(solar.planets.uranus, baseRadius, planetRadiusScale),
+        solar.getObjects(solar.planets.neptune, baseRadius, planetRadiusScale),
+        solar.getObjects(solar.planets.pluto, baseRadius, planetRadiusScale),
+      ];
+      window.planets = planets;
+      planets.forEach(p => {
+        p.updateOrbit(1, orbitScale);
+        world.add(p);
+        if (options.orbit) world.add(p.getOrbitLine(orbitScale));
+      });
+      const ambientLight = new THREE.AmbientLight(0xaaaaaa);
+      world.add(ambientLight);
+      
     }
 
     world.rotation.x = options.worldRotateX;
@@ -1294,7 +1323,13 @@ class Constellations {
     finalComposer.addPass(finalPass);
 
     composer.addPass( renderScene );
-    renderer.setAnimationLoop((_) => {
+    
+    // animation loop
+    renderer.setAnimationLoop((time) => {
+      if (planets.length !== 0 && options.orbit === true) {
+        //planets.forEach(p => p.updateOrbit(time/100, orbitScale))
+      }
+      
       if (options.twincle) {
         stars.forEach((s, i) => {
           // Update twinkle effect in each frame
@@ -1331,6 +1366,7 @@ class Constellations {
       this.trackballControls.update();
       this.orbitControls.update();
     });
+
     //tmp
     starMesh.instanceMatrix.needsUpdate = true;
     this.updateScene = () => {

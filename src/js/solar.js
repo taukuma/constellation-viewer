@@ -17,7 +17,7 @@ class Solar {
             venus: 2,
             earth: 3,
             mars: 4,
-            jupitor: 5,
+            jupiter: 5,
             saturn: 6,
             uranus: 7,
             neptune: 8,
@@ -25,18 +25,210 @@ class Solar {
         };
         this.planets = planets;
     };
+    getOrbitPosition = (t, params, scale = 1) => {
+      const { a, e, i, omega, Omega, T } = params;
+    
+      // 離心近点角 E を解く
+      const solveKepler = (M, e, tolerance = 1e-6) => {
+        let E = M;
+        let delta = 1;
+        while (Math.abs(delta) > tolerance) {
+          delta = (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E));
+          E -= delta;
+        }
+        return E;
+      };
+    
+      // 平均近点角 M
+      const M = (2 * Math.PI / T) * t;
+      const E = solveKepler(M, e);
+    
+      // 軌道平面座標（XY平面上）
+      const x = a * (Math.cos(E) - e);
+      const y = a * Math.sqrt(1 - e * e) * Math.sin(E);
+      const z = 0;
+    
+      // 回転行列適用
+      const pos = new THREE.Vector3(x, y, z);
+      const rot = new THREE.Matrix4()
+        .makeRotationZ(THREE.MathUtils.degToRad(Omega))
+        .multiply(new THREE.Matrix4().makeRotationX(THREE.MathUtils.degToRad(i)))
+        .multiply(new THREE.Matrix4().makeRotationZ(THREE.MathUtils.degToRad(omega)));
+    
+      pos.applyMatrix4(rot);
+    
+      // === 🚀 ここが重要 ===
+      // XY基準をXZ基準に変換（Yを高さ軸に）
+      const converted = new THREE.Vector3(pos.x, pos.z, -pos.y);
+    
+      return converted.multiplyScalar(scale);
+    };
+    createOrbitLine = (orbit, segments = 512, scale = 1) => {
+      const positions = [];
+    
+      for (let i = 0; i <= segments; i++) {
+        const M = (2 * Math.PI * i) / segments;
+    
+        let E = M;
+        for (let j = 0; j < 5; j++) {
+          E = M + orbit.e * Math.sin(E);
+        }
+    
+        const x = orbit.a * (Math.cos(E) - orbit.e);
+        const y = orbit.a * Math.sqrt(1 - orbit.e * orbit.e) * Math.sin(E);
+        const z = 0;
+    
+        const pos = new THREE.Vector3(x, y, z);
+    
+        const rot = new THREE.Matrix4()
+          .makeRotationZ(THREE.MathUtils.degToRad(orbit.Omega))
+          .multiply(new THREE.Matrix4().makeRotationX(THREE.MathUtils.degToRad(orbit.i)))
+          .multiply(new THREE.Matrix4().makeRotationZ(THREE.MathUtils.degToRad(orbit.omega)));
+    
+        pos.applyMatrix4(rot);
+    
+        // === 🚀 軌道線も同様に座標変換 ===
+        const converted = new THREE.Vector3(pos.x, pos.z, -pos.y);
+    
+        positions.push(converted.x * scale, converted.y * scale, converted.z * scale);
+      }
+    
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    
+      const material = new THREE.LineBasicMaterial({
+        color: 0xaaaaaa,
+        transparent: true,
+        opacity: 0.4,
+      });
+    
+      return new THREE.LineLoop(geometry, material);
+    };
+    
 
-    getObjects = (planets, baseRadius = 2) => {
+    getObjects = (planets, baseRadius = 0.05, radiusScale = 1.00) => {
       const planetGroup = new THREE.Group();
+      let getPlanetGroup = (options) => {
+        const radius = options.radius || 2;
+        const cloudRadius = radius * (1 + radius * 0.025)
+        const atmosphereRadius = radius;
+        const numberOfMesh = 256
+        const textureLoader = new THREE.TextureLoader();
+        const diffuseMap = textureLoader.load(options.diffuseMapPath);
+        const normalMap = (options.normalMapPath !== undefined) ? textureLoader.load(options.normalMapPath) : undefined;
+
+        // Material
+        const material = new THREE.MeshStandardMaterial({
+          map: diffuseMap,
+          displacementMap: normalMap,
+          displacementScale: radius * (options.displacementScale ? options.displacementScale : -0.05),
+          transparent: false,
+          opacity: 1,
+          //blending: THREE.NoBlending,
+        });
+
+        // Sphere
+        const geometry = new THREE.SphereGeometry(radius, numberOfMesh, numberOfMesh);  // Adjust size as needed
+        const planetMesh = new THREE.Mesh(geometry, material);
+        
+        // Group
+        const group = new THREE.Group();
+        group.add(planetMesh);
+        
+        return group;
+      };
+      
       switch (planets) {
-        case this.planets.sun: {} break;
-        case this.planets.mercury: {} break;
-        case this.planets.venus: {} break;
+        case this.planets.sun: {
+          const radius = (baseRadius) * 109.25;
+          const color = converters.getColorFromStellarClassString("G2V");
+          const colorCode = `#${('0'+parseInt(color.r).toString(16)).slice(-2)}${('0'+parseInt(color.g).toString(16)).slice(-2)}${('0'+parseInt(color.b).toString(16)).slice(-2)}`
+          const orbitParam = {
+            a: radius * 0,        // 太陽は中心に固定
+            e: 0,                    // 公転しない
+            i: 0,
+            Omega: 0,
+            omega: 0,
+            T:Infinity
+          };
+
+          const starGeometry = new THREE.SphereGeometry(1, 256, 256); // Higher resolution geometry
+          const starMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+          const starMesh = new THREE.InstancedMesh(starGeometry, starMaterial, 1);
+          const dummy = new THREE.Object3D();
+          dummy.scale.setScalar(radius);
+          starMesh.setMatrixAt(0, dummy.matrix);
+
+          // Initial twinkle effect (if needed)
+          const twinkleFactor = Math.sin(Date.now() * 0.005) * 0.8 + 2 ; // Initial twinkle effect
+          const twinkleColor = new THREE.Color(colorCode).multiplyScalar(twinkleFactor);    
+          starMesh.setColorAt(0, twinkleColor);
+
+          planetGroup.add(starMesh);
+
+          planetGroup.updateOrbit = (tDays, scale = 1, callback = (pos)=>{}) => {
+            const pos = this.getOrbitPosition(tDays, orbitParam, scale);
+            planetGroup.position.copy(pos);
+            callback(pos);
+          }
+          planetGroup.getOrbitLine = (scale = 1) => this.createOrbitLine(orbitParam, 512, scale);
+        } break;
+        case this.planets.mercury: {
+          const radius = (baseRadius) * 0.383;
+          console.log(baseRadius, radius);
+          const orbitParam = {
+            a: radius * 23736.14,    // a (地球半径単位)
+            e: 0.20563069,
+            i: 7.00487,
+            Omega: 48.33167,
+            omega: 29.12478,  // argument of perihelion = pi - Omega
+            T: 87.968
+          };
+
+          planetGroup.add(getPlanetGroup({
+            radius: radius * radiusScale, 
+            diffuseMapPath: './src/img/textures/mercury/mercurymap.jpg', 
+            normalMapPath: './src/img/textures/mercury/mercurybump.jpg',
+            displacementScale: -0.005
+          }));
+          planetGroup.updateOrbit = (tDays, scale = 1, callback = (pos)=>{}) => {
+            const pos = this.getOrbitPosition(tDays, orbitParam, scale);
+            planetGroup.position.copy(pos);
+            callback(pos);
+          }
+          planetGroup.getOrbitLine = (scale = 1) => this.createOrbitLine(orbitParam, 512, scale);
+        } break;
+        case this.planets.venus: {
+          const radius = (baseRadius) * 0.950;
+          console.log(baseRadius, radius);
+          const orbitParam = {
+            a: radius * 17880.30,
+            e: 0.00677323,
+            i: 3.39471,
+            Omega: 76.68069,
+            omega: 54.85229,
+            T: 224.697
+          };
+
+          planetGroup.add(getPlanetGroup({
+            radius: radius * radiusScale, 
+            diffuseMapPath: './src/img/textures/venus/venusmap.jpg', 
+            normalMapPath: './src/img/textures/venus/venusbump.jpg',
+            displacementScale: -0.0025
+          }));
+          planetGroup.updateOrbit = (tDays, scale = 1, callback = (pos)=>{}) => {
+            const pos = this.getOrbitPosition(tDays, orbitParam, scale);
+            planetGroup.position.copy(pos);
+            callback(pos);
+          }
+          planetGroup.getOrbitLine = (scale = 1) => this.createOrbitLine(orbitParam, 512, scale);
+        } break;
         case this.planets.earth: {
 
           // planets
           // Load Textures
-          const earthRadius = baseRadius || 2;
+          const earthRadius = baseRadius * radiusScale;
+          console.log(baseRadius, earthRadius);
           const cloudRadius = earthRadius * (1 + earthRadius * 0.025)
           const atmosphereRadius = earthRadius * (1 + earthRadius * 0.2);
           const numberOfMesh = 256
@@ -46,7 +238,14 @@ class Solar {
           //const illuminationMap = textureLoader.load('./src/img/textures/earth/Earth_Illumination_6K.jpg');
           const normalMap = textureLoader.load('./src/img/textures/earth/Earth_NormalNRM_6K.jpg');
           const cloudMap = textureLoader.load('./src/img/textures/earth/Earth_Clouds_6K.jpg');
-
+          const orbitParam = {
+            a: baseRadius * 23481.07,
+            e: 0.0167,
+            i: 0.00005,
+            Omega: -11.26064,
+            omega: 102.94719,
+            T: 365.256
+          };
           // Earth Material
           const earthMaterial = new THREE.MeshStandardMaterial({
             map: diffuseMap,
@@ -116,12 +315,18 @@ class Solar {
           earthGroup.add(clouds);
           earthGroup.add(atmosphereHaze);
 
-          const ambientLight = new THREE.AmbientLight(0xaaaaaa);  // Soft light
           //const light = new THREE.SpotLight(0xeeaaee, 4, 0, Math.PI / 4, 10, 0.5);
           //light.position.set(3, 50, 3);
     
+          earthGroup.rotation.z = THREE.MathUtils.degToRad(23.4);
           planetGroup.add(earthGroup);
-          planetGroup.add(ambientLight);
+
+          planetGroup.updateOrbit = (tDays, scale = 1, callback = (pos)=>{}) => {
+            const pos = this.getOrbitPosition(tDays, orbitParam, scale);
+            planetGroup.position.copy(pos);
+            callback(pos);
+          }
+          planetGroup.getOrbitLine = (scale = 1) => this.createOrbitLine(orbitParam, 512, scale);
           //planetGroup.add(light);
 
 /*    
@@ -233,12 +438,232 @@ class Solar {
 */
 
         } break;
-        case this.planets.mars: {} break;
-        case this.planets.jupitor: {} break;
-        case this.planets.saturn: {} break;
-        case this.planets.uranus: {} break;
-        case this.planets.neptune: {} break;
-        case this.planets.pluto: {} break;
+        case this.planets.mars: {
+          const radius = (baseRadius) * 0.532;
+          console.log(baseRadius, radius);
+          const orbitParam = {
+            a: radius * 67248.62,
+            e: 0.09341233,
+            i: 1.85061,
+            Omega: 49.57854,
+            omega: 286.46230,
+            T: 686.980
+          };
+
+          planetGroup.add(getPlanetGroup({
+            radius: radius * radiusScale, 
+            diffuseMapPath: './src/img/textures/mars/mars_1k_color.jpg', 
+            normalMapPath: './src/img/textures/mars/marsbump1k.jpg',
+            displacementScale: -0.05
+          }));
+
+          planetGroup.updateOrbit = (tDays, scale = 1, callback = (pos)=>{}) => {
+            const pos = this.getOrbitPosition(tDays, orbitParam, scale);
+            planetGroup.position.copy(pos);
+            callback(pos);
+          }
+          planetGroup.getOrbitLine = (scale = 1) => this.createOrbitLine(orbitParam, 512, scale);
+        } break;
+        case this.planets.jupiter: {
+          const radius = (baseRadius) * 10.97;
+          console.log(baseRadius, radius);
+          const orbitParam = {
+            a: radius * 11133.31,
+            e: 0.04839266,
+            i: 1.30530,
+            Omega: 100.55615,
+            omega:  (14.75385), // already argument of perihelion in source
+            T: 4332.589
+          };
+          planetGroup.add(getPlanetGroup({
+            radius: radius * radiusScale,
+            diffuseMapPath: './src/img/textures/jupiter/jupiter2_4k.jpg'
+          }));
+
+          planetGroup.updateOrbit = (tDays, scale = 1, callback = (pos)=>{}) => {
+            const pos = this.getOrbitPosition(tDays, orbitParam, scale);
+            planetGroup.position.copy(pos);
+            callback(pos);
+          }
+          planetGroup.getOrbitLine = (scale = 1) => this.createOrbitLine(orbitParam, 512, scale);
+        } break;
+        case this.planets.saturn: {
+          const radius = (baseRadius) * 9.14;
+          console.log(baseRadius, radius);
+          const orbitParam = {
+            a: radius * 24499.70,
+            e: 0.05415060,
+            i: 2.48446,
+            Omega: 113.71504,
+            omega:  (92.43194),
+            T: 10757.533
+          };
+
+          // Ring
+          const innerRadius = radius * 1.24 * radiusScale;
+          const outerRadius = radius * 2.33 * radiusScale;
+          const ringGeometry = new THREE.RingGeometry(innerRadius, outerRadius, 256);
+          const uv = ringGeometry.attributes.uv;
+          const pos = ringGeometry.attributes.position;
+          for (let i = 0; i < uv.count; i++) {
+            const x = pos.getX(i);
+            const y = pos.getY(i);
+            // 角度を0～1に正規化
+            const theta = (Math.atan2(y, x) + Math.PI) / (2 * Math.PI);
+          
+            // 半径を0～1に正規化
+            const r = (Math.sqrt(x * x + y * y) - innerRadius) / (outerRadius - innerRadius);
+          
+            // U と V を入れ替える
+            uv.setXY(i, r, theta);
+          }
+          uv.needsUpdate = true;
+
+          // === マテリアル ===
+          const texture = new THREE.TextureLoader().load('./src/img/textures/saturn/saturnringcolor.jpg');
+          const alphaMap = new THREE.TextureLoader().load('./src/img/textures/saturn/saturnringpattern.gif');
+          texture.wrapS = THREE.RepeatWrapping;
+          texture.wrapT = THREE.ClampToEdgeWrapping;
+          
+          const ringMaterial = new THREE.MeshStandardMaterial({
+            map: texture,
+            alphaMap: alphaMap,
+            side: THREE.DoubleSide,
+            transparent: true,
+          });
+          const ringMesh = new THREE.Mesh(ringGeometry, ringMaterial)
+          const ringGroup = new THREE.Group();
+          ringMesh.rotation.x = THREE.MathUtils.degToRad(90)
+          ringGroup.add(ringMesh);;
+
+          // planet
+          planetGroup.add(getPlanetGroup({
+            radius: radius * radiusScale,
+            diffuseMapPath: './src/img/textures/saturn/saturnmap.jpg'
+          }));
+          planetGroup.add(ringGroup);
+
+          planetGroup.updateOrbit = (tDays, scale = 1, callback = (pos)=>{}) => {
+            const pos = this.getOrbitPosition(tDays, orbitParam, scale);
+            planetGroup.position.copy(pos);
+            callback(pos);
+          }
+          planetGroup.getOrbitLine = (scale = 1) => this.createOrbitLine(orbitParam, 512, scale);
+        } break;
+        case this.planets.uranus: {
+          const radius = (baseRadius) * 3.98;
+          console.log(baseRadius, radius);
+          const orbitParam = {
+            a: radius * 113199.76,
+            e: 0.04716771,
+            i: 0.76986,
+            Omega: 74.22988,
+            omega: 96.73436,
+            T: 30707.580
+          };
+
+          // Ring
+          const innerRadius = radius * 2.02 * radiusScale;
+          const outerRadius = radius * 2.04 * radiusScale;
+          const ringGeometry = new THREE.RingGeometry(innerRadius, outerRadius, 256);
+          const uv = ringGeometry.attributes.uv;
+          const pos = ringGeometry.attributes.position;
+          for (let i = 0; i < uv.count; i++) {
+            const x = pos.getX(i);
+            const y = pos.getY(i);
+            // 角度を0～1に正規化
+            const theta = (Math.atan2(y, x) + Math.PI) / (2 * Math.PI);
+          
+            // 半径を0～1に正規化
+            const r = (Math.sqrt(x * x + y * y) - innerRadius) / (outerRadius - innerRadius);
+          
+            // U と V を入れ替える
+            uv.setXY(i, r, theta);
+          }
+          uv.needsUpdate = true;
+
+          // === マテリアル ===
+          const texture = new THREE.TextureLoader().load('./src/img/textures/uranus/uranusringcolour.jpg');
+          const alphaMap = new THREE.TextureLoader().load('./src/img/textures/uranus/uranusringtrans.gif');
+          texture.wrapS = THREE.RepeatWrapping;
+          texture.wrapT = THREE.ClampToEdgeWrapping;
+          
+          const ringMaterial = new THREE.MeshStandardMaterial({
+            map: texture,
+            alphaMap: alphaMap,
+            side: THREE.DoubleSide,
+            transparent: true,
+          });
+          const ringMesh = new THREE.Mesh(ringGeometry, ringMaterial)
+          const ringGroup = new THREE.Group();
+          ringMesh.rotation.x = THREE.MathUtils.degToRad(90)
+          ringGroup.add(ringMesh);;
+
+          // planet
+          planetGroup.add(getPlanetGroup({
+            radius: radius * radiusScale,
+            diffuseMapPath: './src/img/textures/uranus/uranusmap.jpg'
+          }));
+          planetGroup.add(ringGroup);
+
+          planetGroup.updateOrbit = (tDays, scale = 1, callback = (pos)=>{}) => {
+            const pos = this.getOrbitPosition(tDays, orbitParam, scale);
+            planetGroup.position.copy(pos);
+            callback(pos);
+          }
+          planetGroup.getOrbitLine = (scale = 1) => this.createOrbitLine(orbitParam, 512, scale);
+
+        } break;
+        case this.planets.neptune: {
+          const radius = (baseRadius) * 3.87
+          console.log(baseRadius, radius);
+          const orbitParam = {
+            a: radius * 182692.43,
+            e: 0.00858587,
+            i: 1.76917,
+            Omega: 131.72169,
+            omega: -86.75034,
+            T: 60223.766
+          };
+
+          planetGroup.add(getPlanetGroup({
+            radius: radius * radiusScale,
+            diffuseMapPath: './src/img/textures/neptune/neptunemap.jpg'
+          }));
+
+          planetGroup.updateOrbit = (tDays, scale = 1, callback = (pos)=>{}) => {
+            const pos = this.getOrbitPosition(tDays, orbitParam, scale);
+            planetGroup.position.copy(pos);
+            callback(pos);
+          }
+          planetGroup.getOrbitLine = (scale = 1) => this.createOrbitLine(orbitParam, 512, scale);
+        } break;
+        case this.planets.pluto: {
+          const radius = (baseRadius) * 0.186;
+          const orbitParam = {
+            a: radius * 4970445.17,   // 冥王星の軌道長半径（他と同じ比率に基づく）
+            e: 0.2488,
+            i: 17.16,
+            Omega: 110.299,
+            omega: 113.834,
+            T: 90560,                // 公転周期 [days]
+          };
+          console.log(baseRadius, radius);
+
+          planetGroup.add(getPlanetGroup({
+            radius: radius * radiusScale, 
+            diffuseMapPath: './src/img/textures/pluto/plutomap2k.jpg', 
+            normalMapPath: './src/img/textures/pluto/plutobump2k.jpg',
+            displacementScale: -0.025
+          }));
+          
+          planetGroup.updateOrbit = (tDays, scale = 1, callback = (pos)=>{}) => {
+            const pos = this.getOrbitPosition(tDays, orbitParam, scale);
+            planetGroup.position.copy(pos);
+            callback(pos);
+          }
+          planetGroup.getOrbitLine = (scale = 1) => this.createOrbitLine(orbitParam, 512, scale);
+        } break;
         default: {} break;
       }
       return planetGroup;
@@ -354,6 +779,7 @@ class Solar {
         this.orbitControls.update();
       });
       this.updateScene = () => {
+        console.log("####################")
         renderer.render(scene, this.perspectiveCamera);
       }
 

@@ -141,6 +141,6 @@ constants = {
     "冬の大三角": {label: "冬の大三角", label_en: "Winter Triangle", filters: [], "NearBy": ["CMa", "CMi", "Ori"]},
     //"冬のダイヤモンド":{label: "冬のダイヤモンド", label_en: "Winter Hexagon", filters: [], "NearBy": ["CMa", "CMi", "Ori", "Tau"]},
     "北斗七星": {label: "北斗七星", label_en: "Big Dipper", filters: [], "NearBy": ["UMa"]},
-    "南斗六星": {label: "南斗六星", label_en: "The Six Stars of the Southern Dipper", filters: [], "NearBy": ["UMa"]},
+    //"南斗六星": {label: "南斗六星", label_en: "The Six Stars of the Southern Dipper", filters: [], "NearBy": ["UMa"]},
   }
 };
