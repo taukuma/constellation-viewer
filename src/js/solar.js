@@ -140,7 +140,7 @@ class Solar {
       
       switch (planets) {
         case this.planets.sun: {
-          const radius = (baseRadius) * 109.25;
+          const radius = (baseRadius) * 109.25 * radiusScale;
           const color = converters.getColorFromStellarClassString("G2V");
           const colorCode = `#${('0'+parseInt(color.r).toString(16)).slice(-2)}${('0'+parseInt(color.g).toString(16)).slice(-2)}${('0'+parseInt(color.b).toString(16)).slice(-2)}`
           const orbitParam = {
@@ -152,11 +152,10 @@ class Solar {
             T:Infinity
           };
 
-          const starGeometry = new THREE.SphereGeometry(1, 256, 256); // Higher resolution geometry
+          const starGeometry = new THREE.SphereGeometry(radius, 256, 256); // Higher resolution geometry
           const starMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
           const starMesh = new THREE.InstancedMesh(starGeometry, starMaterial, 1);
           const dummy = new THREE.Object3D();
-          dummy.scale.setScalar(radius);
           starMesh.setMatrixAt(0, dummy.matrix);
 
           // Initial twinkle effect (if needed)
@@ -169,7 +168,7 @@ class Solar {
           planetGroup.updateOrbit = (tDays, scale = 1, callback = (pos)=>{}) => {
             const pos = this.getOrbitPosition(tDays, orbitParam, scale);
             planetGroup.position.copy(pos);
-            callback(pos);
+            callback(pos, planetGroup);
           }
           planetGroup.getOrbitLine = (scale = 1) => this.createOrbitLine(orbitParam, 512, scale);
         } break;
@@ -194,7 +193,7 @@ class Solar {
           planetGroup.updateOrbit = (tDays, scale = 1, callback = (pos)=>{}) => {
             const pos = this.getOrbitPosition(tDays, orbitParam, scale);
             planetGroup.position.copy(pos);
-            callback(pos);
+            callback(pos, planetGroup);
           }
           planetGroup.getOrbitLine = (scale = 1) => this.createOrbitLine(orbitParam, 512, scale);
         } break;
@@ -219,7 +218,7 @@ class Solar {
           planetGroup.updateOrbit = (tDays, scale = 1, callback = (pos)=>{}) => {
             const pos = this.getOrbitPosition(tDays, orbitParam, scale);
             planetGroup.position.copy(pos);
-            callback(pos);
+            callback(pos, planetGroup);
           }
           planetGroup.getOrbitLine = (scale = 1) => this.createOrbitLine(orbitParam, 512, scale);
         } break;
@@ -324,7 +323,7 @@ class Solar {
           planetGroup.updateOrbit = (tDays, scale = 1, callback = (pos)=>{}) => {
             const pos = this.getOrbitPosition(tDays, orbitParam, scale);
             planetGroup.position.copy(pos);
-            callback(pos);
+            callback(pos, planetGroup);
           }
           planetGroup.getOrbitLine = (scale = 1) => this.createOrbitLine(orbitParam, 512, scale);
           //planetGroup.add(light);
@@ -460,7 +459,7 @@ class Solar {
           planetGroup.updateOrbit = (tDays, scale = 1, callback = (pos)=>{}) => {
             const pos = this.getOrbitPosition(tDays, orbitParam, scale);
             planetGroup.position.copy(pos);
-            callback(pos);
+            callback(pos, planetGroup);
           }
           planetGroup.getOrbitLine = (scale = 1) => this.createOrbitLine(orbitParam, 512, scale);
         } break;
@@ -483,7 +482,7 @@ class Solar {
           planetGroup.updateOrbit = (tDays, scale = 1, callback = (pos)=>{}) => {
             const pos = this.getOrbitPosition(tDays, orbitParam, scale);
             planetGroup.position.copy(pos);
-            callback(pos);
+            callback(pos, planetGroup);
           }
           planetGroup.getOrbitLine = (scale = 1) => this.createOrbitLine(orbitParam, 512, scale);
         } break;
@@ -546,7 +545,7 @@ class Solar {
           planetGroup.updateOrbit = (tDays, scale = 1, callback = (pos)=>{}) => {
             const pos = this.getOrbitPosition(tDays, orbitParam, scale);
             planetGroup.position.copy(pos);
-            callback(pos);
+            callback(pos, planetGroup);
           }
           planetGroup.getOrbitLine = (scale = 1) => this.createOrbitLine(orbitParam, 512, scale);
         } break;
@@ -609,7 +608,7 @@ class Solar {
           planetGroup.updateOrbit = (tDays, scale = 1, callback = (pos)=>{}) => {
             const pos = this.getOrbitPosition(tDays, orbitParam, scale);
             planetGroup.position.copy(pos);
-            callback(pos);
+            callback(pos, planetGroup);
           }
           planetGroup.getOrbitLine = (scale = 1) => this.createOrbitLine(orbitParam, 512, scale);
 
@@ -634,7 +633,7 @@ class Solar {
           planetGroup.updateOrbit = (tDays, scale = 1, callback = (pos)=>{}) => {
             const pos = this.getOrbitPosition(tDays, orbitParam, scale);
             planetGroup.position.copy(pos);
-            callback(pos);
+            callback(pos, planetGroup);
           }
           planetGroup.getOrbitLine = (scale = 1) => this.createOrbitLine(orbitParam, 512, scale);
         } break;
@@ -660,7 +659,7 @@ class Solar {
           planetGroup.updateOrbit = (tDays, scale = 1, callback = (pos)=>{}) => {
             const pos = this.getOrbitPosition(tDays, orbitParam, scale);
             planetGroup.position.copy(pos);
-            callback(pos);
+            callback(pos, planetGroup);
           }
           planetGroup.getOrbitLine = (scale = 1) => this.createOrbitLine(orbitParam, 512, scale);
         } break;
