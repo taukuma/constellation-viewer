@@ -438,7 +438,7 @@ class Constellations {
                 onComplete: () => {
                   this.orbitControls.enabled = true;
                   this.trackballControls.enabled = true;
-                  console.log("done");
+                  //console.log("done");
                   res()
                 }
               })
@@ -919,6 +919,15 @@ class Constellations {
         return undefined;
     }
   };
+  logScale =  (x, minX, maxX, minY, maxY) => {
+    if (x <= 0 || minX <= 0 || maxX <= 0 || minY <= 0 || maxY <= 0) {
+      throw new Error("All values must be > 0 for logarithmic scaling.");
+    }
+  
+    const a = (Math.log10(maxY) - Math.log10(minY)) / (Math.log10(maxX) - Math.log10(minX));
+    const b = Math.log10(minY) - a * Math.log10(minX);
+    return Math.pow(10, a * Math.log10(x) + b);
+  }
   resetController = (target) => {
     this.trackballControls = new TrackballControls(this.perspectiveCamera, this.renderer.domElement);
     this.trackballControls.target = target
@@ -953,11 +962,7 @@ class Constellations {
     let world = new THREE.Group();
     this.data = {stars: stars, constellations: constellationInfo, lines: linePaths}
     this.labels = [];
-    const orbitScale = Math.pow(10, (4/11) * Math.log10(options.distanceMultiplyScalar) - 40/11);
-    const baseRadius = 0.05;
 
-    /* let planetNum = 8; let planetPos = `(${planets[planetNum].position.x},${planets[planetNum].position.y},${planets[planetNum].position.z})`; constellations.command.run(`set stopoffset = 1; set mode=async; set duration = 3000; lookat ${planetPos};goto ${planetPos};targetto ${planetPos}`) */
-    console.log(options.distanceMultiplyScalar, orbitScale)
     // navigation
     if (options.nav) {
       document.querySelector("#navigation-menu-container").style.display = "block";
@@ -1073,8 +1078,8 @@ class Constellations {
     }
 
     //星座名の表示
-    let constellatinNamePositionOffset = (options.distance) ? 20 : 100;
-    let constellatinNameScalorFactor = (options.distance) ? 1/100 : 1/25;
+    let constellatinNamePositionOffset = (options.distance) ? 5000000000 : 100;
+    let constellatinNameScalorFactor = (options.distance) ? 2500000 : 1/25;
     let constellatinNameFontSize = 38;
     let constellatinNameOpacity = 1;
     if (options.showConstellationName) {
@@ -1163,7 +1168,7 @@ class Constellations {
         let isStarFormsConstellationLine = (s) => linePaths.reduce((acc,curr) => acc.concat(curr)).reduce((acc,curr) => acc.concat(curr)).filter(l => l.x === s.x && l.y === s.y && l.z === s.z).length > 0;
         const textureLoader = new THREE.TextureLoader();
         const textureFlare0 = textureLoader.load( "./src/img/textures/lensflare/lensflare0_mono.png" );
-
+        console.log(isStarFormsConstellationLine, textureFlare0)
         stars.forEach((s, i) => {
           let color = new THREE.Color(`#${('0'+parseInt(s.color.r).toString(16)).slice(-2)}${('0'+parseInt(s.color.g).toString(16)).slice(-2)}${('0'+parseInt(s.color.b).toString(16)).slice(-2)}`);
           let light = new THREE.PointLight(color, 1.5, 1000); // Create PointLight with star color and intensity
@@ -1175,6 +1180,7 @@ class Constellations {
           light.add(mesh);
           light.position.set(s.coordinates.x, s.coordinates.y, s.coordinates.z);
           world.add(light);
+          console.log(i,s)
     
           //flare
           const lensflare = new Lensflare();
@@ -1241,20 +1247,28 @@ class Constellations {
 
     // 太陽系（地球）
     let planets = [];
+    const minMultiplyScalar = 0.1;
+    const maxMultiplyScalar = 1e10;
+    const scalar = (options.distance) ? options.distanceMultiplyScalar : 2;
+    const orbitScale = this.logScale(scalar, minMultiplyScalar, maxMultiplyScalar, 0.000075, 1);
+    const baseRadius = 0.05;
+
     if (this.options.showEarth) {
       const solar = new Solar();
-      const planetRadiusScale = 1;
+  
+      /* let planetNum = 8; let planetPos = `(${planets[planetNum].position.x},${planets[planetNum].position.y},${planets[planetNum].position.z})`; constellations.command.run(`set stopoffset = 1; set mode=async; set duration = 3000; lookat ${planetPos};goto ${planetPos};targetto ${planetPos}`) */
+
       planets = [
-        solar.getObjects(solar.planets.sun, baseRadius, planetRadiusScale),
-        solar.getObjects(solar.planets.mercury, baseRadius, planetRadiusScale),
-        solar.getObjects(solar.planets.venus, baseRadius, planetRadiusScale),
-        solar.getObjects(solar.planets.earth, baseRadius, planetRadiusScale),
-        solar.getObjects(solar.planets.mars, baseRadius, planetRadiusScale),
-        solar.getObjects(solar.planets.jupiter, baseRadius, planetRadiusScale),
-        solar.getObjects(solar.planets.saturn, baseRadius, planetRadiusScale),
-        solar.getObjects(solar.planets.uranus, baseRadius, planetRadiusScale),
-        solar.getObjects(solar.planets.neptune, baseRadius, planetRadiusScale),
-        solar.getObjects(solar.planets.pluto, baseRadius, planetRadiusScale),
+        solar.getObjects(solar.planets.sun,     baseRadius, this.logScale(scalar, minMultiplyScalar, maxMultiplyScalar, 0.0025, 1)),
+        solar.getObjects(solar.planets.mercury, baseRadius, this.logScale(scalar, minMultiplyScalar, maxMultiplyScalar, 0.25, 1)),
+        solar.getObjects(solar.planets.venus,   baseRadius, this.logScale(scalar, minMultiplyScalar, maxMultiplyScalar, 0.2, 1)),
+        solar.getObjects(solar.planets.earth,   baseRadius, this.logScale(scalar, minMultiplyScalar, maxMultiplyScalar, 0.2, 1)),
+        solar.getObjects(solar.planets.mars,    baseRadius, this.logScale(scalar, minMultiplyScalar, maxMultiplyScalar, 0.2, 1)),
+        solar.getObjects(solar.planets.jupiter, baseRadius, this.logScale(scalar, minMultiplyScalar, maxMultiplyScalar, 0.05, 1)),
+        solar.getObjects(solar.planets.saturn,  baseRadius, this.logScale(scalar, minMultiplyScalar, maxMultiplyScalar, 0.05, 1)),
+        solar.getObjects(solar.planets.uranus,  baseRadius, this.logScale(scalar, minMultiplyScalar, maxMultiplyScalar, 0.25, 1)),
+        solar.getObjects(solar.planets.pluto,   baseRadius, this.logScale(scalar, minMultiplyScalar, maxMultiplyScalar, 1, 1)),
+        solar.getObjects(solar.planets.neptune, baseRadius, this.logScale(scalar, minMultiplyScalar, maxMultiplyScalar, 0.25, 1)),
       ];
       window.planets = planets;
       planets.forEach(p => {
@@ -1325,9 +1339,10 @@ class Constellations {
     composer.addPass( renderScene );
     
     // animation loop
+    window.callback = (pos) => {};
     renderer.setAnimationLoop((time) => {
       if (planets.length !== 0 && options.orbit === true) {
-        //planets.forEach(p => p.updateOrbit(time/100, orbitScale))
+        //planets.forEach((p,i) => p.updateOrbit(time/100, orbitScale, (i === 3) ? callback : undefined))
       }
       
       if (options.twincle) {
