@@ -1344,6 +1344,10 @@ class Constellations {
       if (planets.length !== 0 && options.orbit === true) {
         //planets.forEach((p,i) => p.updateOrbit(time/100, orbitScale, (i === 3) ? callback : undefined))
       }
+
+      if (highlightRing) {
+        highlightRing.lookAt(this.perspectiveCamera.position);
+      }
       
       if (options.twincle) {
         stars.forEach((s, i) => {
@@ -1381,6 +1385,121 @@ class Constellations {
       this.trackballControls.update();
       this.orbitControls.update();
     });
+
+    //click
+// 📍 Raycaster 初期化
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+let highlightRing = null;
+
+const onDoubleTap = (event) => {
+  const rect = renderer.domElement.getBoundingClientRect();
+  const baseX = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  const baseY = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+  const radiusPx = 15; // 🔍 判定したい半径(px)
+  const samples = 24;  // 🔍 サンプリング回数
+
+  const hits = [];
+
+  for (let i = 0; i < samples; i++) {
+    const angle = (i / samples) * 2 * Math.PI;
+    const dx = (Math.cos(angle) * radiusPx) / rect.width * 2;
+    const dy = (Math.sin(angle) * radiusPx) / rect.height * 2;
+
+    const nx = baseX + dx;
+    const ny = baseY + dy;
+
+    raycaster.setFromCamera({ x: nx, y: ny }, this.perspectiveCamera);
+
+    // 📍 InstancedMesh の判定
+    const starHits = raycaster.intersectObject(starMesh, true);
+    if (starHits.length > 0) hits.push(starHits[0]);
+
+    // 📍 planets (Group[]) の判定
+    for (const planetGroup of planets) {
+      const planetHits = raycaster.intersectObject(planetGroup, true);
+      if (planetHits.length > 0) hits.push(planetHits[0]);
+    }
+  }
+
+  if (hits.length === 0) return;
+
+  // 📍 一番カメラに近いヒットを選ぶ
+  hits.sort((a, b) => a.distance - b.distance);
+  const hit = hits[0];
+  let position = new THREE.Vector3();
+
+  // 📍 ヒット対象が InstancedMesh の場合
+  if (hit.object.isInstancedMesh && hit.instanceId !== undefined) {
+    const dummyMatrix = new THREE.Matrix4();
+    hit.object.getMatrixAt(hit.instanceId, dummyMatrix);
+    const quaternion = new THREE.Quaternion();
+    const scale = new THREE.Vector3();
+    dummyMatrix.decompose(position, quaternion, scale);
+
+    // 既存のリング削除
+    if (highlightRing) scene.remove(highlightRing);
+
+    const radius = scale.x * 3;
+    const geometry = new THREE.RingGeometry(radius * 0.95, radius, 64);
+    const material = new THREE.MeshBasicMaterial({
+      color: 0xffcc00,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.8
+    });
+
+    highlightRing = new THREE.Mesh(geometry, material);
+    highlightRing.position.copy(position);
+    highlightRing.lookAt(this.perspectiveCamera.position);
+    scene.add(highlightRing);
+
+    this.command.run(`set stopoffset=${radius * 3};set mode=async;lookat (${position.x},${position.y},${position.z});goto (${position.x},${position.y},${position.z});targetto (${position.x},${position.y},${position.z});`);
+
+    console.log("✅ InstancedMesh がヒット:", hit.object);
+  } 
+  // 📍 ヒット対象が通常の Mesh (Group 内など) の場合
+  else {
+    // ✅ Group（惑星）を取得
+    const group = hit.object.parent;
+
+    // ✅ Group全体の境界から中心とサイズを求める
+    const box = new THREE.Box3().setFromObject(group);
+    const center = new THREE.Vector3();
+    box.getCenter(center);
+    const size = new THREE.Vector3();
+    box.getSize(size);
+
+    // ✅ リングの中心と半径
+    position.copy(center);
+    const radius = Math.max(size.x, size.y, size.z) / 2 * 1.2;
+
+    // ✅ 既存リング削除
+    if (highlightRing) scene.remove(highlightRing);
+
+    // ✅ リング作成
+    const geometry = new THREE.RingGeometry(radius * 0.9, radius, 64);
+    const material = new THREE.MeshBasicMaterial({
+      color: 0x00ccff,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.8
+    });
+
+    highlightRing = new THREE.Mesh(geometry, material);
+    highlightRing.position.copy(position);
+    highlightRing.lookAt(this.perspectiveCamera.position);
+    scene.add(highlightRing);
+    
+    this.command.run(`set stopoffset=${radius * 2};set mode=async;lookat (${position.x},${position.y},${position.z});goto (${position.x},${position.y},${position.z});targetto (${position.x},${position.y},${position.z});`);
+
+    console.log("✅ Planet がヒット:", group.name || hit.object.name);
+  }
+};
+
+renderer.domElement.addEventListener("click", onDoubleTap);
+
 
     //tmp
     starMesh.instanceMatrix.needsUpdate = true;
