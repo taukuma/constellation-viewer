@@ -149,11 +149,17 @@
             <div class="param-items"><span class="multi-lang" data-en="Show Lines">星座線を表示</span>
               <input class="tgl tgl-ios params" id="param-showLine" type="checkbox" name="param-showLine" checked/><label class="tgl-btn" for="param-showLine"></label>
             </div>
+            <div class="param-items"><span class="multi-lang" data-en="Show Guide">ガイド星座</span>
+              <input class="tgl tgl-ios params" id="param-showGuideConstellations" type="checkbox" name="param-showGuideConstellations" checked/><label class="tgl-btn" for="param-showGuideConstellations"></label>
+            </div>
             <div class="param-items"><span class="multi-lang" data-en="Show Names">星座名を表示</span>
               <input class="tgl tgl-ios params" id="param-showConstellationName" type="checkbox" name="param-showConstellationName" checked/><label class="tgl-btn" for="param-showConstellationName"></label>
             </div>
             <div class="param-items"><span class="multi-lang" data-en="Star Names">星名を表示</span>
               <input class="tgl tgl-ios params" id="param-showStarName" type="checkbox" name="param-showStarName"/><label class="tgl-btn" for="param-showStarName"></label>
+            </div>
+            <div class="param-items"><span class="multi-lang" data-en="Star Info">星情報を表示</span>
+              <input class="tgl tgl-ios params" id="param-showStarInfoOnTap" type="checkbox" name="param-showStarInfoOnTap"/><label class="tgl-btn" for="param-showStarInfoOnTap"></label>
             </div>
           </div>
           <div>
@@ -162,9 +168,6 @@
             </div>
             <div class="param-items"><span class="multi-lang" data-en="Show Orbit">軌道表示</span>
               <input class="tgl tgl-ios params" id="param-orbit" type="checkbox" name="param-orbit" checked/><label class="tgl-btn" for="param-orbit"></label>
-            </div>
-            <div class="param-items"><span class="multi-lang" data-en="Show Guide">ガイド星座</span>
-              <input class="tgl tgl-ios params" id="param-showGuideConstellations" type="checkbox" name="param-showGuideConstellations" checked/><label class="tgl-btn" for="param-showGuideConstellations"></label>
             </div>
             <div class="param-items"><span class="multi-lang" data-en="Show Grid">グリッド表示</span>
               <input class="tgl tgl-ios params" id="param-grid" type="checkbox" name="param-grid"/><label class="tgl-btn" for="param-grid"></label>
@@ -319,7 +322,14 @@
       </button>
       <div id="navigation-menu" class="settings"></div>
     </div>
-    <div id="star-info-container" style=""></div>
+    <div id="star-info-container" style="display:none;">
+      <div id="star-info" style="height: 100%; overflow: auto; position: relative; top: -20px;"></div>
+      <button id="star-info-menu-trigger" class="menu-trigger active" style="position: absolute; top: -25px; right: -25px; transform:scale(0.6)" onclick="document.querySelector('#star-info-container').style.display='none';">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
     <div id="controller-container" style="display:none;background: #0001;backdrop-filter: blur(5px);border-radius: 10px;box-shadow: 0 0 10px #000;height: calc(min(100vh,100vw) * 0.75);width: calc(min(100vh,100vw)*0.75);position: fixed;top: calc((100vh - min(100vh, 100vw)*0.75) / 2);left: calc((100vw - min(100vh, 100vw)*0.75) / 2);">
     </div>
     <script type="importMap">

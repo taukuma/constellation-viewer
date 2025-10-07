@@ -612,6 +612,7 @@ class Constellations {
       renderMode  : renderParams.renderMode,
       twincle     : renderParams.twincle == '1',
       orbit       : renderParams.orbit == "1",
+      showStarInfoOnTap: renderParams.showStarInfoOnTap == "1",
       lang        : renderParams.lang || "ja"
     };
   };
@@ -841,7 +842,8 @@ class Constellations {
         absoluteMagnitude: absoluteMagnitude,
         magnitude: magnitude,
         id: hip,
-        additional_info: s.additional_info
+        additional_info: s.additional_info,
+        original_info: s
       }
       let aka = (starInfo.aka.split(",").map(a => a.replace(/\[.*/g, "").trim())) || []
       starInfo.aka = {
@@ -1708,7 +1710,13 @@ class Constellations {
       if (!bestCandidate) return;
     
       console.log("✅ 最大見かけサイズのオブジェクト:", bestCandidate);
-      document.querySelector("#star-info-container").innerHTML = JSON.stringify(bestCandidate.info, 4);
+
+      // add info
+      if (options.showStarInfoOnTap) {
+        document.querySelector("#navigation-menu-trigger").className = "menu-trigger";
+        document.querySelector("#star-info").innerHTML = JSON.stringify(bestCandidate.info.original_info, null, 4);
+        document.querySelector("#star-info-container").style.display = "block";
+      } 
     
       if (highlightRing) scene.remove(highlightRing);
     
@@ -1723,11 +1731,27 @@ class Constellations {
       highlightRing.position.copy(bestCandidate.position);
       highlightRing.lookAt(this.perspectiveCamera.position);
       scene.add(highlightRing);
+  
       await this.command.run(`set stopoffset=${bestCandidate.size * 3};set mode=async;lookat (${bestCandidate.position.x},${bestCandidate.position.y},${bestCandidate.position.z});goto (${bestCandidate.position.x},${bestCandidate.position.y},${bestCandidate.position.z});targetto (${bestCandidate.position.x},${bestCandidate.position.y},${bestCandidate.position.z});`);
+
+      //decay
+      gsap.to(highlightRing.material, {
+        opacity: 0.0,
+        duration: 2,       // フェードアウトにかける時間
+        delay: 5,          // 表示しておく時間
+        ease: "power2.out",
+        onComplete: () => {
+          // 完全に透明になったら自動で削除
+          scene.remove(highlightRing);
+          highlightRing.geometry.dispose();
+          highlightRing.material.dispose();
+          highlightRing = null;
+        }
+      });
     };
     
     
-    renderer.domElement.addEventListener("click", onDoubleTap_NDC_SizePriority);
+    renderer.domElement.addEventListener("dblclick", onDoubleTap_NDC_SizePriority);
 
 
     //tmp
