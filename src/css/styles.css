@@ -550,6 +550,23 @@ cursor: pointer;
   box-shadow: 0 4px 15px 0 rgba(65, 132, 234, 0.75);
 }
 
+#star-info-container {  
+  background: repeating-linear-gradient(-45deg, #ffffff07 0px, #ffffff07 5px, #ffffff15 5px, #ffffff15 10px);
+  /* filter: brightness(2); */
+  border-radius: 10px;
+  height: 15vh;
+  width: 90vw;
+  position: absolute;
+  top: 80vh;
+  left: 5vw;
+  display: block;
+  z-index: 1000;
+  color: #fff;
+  padding: 10px;
+  backdrop-filter: blur(5px);
+  white-space: pre-line;
+}
+
 #navigation-menu-container {
  background-color: #000;
  user-select: none;

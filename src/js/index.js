@@ -104,9 +104,10 @@ let updateLink = (target) => {
   let worldRotateY = document.querySelector("select[name=worldRotateY]").value;
   let worldRotateZ = document.querySelector("select[name=worldRotateZ]").value;
   let orbit =  document.querySelector("input[name=param-orbit]").checked ? 1 : 0;
+  let showStarInfoOnTap =  document.querySelector("input[name=param-showStarInfoOnTap]").checked ? 1 : 0;
   let cons = [];
   document.querySelectorAll("input.constellation-link:checked").forEach(v => cons.push(v.value))
-  return `index.html?constellations=${cons.join("+")}&focalLength=${focalLength}&rotateX=${rotateX}&rotateY=${rotateY}&rotateZ=${rotateZ}&showLine=${showLine}&showConstellationName=${showConstellationName}&showGuideConstellations=${showGuideConstellations}&showStarName=${showStarName}&autoLoad=${autoLoad}&showEarth=${showEarth}&grid=${grid}&autoRotate=${autoRotate}&distance=${distance}&distanceMultiplyScalar=${distanceMultiplyScalar}&nav=${nav}&twincle=${twincle}&worldRotateX=${worldRotateX}&worldRotateY=${worldRotateY}&worldRotateZ=${worldRotateZ}&orbit=${orbit}&lang=${params.lang || "ja"}`;
+  return `index.html?constellations=${cons.join("+")}&focalLength=${focalLength}&rotateX=${rotateX}&rotateY=${rotateY}&rotateZ=${rotateZ}&showLine=${showLine}&showConstellationName=${showConstellationName}&showGuideConstellations=${showGuideConstellations}&showStarName=${showStarName}&autoLoad=${autoLoad}&showEarth=${showEarth}&grid=${grid}&autoRotate=${autoRotate}&distance=${distance}&distanceMultiplyScalar=${distanceMultiplyScalar}&nav=${nav}&twincle=${twincle}&worldRotateX=${worldRotateX}&worldRotateY=${worldRotateY}&worldRotateZ=${worldRotateZ}&orbit=${orbit}&showStarInfoOnTap=${showStarInfoOnTap}&lang=${params.lang || "ja"}`;
 };
 
 let setFilter = (e) => {
@@ -160,7 +161,10 @@ let init = () => {
     }
 
     
-    document.querySelector("#navigation-menu-container .menu-trigger").addEventListener(touchEvent, () => {document.querySelector('#navigation-menu-container .menu-trigger').classList.toggle('active')}, false);
+    document.querySelector("#navigation-menu-container .menu-trigger").addEventListener(touchEvent, () => {
+      document.querySelector("#star-info-container").style.display = "none";
+      document.querySelector('#navigation-menu-container .menu-trigger').classList.toggle('active');
+    }, false);
   } else {
     let frame = getFrame("#aaa");
     document.querySelector("#param-list .menu-trigger").addEventListener(touchEvent, () => {document.querySelector('#param-list .menu-trigger').classList.toggle('active')}, false);

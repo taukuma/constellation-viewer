@@ -612,6 +612,7 @@ class Constellations {
       renderMode  : renderParams.renderMode,
       twincle     : renderParams.twincle == '1',
       orbit       : renderParams.orbit == "1",
+      showStarInfoOnTap: renderParams.showStarInfoOnTap == "1",
       lang        : renderParams.lang || "ja"
     };
   };
@@ -841,7 +842,8 @@ class Constellations {
         absoluteMagnitude: absoluteMagnitude,
         magnitude: magnitude,
         id: hip,
-        additional_info: s.additional_info
+        additional_info: s.additional_info,
+        original_info: s
       }
       let aka = (starInfo.aka.split(",").map(a => a.replace(/\[.*/g, "").trim())) || []
       starInfo.aka = {
@@ -1259,16 +1261,16 @@ class Constellations {
       /* let planetNum = 8; let planetPos = `(${planets[planetNum].position.x},${planets[planetNum].position.y},${planets[planetNum].position.z})`; constellations.command.run(`set stopoffset = 1; set mode=async; set duration = 3000; lookat ${planetPos};goto ${planetPos};targetto ${planetPos}`) */
 
       planets = [
-        solar.getObjects(solar.planets.sun,     baseRadius, this.logScale(scalar, minMultiplyScalar, maxMultiplyScalar, 0.0025, 1)),
-        solar.getObjects(solar.planets.mercury, baseRadius, this.logScale(scalar, minMultiplyScalar, maxMultiplyScalar, 0.25, 1)),
-        solar.getObjects(solar.planets.venus,   baseRadius, this.logScale(scalar, minMultiplyScalar, maxMultiplyScalar, 0.2, 1)),
-        solar.getObjects(solar.planets.earth,   baseRadius, this.logScale(scalar, minMultiplyScalar, maxMultiplyScalar, 0.2, 1)),
-        solar.getObjects(solar.planets.mars,    baseRadius, this.logScale(scalar, minMultiplyScalar, maxMultiplyScalar, 0.2, 1)),
-        solar.getObjects(solar.planets.jupiter, baseRadius, this.logScale(scalar, minMultiplyScalar, maxMultiplyScalar, 0.05, 1)),
-        solar.getObjects(solar.planets.saturn,  baseRadius, this.logScale(scalar, minMultiplyScalar, maxMultiplyScalar, 0.05, 1)),
-        solar.getObjects(solar.planets.uranus,  baseRadius, this.logScale(scalar, minMultiplyScalar, maxMultiplyScalar, 0.25, 1)),
-        solar.getObjects(solar.planets.pluto,   baseRadius, this.logScale(scalar, minMultiplyScalar, maxMultiplyScalar, 1, 1)),
-        solar.getObjects(solar.planets.neptune, baseRadius, this.logScale(scalar, minMultiplyScalar, maxMultiplyScalar, 0.25, 1)),
+        solar.getObjects(solar.planets.sun,     baseRadius, this.logScale(scalar, minMultiplyScalar, maxMultiplyScalar, 0.0005, 1)),
+        solar.getObjects(solar.planets.mercury, baseRadius, this.logScale(scalar, minMultiplyScalar, maxMultiplyScalar, 0.05, 1)),
+        solar.getObjects(solar.planets.venus,   baseRadius, this.logScale(scalar, minMultiplyScalar, maxMultiplyScalar, 0.05, 1)),
+        solar.getObjects(solar.planets.earth,   baseRadius, this.logScale(scalar, minMultiplyScalar, maxMultiplyScalar, 0.05, 1)),
+        solar.getObjects(solar.planets.mars,    baseRadius, this.logScale(scalar, minMultiplyScalar, maxMultiplyScalar, 0.05, 1)),
+        solar.getObjects(solar.planets.jupiter, baseRadius, this.logScale(scalar, minMultiplyScalar, maxMultiplyScalar, 0.01, 1)),
+        solar.getObjects(solar.planets.saturn,  baseRadius, this.logScale(scalar, minMultiplyScalar, maxMultiplyScalar, 0.01, 1)),
+        solar.getObjects(solar.planets.uranus,  baseRadius, this.logScale(scalar, minMultiplyScalar, maxMultiplyScalar, 0.05, 1)),
+        solar.getObjects(solar.planets.pluto,   baseRadius, this.logScale(scalar, minMultiplyScalar, maxMultiplyScalar, 0.1, 1)),
+        solar.getObjects(solar.planets.neptune, baseRadius, this.logScale(scalar, minMultiplyScalar, maxMultiplyScalar, 0.05, 1)),
       ];
       window.planets = planets;
       planets.forEach(p => {
@@ -1339,10 +1341,13 @@ class Constellations {
     composer.addPass( renderScene );
     
     // animation loop
-    window.callback = (pos) => {};
+    window.callback = (pos) => {}
+    window.enableOrbitAnimation = () => options.animateOrbit = true;
+    window.disableOrbitAnimation = () => options.animateOrbit = false;
+
     renderer.setAnimationLoop((time) => {
-      if (planets.length !== 0 && options.orbit === true) {
-        //planets.forEach((p,i) => p.updateOrbit(time/100, orbitScale, (i === 3) ? callback : undefined))
+      if (planets.length !== 0 && options.orbit === true && options.animateOrbit === true) {
+        planets.forEach((p,i) => p.updateOrbit(time/100, orbitScale, (i === 3) ? callback : undefined))
       }
 
       if (highlightRing) {
@@ -1387,118 +1392,366 @@ class Constellations {
     });
 
     //click
-// 📍 Raycaster 初期化
-const raycaster = new THREE.Raycaster();
-const pointer = new THREE.Vector2();
-let highlightRing = null;
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+    let highlightRing = null;
+    let isOnTapMovement = false;
 
-const onDoubleTap = (event) => {
-  const rect = renderer.domElement.getBoundingClientRect();
-  const baseX = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-  const baseY = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    const onDoubleTap = async (event) => {
+      console.log(isOnTapMovement)
+      if (isOnTapMovement) return;
+      isOnTapMovement = true;
 
-  const radiusPx = 15; // 🔍 判定したい半径(px)
-  const samples = 24;  // 🔍 サンプリング回数
+      const rect = renderer.domElement.getBoundingClientRect();
+      const baseX = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      const baseY = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
-  const hits = [];
+      const radiusPx = 5; // 🔍 判定したい半径(px)
+      const samples = 24;  // 🔍 サンプリング回数
 
-  for (let i = 0; i < samples; i++) {
-    const angle = (i / samples) * 2 * Math.PI;
-    const dx = (Math.cos(angle) * radiusPx) / rect.width * 2;
-    const dy = (Math.sin(angle) * radiusPx) / rect.height * 2;
+      const hits = [];
 
-    const nx = baseX + dx;
-    const ny = baseY + dy;
+      for (let i = 0; i < samples; i++) {
+        const angle = (i / samples) * 2 * Math.PI;
+        const dx = (Math.cos(angle) * radiusPx) / rect.width * 2;
+        const dy = (Math.sin(angle) * radiusPx) / rect.height * 2;
 
-    raycaster.setFromCamera({ x: nx, y: ny }, this.perspectiveCamera);
+        const nx = baseX + dx;
+        const ny = baseY + dy;
 
-    // 📍 InstancedMesh の判定
-    const starHits = raycaster.intersectObject(starMesh, true);
-    if (starHits.length > 0) hits.push(starHits[0]);
+        raycaster.setFromCamera({ x: nx, y: ny }, this.perspectiveCamera);
 
-    // 📍 planets (Group[]) の判定
-    for (const planetGroup of planets) {
-      const planetHits = raycaster.intersectObject(planetGroup, true);
-      if (planetHits.length > 0) hits.push(planetHits[0]);
-    }
-  }
+        // 📍 InstancedMesh の判定
+        const starHits = raycaster.intersectObject(starMesh, true);
+        if (starHits.length > 0) hits.push(starHits[0]);
 
-  if (hits.length === 0) return;
+        // 📍 planets (Group[]) の判定
+        for (const planetGroup of planets) {
+          const planetHits = raycaster.intersectObject(planetGroup, true);
+          if (planetHits.length > 0) hits.push(planetHits[0]);
+        }
+      }
 
-  // 📍 一番カメラに近いヒットを選ぶ
-  hits.sort((a, b) => a.distance - b.distance);
-  const hit = hits[0];
-  let position = new THREE.Vector3();
+      if (hits.length === 0) {
+        isOnTapMovement = false;
+        return;
+      }
 
-  // 📍 ヒット対象が InstancedMesh の場合
-  if (hit.object.isInstancedMesh && hit.instanceId !== undefined) {
-    const dummyMatrix = new THREE.Matrix4();
-    hit.object.getMatrixAt(hit.instanceId, dummyMatrix);
-    const quaternion = new THREE.Quaternion();
-    const scale = new THREE.Vector3();
-    dummyMatrix.decompose(position, quaternion, scale);
+      // 📍 一番カメラに近いヒットを選ぶ
+      hits.sort((a, b) => a.distance - b.distance);
+      const hit = hits[0];
+      let position = new THREE.Vector3();
 
-    // 既存のリング削除
-    if (highlightRing) scene.remove(highlightRing);
+      // 📍 ヒット対象が InstancedMesh の場合
+      if (hit.object.isInstancedMesh && hit.instanceId !== undefined) {
+        const dummyMatrix = new THREE.Matrix4();
+        hit.object.getMatrixAt(hit.instanceId, dummyMatrix);
+        const quaternion = new THREE.Quaternion();
+        const scale = new THREE.Vector3();
+        dummyMatrix.decompose(position, quaternion, scale);
 
-    const radius = scale.x * 3;
-    const geometry = new THREE.RingGeometry(radius * 0.95, radius, 64);
-    const material = new THREE.MeshBasicMaterial({
-      color: 0xffcc00,
-      side: THREE.DoubleSide,
-      transparent: true,
-      opacity: 0.8
-    });
+        // 既存のリング削除
+        if (highlightRing) scene.remove(highlightRing);
 
-    highlightRing = new THREE.Mesh(geometry, material);
-    highlightRing.position.copy(position);
-    highlightRing.lookAt(this.perspectiveCamera.position);
-    scene.add(highlightRing);
+        const radius = scale.x * 3;
+        const geometry = new THREE.RingGeometry(radius * 0.95, radius, 64);
+        const material = new THREE.MeshBasicMaterial({
+          color: 0xffcc00,
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.8
+        });
 
-    this.command.run(`set stopoffset=${radius * 3};set mode=async;lookat (${position.x},${position.y},${position.z});goto (${position.x},${position.y},${position.z});targetto (${position.x},${position.y},${position.z});`);
+        highlightRing = new THREE.Mesh(geometry, material);
+        highlightRing.position.copy(position);
+        highlightRing.lookAt(this.perspectiveCamera.position);
+        scene.add(highlightRing);
 
-    console.log("✅ InstancedMesh がヒット:", hit.object);
-  } 
-  // 📍 ヒット対象が通常の Mesh (Group 内など) の場合
-  else {
-    // ✅ Group（惑星）を取得
-    const group = hit.object.parent;
+        await this.command.run(`set stopoffset=${radius * 3};set mode=async;lookat (${position.x},${position.y},${position.z});goto (${position.x},${position.y},${position.z});targetto (${position.x},${position.y},${position.z});`);
 
-    // ✅ Group全体の境界から中心とサイズを求める
-    const box = new THREE.Box3().setFromObject(group);
-    const center = new THREE.Vector3();
-    box.getCenter(center);
-    const size = new THREE.Vector3();
-    box.getSize(size);
+        console.log("✅ InstancedMesh がヒット:", hit.object);
+      } 
+      // 📍 ヒット対象が通常の Mesh (Group 内など) の場合
+      else {
+        // ✅ Group（惑星）を取得
+        const group = hit.object.parent;
 
-    // ✅ リングの中心と半径
-    position.copy(center);
-    const radius = Math.max(size.x, size.y, size.z) / 2 * 1.2;
+        // ✅ Group全体の境界から中心とサイズを求める
+        const box = new THREE.Box3().setFromObject(group);
+        const center = new THREE.Vector3();
+        box.getCenter(center);
+        const size = new THREE.Vector3();
+        box.getSize(size);
 
-    // ✅ 既存リング削除
-    if (highlightRing) scene.remove(highlightRing);
+        // ✅ リングの中心と半径
+        position.copy(center);
+        const radius = Math.max(size.x, size.y, size.z) / 2 * 1.2;
 
-    // ✅ リング作成
-    const geometry = new THREE.RingGeometry(radius * 0.9, radius, 64);
-    const material = new THREE.MeshBasicMaterial({
-      color: 0x00ccff,
-      side: THREE.DoubleSide,
-      transparent: true,
-      opacity: 0.8
-    });
+        // ✅ 既存リング削除
+        if (highlightRing) scene.remove(highlightRing);
 
-    highlightRing = new THREE.Mesh(geometry, material);
-    highlightRing.position.copy(position);
-    highlightRing.lookAt(this.perspectiveCamera.position);
-    scene.add(highlightRing);
+        // ✅ リング作成
+        const geometry = new THREE.RingGeometry(radius * 0.9, radius, 64);
+        const material = new THREE.MeshBasicMaterial({
+          color: 0x00ccff,
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.8
+        });
+
+        highlightRing = new THREE.Mesh(geometry, material);
+        highlightRing.position.copy(position);
+        highlightRing.lookAt(this.perspectiveCamera.position);
+        scene.add(highlightRing);
+        
+        await this.command.run(`set stopoffset=${radius * 2};set mode=async;lookat (${position.x},${position.y},${position.z});goto (${position.x},${position.y},${position.z});targetto (${position.x},${position.y},${position.z});`);
+
+        console.log("✅ Planet がヒット:", group.name || hit.object.name);
+      }
+
+      isOnTapMovement = false;
+    };
+    const onDoubleTap_NDC = async (event) => {
+      const rect = renderer.domElement.getBoundingClientRect();
+      const ndcClick = new THREE.Vector2(
+        ((event.clientX - rect.left) / rect.width) * 2 - 1,
+        -((event.clientY - rect.top) / rect.height) * 2 + 1
+      );
     
-    this.command.run(`set stopoffset=${radius * 2};set mode=async;lookat (${position.x},${position.y},${position.z});goto (${position.x},${position.y},${position.z});targetto (${position.x},${position.y},${position.z});`);
+      let closest = null;
+      let minDist = Infinity;
+      let hitPosition = new THREE.Vector3();
+      let hitScale = 1;
+    
+      const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(this.perspectiveCamera.quaternion); // 👈 カメラの前方ベクトル
+    
+      // --------------------
+      // Groups
+      // --------------------
+      planets.forEach(group => {
+        const groupPos = new THREE.Vector3();
+        group.getWorldPosition(groupPos);
+    
+        const camToObj = groupPos.clone().sub(this.perspectiveCamera.position);
+        if (camToObj.dot(forward) < 0) return;
+    
+        const projected = groupPos.clone().project(this.perspectiveCamera);
+        const dx = projected.x - ndcClick.x;
+        const dy = projected.y - ndcClick.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+    
+        if (dist < 0.05 && dist < minDist) {
+          minDist = dist;
+          closest = { type: 'group', group };
+          hitPosition.copy(groupPos);
+    
+          let maxSize = 0;
+          group.traverse(child => {
+            if (child.isMesh) {
+              child.geometry.computeBoundingSphere();
+              const size = child.geometry.boundingSphere.radius * child.scale.x;
+              maxSize = Math.max(maxSize, size);
+            }
+          });
+          hitScale = maxSize;
+        }
+      });
 
-    console.log("✅ Planet がヒット:", group.name || hit.object.name);
-  }
-};
+      // --------------------
+      // InstancedMesh
+      // --------------------
+      const dummyMatrix = new THREE.Matrix4();
+      const tempPos = new THREE.Vector3();
+      const tempScale = new THREE.Vector3();
+      const tempQuat = new THREE.Quaternion();
+    
+      if (!closest) { //まだ選択されていない場合に限定
+        for (let i = 0; i < starMesh.count; i++) {
+          starMesh.getMatrixAt(i, dummyMatrix);
+          dummyMatrix.decompose(tempPos, tempQuat, tempScale);
+      
+          // 👇 背面オブジェクト除外
+          const camToObj = tempPos.clone().sub(this.perspectiveCamera.position);
+          if (camToObj.dot(forward) < 0) continue;
+      
+          const projected = tempPos.clone().project(this.perspectiveCamera);
+          const dx = projected.x - ndcClick.x;
+          const dy = projected.y - ndcClick.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+      
+          if (dist < 0.05 && dist < minDist) {
+            minDist = dist;
+            closest = { type: 'instance', index: i };
+            hitPosition.copy(tempPos);
+            hitScale = tempScale.x;
+          }
+        }
+      }
+    
+      if (!closest) return;
+    
+      console.log("✅ Hit position (Front only):", hitPosition);
+    
+      if (highlightRing) scene.remove(highlightRing);
+    
+      const geometry = new THREE.RingGeometry(hitScale * 2.9, hitScale * 3, 64);
+      const material = new THREE.MeshBasicMaterial({
+        color: 0xffcc00,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.8
+      });
+      highlightRing = new THREE.Mesh(geometry, material);
+      highlightRing.position.copy(hitPosition);
+      highlightRing.lookAt(this.perspectiveCamera.position);
+    
+      scene.add(highlightRing);
 
-renderer.domElement.addEventListener("click", onDoubleTap);
+      await this.command.run(`set stopoffset=${hitScale * 3};set mode=async;lookat (${hitPosition.x},${hitPosition.y},${hitPosition.z});goto (${hitPosition.x},${hitPosition.y},${hitPosition.z});targetto (${hitPosition.x},${hitPosition.y},${hitPosition.z});`);
+    };
+    const onDoubleTap_NDC_SizePriority = async (event) => {
+      const rect = renderer.domElement.getBoundingClientRect();
+      const ndcClick = new THREE.Vector2(
+        ((event.clientX - rect.left) / rect.width) * 2 - 1,
+        -((event.clientY - rect.top) / rect.height) * 2 + 1
+      );
+    
+      const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(this.perspectiveCamera.quaternion);
+    
+      const dummyMatrix = new THREE.Matrix4();
+      const tempPos = new THREE.Vector3();
+      const tempQuat = new THREE.Quaternion();
+      const tempScale = new THREE.Vector3();
+    
+      let bestCandidate = null;
+      let bestApparentSize = -Infinity;
+    
+      // -----------------------------------------
+      // Group の判定
+      // -----------------------------------------
+      planets.forEach(group => {
+        const groupPos = new THREE.Vector3();
+        group.getWorldPosition(groupPos);
+    
+        // 背面は除外
+        const camToObj = groupPos.clone().sub(this.perspectiveCamera.position);
+        if (camToObj.dot(forward) < 0) return;
+    
+        const projected = groupPos.clone().project(this.perspectiveCamera);
+        const dx = projected.x - ndcClick.x;
+        const dy = projected.y - ndcClick.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > 0.08) return;
+    
+        // Group内の最大半径を取得
+        let maxRadius = 0;
+        group.traverse(child => {
+          if (child.isMesh) {
+            child.geometry.computeBoundingSphere();
+            maxRadius = Math.max(maxRadius, child.geometry.boundingSphere.radius * child.scale.x);
+          }
+        });
+    
+        const distance = camToObj.length();
+        const apparentSize = maxRadius / distance;
+    
+        if (apparentSize > bestApparentSize) {
+          bestApparentSize = apparentSize;
+          bestCandidate = {
+            type: "group",
+            group,
+            position: groupPos.clone(),
+            size: maxRadius,
+            info: {}
+          };
+        }
+      });
+
+      // -----------------------------------------
+      // InstancedMesh の判定
+      // -----------------------------------------
+      if (!bestCandidate) {
+        for (let i = 0; i < starMesh.count; i++) {
+          starMesh.getMatrixAt(i, dummyMatrix);
+          dummyMatrix.decompose(tempPos, tempQuat, tempScale);
+      
+          // 背面は除外
+          const camToObj = tempPos.clone().sub(this.perspectiveCamera.position);
+          if (camToObj.dot(forward) < 0) continue;
+      
+          const projected = tempPos.clone().project(this.perspectiveCamera);
+          const dx = projected.x - ndcClick.x;
+          const dy = projected.y - ndcClick.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+      
+          // 🔎 クリック近傍のみを候補とする
+          if (dist > 0.08) continue;
+      
+          // 🔎 投影サイズ ≒ スケール / 距離（距離の逆数）
+          const distance = camToObj.length();
+          const apparentSize = tempScale.x / distance;
+      
+          if (apparentSize > bestApparentSize) {
+            bestApparentSize = apparentSize;
+            bestCandidate = {
+              type: "instance",
+              index: i,
+              position: tempPos.clone(),
+              size: tempScale.x,
+              info: this.data.stars[i]
+            };
+          }
+        }
+      }
+    
+      // -----------------------------------------
+      // 選択処理
+      // -----------------------------------------
+      if (!bestCandidate) return;
+    
+      console.log("✅ 最大見かけサイズのオブジェクト:", bestCandidate);
+
+      // add info
+      if (options.showStarInfoOnTap) {
+        document.querySelector("#navigation-menu-trigger").className = "menu-trigger";
+        document.querySelector("#star-info").innerHTML = JSON.stringify(bestCandidate.info.original_info, null, 4);
+        document.querySelector("#star-info-container").style.display = "block";
+      } 
+    
+      if (highlightRing) scene.remove(highlightRing);
+    
+      const geometry = new THREE.RingGeometry(bestCandidate.size * 2.9, bestCandidate.size * 3, 64);
+      const material = new THREE.MeshBasicMaterial({
+        color: 0xff8800,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.8
+      });
+      highlightRing = new THREE.Mesh(geometry, material);
+      highlightRing.position.copy(bestCandidate.position);
+      highlightRing.lookAt(this.perspectiveCamera.position);
+      scene.add(highlightRing);
+  
+      await this.command.run(`set stopoffset=${bestCandidate.size * 3};set mode=async;lookat (${bestCandidate.position.x},${bestCandidate.position.y},${bestCandidate.position.z});goto (${bestCandidate.position.x},${bestCandidate.position.y},${bestCandidate.position.z});targetto (${bestCandidate.position.x},${bestCandidate.position.y},${bestCandidate.position.z});`);
+
+      //decay
+      gsap.to(highlightRing.material, {
+        opacity: 0.0,
+        duration: 2,       // フェードアウトにかける時間
+        delay: 5,          // 表示しておく時間
+        ease: "power2.out",
+        onComplete: () => {
+          // 完全に透明になったら自動で削除
+          scene.remove(highlightRing);
+          highlightRing.geometry.dispose();
+          highlightRing.material.dispose();
+          highlightRing = null;
+        }
+      });
+    };
+    
+    
+    renderer.domElement.addEventListener("dblclick", onDoubleTap_NDC_SizePriority);
 
 
     //tmp
