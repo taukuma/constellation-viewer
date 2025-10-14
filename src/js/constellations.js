@@ -612,6 +612,7 @@ class Constellations {
       renderMode  : renderParams.renderMode,
       twincle     : renderParams.twincle == '1',
       orbit       : renderParams.orbit == "1",
+      asteroidBelt: renderParams.asteroidBelt == "1",
       showStarInfoOnTap: renderParams.showStarInfoOnTap == "1",
       lang        : renderParams.lang || "ja"
     };
@@ -1249,6 +1250,8 @@ class Constellations {
 
     // 太陽系（地球）
     let planets = [];
+    let belts = [];
+    let solar = undefined;
     const minMultiplyScalar = 0.1;
     const maxMultiplyScalar = 1e10;
     const scalar = (options.distance) ? options.distanceMultiplyScalar : 2;
@@ -1256,7 +1259,7 @@ class Constellations {
     const baseRadius = 0.05;
 
     if (this.options.showEarth) {
-      const solar = new Solar();
+      if (!solar) solar = new Solar();
   
       /* let planetNum = 8; let planetPos = `(${planets[planetNum].position.x},${planets[planetNum].position.y},${planets[planetNum].position.z})`; constellations.command.run(`set stopoffset = 1; set mode=async; set duration = 3000; lookat ${planetPos};goto ${planetPos};targetto ${planetPos}`) */
 
@@ -1272,11 +1275,26 @@ class Constellations {
         solar.getObjects(solar.planets.pluto,   baseRadius, this.logScale(scalar, minMultiplyScalar, maxMultiplyScalar, 0.1, 1)),
         solar.getObjects(solar.planets.neptune, baseRadius, this.logScale(scalar, minMultiplyScalar, maxMultiplyScalar, 0.05, 1)),
       ];
+
       window.planets = planets;
       planets.forEach(p => {
         p.updateOrbit(1, orbitScale);
         world.add(p);
         if (options.orbit) world.add(p.getOrbitLine(orbitScale));
+      });
+      const ambientLight = new THREE.AmbientLight(0xaaaaaa);
+      world.add(ambientLight);
+      
+    }
+    if (this.options.asteroidBelt) {
+      if (!solar) solar = new Solar();
+      belts = [
+        solar.getBelt("asteroid", orbitScale),
+        solar.getBelt("kuiper", orbitScale),
+      ];
+      window.belts = belts;
+      belts.forEach(b => {
+        world.add(b);
       });
       const ambientLight = new THREE.AmbientLight(0xaaaaaa);
       world.add(ambientLight);
