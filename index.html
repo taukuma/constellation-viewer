@@ -42,10 +42,10 @@
           <div class="param-items" style="display: block; padding-top:50px"><span class="multi-lang" data-en="Focal Length">焦点距離</span></div>
           <div class="inline-radio">
             <div><input class="params" type="radio" name="focalLength" value=8><label>8mm</label></div>
-            <div><input class="params" type="radio" name="focalLength" value=14><label>14mm</label></div>
+            <div><input class="params" type="radio" name="focalLength" value=14 checked><label>14mm</label></div>
             <div><input class="params" type="radio" name="focalLength" value=24><label>24mm</label></div>
-            <div><input class="params" type="radio" name="focalLength" value=28 checked><label>28mm</label></div>
-            <div><input class="params" type="radio" name="focalLength" value=25><label>35mm</label></div>
+            <div><input class="params" type="radio" name="focalLength" value=28><label>28mm</label></div>
+            <div><input class="params" type="radio" name="focalLength" value=35><label>35mm</label></div>
             <div><input class="params" type="radio" name="focalLength" value=45><label>45mm</label></div>
           </div>
           <div class="inline-radio">
@@ -163,13 +163,16 @@
             </div>
           </div>
           <div>
-            <div class="param-items"><span class="multi-lang" data-en="Show Earth">地球を表示</span>
+            <div class="param-items"><span class="multi-lang" data-en="Show Earth">太陽系を表示</span>
               <input class="tgl tgl-ios params" id="param-showEarth" type="checkbox" name="param-showEarth" checked/><label class="tgl-btn" for="param-showEarth"></label>
             </div>
-            <div class="param-items"><span class="multi-lang" data-en="Show Orbit">軌道表示</span>
+            <div class="param-items"><span class="multi-lang" data-en="Show Orbit">軌道を表示</span>
               <input class="tgl tgl-ios params" id="param-orbit" type="checkbox" name="param-orbit" checked/><label class="tgl-btn" for="param-orbit"></label>
             </div>
-            <div class="param-items"><span class="multi-lang" data-en="Show Grid">グリッド表示</span>
+            <div class="param-items"><span class="multi-lang" data-en="Show Asteroid Belt">小惑星帯を表示</span>
+              <input class="tgl tgl-ios params" id="param-asteroid-belt" type="checkbox" name="param-asteroid-belt"/><label class="tgl-btn" for="param-asteroid-belt"></label>
+            </div>
+            <div class="param-items"><span class="multi-lang" data-en="Show Grid">グリッドを表示</span>
               <input class="tgl tgl-ios params" id="param-grid" type="checkbox" name="param-grid"/><label class="tgl-btn" for="param-grid"></label>
             </div>
           </div>
@@ -192,7 +195,7 @@
           </div>
           <div>
             <div class="param-items" style="width: 80%"><span class="multi-lang" data-en="Distance Amount">距離倍率</span>
-              <div class="range-ios"><input class=" params" id="param-distance-scalor" type="range" name="param-distance-scalor" value="0" min="-1" max="10" step="0.0125"/></div>
+              <div class="range-ios"><input class=" params" id="param-distance-scalor" type="range" name="param-distance-scalor" value="5" min="-1" max="10" step="0.0125"/></div>
             </div>
           </div>
           <div class="hide">

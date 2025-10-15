@@ -439,7 +439,6 @@ class Solar {
         } break;
         case this.planets.mars: {
           const radius = (baseRadius) * 0.532;
-          console.log(baseRadius, radius);
           const orbitParam = {
             a: radius * 67248.62,
             e: 0.09341233,
@@ -465,7 +464,6 @@ class Solar {
         } break;
         case this.planets.jupiter: {
           const radius = (baseRadius) * 10.97;
-          console.log(baseRadius, radius);
           const orbitParam = {
             a: radius * 11133.31,
             e: 0.04839266,
@@ -668,6 +666,132 @@ class Solar {
       return planetGroup;
     }
     
+    getBelt = (beltType, scale = 1.00) => {
+      const createBeltMaterial = (beltType) => {
+        const params = {
+          asteroid: {
+            color: new THREE.Color(0x5a503e),
+            innerRadius: 2.2 * 1.00,
+            thickness: 0.3,
+            noiseScale: Math.random() * 25,   // 粒子感アップ
+            noiseStrength: Math.random(), // ノイズの強さ
+            alphaScale: Math.random()     // 全体の透明度スケール
+          },
+          kuiper: {
+            color: new THREE.Color(0x4d647c),
+            innerRadius: 12.0 * 1.00,
+            thickness: 1.0,
+            noiseScale: Math.random() * 60,
+            noiseStrength: 0.05 * Math.random(),
+            alphaScale: Math.random()
+          }
+        }[beltType];
+      
+        return new THREE.ShaderMaterial({
+          uniforms: {
+            uTime: { value: 0 },
+            uColor: { value: params.color },
+            uNoiseScale: { value: params.noiseScale },
+            uNoiseStrength: { value: params.noiseStrength },
+            uThickness: { value: params.thickness },
+            uAlphaScale: { value: params.alphaScale },
+          },
+      
+          vertexShader: `
+            varying vec3 vPosition;
+            void main() {
+              vPosition = normalize(position);
+              gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+          `,
+      
+          fragmentShader: `
+            varying vec3 vPosition;
+            uniform float uTime;
+            uniform vec3 uColor;
+            uniform float uThickness;
+            uniform float uNoiseScale;
+            uniform float uNoiseStrength;
+            uniform float uAlphaScale;
+      
+            // hash & noise
+            float hash(vec3 p) {
+              p = vec3(dot(p, vec3(127.1,311.7,74.7)),
+                       dot(p, vec3(269.5,183.3,246.1)),
+                       dot(p, vec3(113.5,271.9,124.6)));
+              return fract(sin(p.x+p.y+p.z)*43758.5453123);
+            }
+      
+            float noise(vec3 p) {
+              vec3 i = floor(p);
+              vec3 f = fract(p);
+              float n = mix(
+                mix(mix(hash(i + vec3(0,0,0)), hash(i + vec3(1,0,0)), f.x),
+                    mix(hash(i + vec3(0,1,0)), hash(i + vec3(1,1,0)), f.x), f.y),
+                mix(mix(hash(i + vec3(0,0,1)), hash(i + vec3(1,0,1)), f.x),
+                    mix(hash(i + vec3(0,1,1)), hash(i + vec3(1,1,1)), f.x), f.y),
+                f.z
+              );
+              return n;
+            }
+      
+            void main() {
+              float latitude = acos(vPosition.y);
+              float band = smoothstep(uThickness, 0.0, abs(latitude - 3.1415926 / 2.0));
+      
+              // より粒状のノイズ
+              float n = noise(vPosition * uNoiseScale + vec3(0.0, uTime * 0.1, 0.0));
+      
+              // コントラストを強調（粒子感アップ）
+              n = pow(n, 3.0);
+      
+              // α（透明度）を低めに
+              float alpha = band * (0.1 + n * uNoiseStrength) * uAlphaScale;
+      
+              if (alpha < 0.05) discard;
+      
+              gl_FragColor = vec4(uColor * (0.4 + 0.6 * n), alpha);
+            }
+          `,
+          transparent: true,
+          blending: THREE.AdditiveBlending,
+          //side: THREE.DoubleSide,
+          depthWrite: false,
+        });
+      };
+      
+    
+      const group = new THREE.Group();
+      switch (beltType) {
+        case "asteroid": {
+          let meshList = (new Array(10)).fill().map((v,i) => (3800 + i * 190) * scale);
+
+          meshList.forEach(s => {
+            const mesh = new THREE.Mesh(
+              new THREE.SphereGeometry(s, 32, 32),
+              createBeltMaterial("asteroid")
+            );
+            group.add(mesh);
+          })
+
+          break;
+        }
+        case "kuiper": {
+          let meshList = (new Array(20)).fill().map((v,i) => (42000 + i * 1500) * scale);
+          meshList.forEach(s => {
+            const mesh = new THREE.Mesh(
+              new THREE.SphereGeometry(s, 32, 32),
+              createBeltMaterial("kuiper")
+            );
+            group.add(mesh);
+          })
+          break;
+        }
+      }
+    
+      return group;
+    };
+
     render = (planets, renderElement) => {
       let world = new THREE.Group();
       this.labels = [];
