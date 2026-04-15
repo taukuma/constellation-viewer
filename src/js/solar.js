@@ -792,6 +792,326 @@ class Solar {
       return group;
     };
 
+    // ===== 彗星・流星群母天体データ =====
+    COMET_DATA = {
+      // --- 著名彗星 ---
+      halley: {
+        nameEn: "1P/Halley",
+        nameJa: "ハレー彗星",
+        meteorShower: "オリオン座流星群・みずがめ座η流星群",
+        a_AU: 17.83,
+        e: 0.9671,
+        i: 162.26,
+        Omega: 58.42,
+        omega: 111.33,
+        T: 27507,
+        color: 0xaaddff,
+      },
+      encke: {
+        nameEn: "2P/Encke",
+        nameJa: "エンケ彗星",
+        meteorShower: "おうし座流星群",
+        a_AU: 2.2179,
+        e: 0.84834,
+        i: 11.782,
+        Omega: 334.567,
+        omega: 186.544,
+        T: 1205,
+        color: 0xbbddff,
+      },
+      neowise: {
+        nameEn: "C/2020 F3",
+        nameJa: "ネオワイズ彗星",
+        meteorShower: null,
+        a_AU: 358.0,
+        e: 0.99922,
+        i: 128.93,
+        Omega: 61.01,
+        omega: 37.28,
+        T: 2474620,
+        color: 0xffeecc,
+      },
+      tempel1: {
+        nameEn: "9P/Tempel",
+        nameJa: "テンペル第1彗星",
+        meteorShower: null,
+        a_AU: 3.1237,
+        e: 0.5175,
+        i: 10.53,
+        Omega: 68.98,
+        omega: 178.84,
+        T: 2017,
+        color: 0xaaddff,
+      },
+      chury: {
+        nameEn: "67P/C-G",
+        nameJa: "チュリュモフ・ゲラシメンコ彗星",
+        meteorShower: null,
+        a_AU: 3.4630,
+        e: 0.6410,
+        i: 7.044,
+        Omega: 50.147,
+        omega: 12.802,
+        T: 2352,
+        color: 0xaaddff,
+      },
+      // --- 流星群の母天体 ---
+      swiftTuttle: {
+        nameEn: "109P/Swift-Tuttle",
+        nameJa: "スイフト・タットル彗星",
+        meteorShower: "ペルセウス座流星群",
+        a_AU: 26.09,
+        e: 0.9632,
+        i: 113.45,
+        Omega: 139.38,
+        omega: 152.98,
+        T: 47490,
+        color: 0xccddff,
+      },
+      tempelTuttle: {
+        nameEn: "55P/Tempel-Tuttle",
+        nameJa: "テンペル・タットル彗星",
+        meteorShower: "しし座流星群",
+        a_AU: 10.33,
+        e: 0.9055,
+        i: 162.49,
+        Omega: 235.27,
+        omega: 172.50,
+        T: 12125,
+        color: 0xddeeff,
+      },
+      giacobiniZinner: {
+        nameEn: "21P/Giacobini-Zinner",
+        nameJa: "ジャコビニ・ツィナー彗星",
+        meteorShower: "りゅう座流星群",
+        a_AU: 3.5227,
+        e: 0.7067,
+        i: 31.79,
+        Omega: 195.07,
+        omega: 172.52,
+        T: 2411,
+        color: 0xaaccee,
+      },
+      thatcher: {
+        nameEn: "C/1861 G1 (Thatcher)",
+        nameJa: "サッチャー彗星",
+        meteorShower: "こと座流星群",
+        a_AU: 55.68,
+        e: 0.9824,
+        i: 79.78,
+        Omega: 31.78,
+        omega: 213.68,
+        T: 151577,
+        color: 0xeeeeff,
+      },
+      eh1: {
+        nameEn: "2003 EH1",
+        nameJa: "2003 EH1（消滅彗星核）",
+        meteorShower: "しぶんぎ座流星群",
+        a_AU: 3.124,
+        e: 0.619,
+        i: 70.84,
+        Omega: 282.96,
+        omega: 171.36,
+        T: 2016,
+        color: 0xddccff,
+      },
+      phaethon: {
+        nameEn: "3200 Phaethon",
+        nameJa: "ファエトン（岩石彗星）",
+        meteorShower: "ふたご座流星群",
+        a_AU: 1.271,
+        e: 0.890,
+        i: 22.18,
+        Omega: 265.20,
+        omega: 322.12,
+        T: 523,
+        color: 0xffddcc,
+      },
+    };
+
+    // ===== 彗星オブジェクト生成 =====
+    // 核 (nucleus)、コマ (coma)、イオン尾 (tail) を持つグループを返す
+    getComet = (cometData, baseRadius = 0.05, radiusScale = 1) => {
+      const group = new THREE.Group();
+
+      // AU → シーン単位系変換係数 (Earth の a 計算に合わせる)
+      const AU_to_units = baseRadius * 23481.07;
+
+      const orbitParam = {
+        a: cometData.a_AU * AU_to_units,
+        e: cometData.e,
+        i: cometData.i,
+        Omega: cometData.Omega,
+        omega: cometData.omega,
+        T: cometData.T,
+      };
+
+      // --- 核 ---
+      const nucleusRadius = baseRadius * 0.12 * radiusScale;
+      const nucleusGeo = new THREE.SphereGeometry(nucleusRadius, 8, 8);
+      const nucleusMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+      const nucleus = new THREE.Mesh(nucleusGeo, nucleusMat);
+
+      // --- コマ (edge-glow halo) ---
+      const comaRadius = nucleusRadius * 8;
+      const comaGeo = new THREE.SphereGeometry(comaRadius, 16, 16);
+      const comaMat = new THREE.ShaderMaterial({
+        uniforms: {
+          color: { value: new THREE.Color(cometData.color) },
+        },
+        vertexShader: `
+          varying vec3 vNormal;
+          varying vec3 vViewPosition;
+          void main() {
+            vNormal = normalize(normalMatrix * normal);
+            vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
+            vViewPosition = -mvPos.xyz;
+            gl_Position = projectionMatrix * mvPos;
+          }
+        `,
+        fragmentShader: `
+          uniform vec3 color;
+          varying vec3 vNormal;
+          varying vec3 vViewPosition;
+          void main() {
+            vec3 viewDir = normalize(vViewPosition);
+            float intensity = 1.0 - abs(dot(vNormal, viewDir));
+            intensity = pow(intensity, 1.8);
+            gl_FragColor = vec4(color, intensity * 0.75);
+          }
+        `,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        side: THREE.FrontSide,
+      });
+      const coma = new THREE.Mesh(comaGeo, comaMat);
+
+      // --- 尾 (イオンテール: 太陽と反対方向に伸びる円錐) ---
+      const tailLength = comaRadius * 60;
+      const tailBaseRadius = comaRadius * 2.5;
+      const tailGeo = new THREE.ConeGeometry(tailBaseRadius, tailLength, 8, 1, true);
+      const tailMat = new THREE.ShaderMaterial({
+        uniforms: {
+          color: { value: new THREE.Color(cometData.color) },
+          uTailLength: { value: tailLength },
+        },
+        vertexShader: `
+          uniform float uTailLength;
+          varying float vFade;
+          void main() {
+            // ConeGeometry: 先端 +tailLength/2, 底面 -tailLength/2
+            // tail.position.y = -tailLength/2 でオフセット → 先端がグループ原点
+            // したがって position.y は 0(先端)〜-tailLength(底面)
+            vFade = clamp(-position.y / uTailLength, 0.0, 1.0);
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          uniform vec3 color;
+          varying float vFade;
+          void main() {
+            float alpha = vFade * 0.45;
+            if (alpha < 0.005) discard;
+            gl_FragColor = vec4(color, alpha);
+          }
+        `,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      });
+      const tail = new THREE.Mesh(tailGeo, tailMat);
+      // 円錐の先端をグループ原点 (彗星核の位置) に合わせる
+      tail.position.y = -tailLength / 2;
+
+      // tailGroup を回転させて尾の方向を制御する
+      const tailGroup = new THREE.Group();
+      tailGroup.add(tail);
+
+      group.add(nucleus);
+      group.add(coma);
+      group.add(tailGroup);
+
+      const _up = new THREE.Vector3(0, 1, 0);
+
+      group.updateOrbit = (tDays, scale = 1, callback = (pos) => {}) => {
+        const pos = this.getOrbitPosition(tDays, orbitParam, scale);
+        group.position.copy(pos);
+
+        // 尾を太陽と反対方向に向ける
+        // ConeGeometry: +Y が先端 → +Y を太陽方向 (-pos) に向けると
+        // -Y (底面) が太陽の逆方向 = 尾が太陽から離れる方向に伸びる
+        if (pos.lengthSq() > 1e-10) {
+          const towardSun = pos.clone().negate().normalize();
+          const dot = _up.dot(towardSun);
+          if (Math.abs(dot + 1) < 1e-6) {
+            // ほぼ逆平行: 任意軸で 180° 回転
+            tailGroup.quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI);
+          } else {
+            tailGroup.quaternion.setFromUnitVectors(_up, towardSun);
+          }
+        }
+
+        callback(pos, group);
+      };
+
+      group.getOrbitLine = (scale = 1) => this.createCometOrbitLine(orbitParam, scale);
+
+      return group;
+    };
+
+    // ===== 彗星軌道線生成 (真近点角ベース・高離心率軌道は弧のみ表示) =====
+    createCometOrbitLine = (orbit, segments = 256, scale = 1) => {
+      const { a, e, i, omega, Omega } = orbit;
+      const positions = [];
+      const showFullOrbit = e < 0.7;
+
+      // e >= 0.7 の高離心率彗星は近日点付近 ±150° の弧のみ表示
+      const fStart = showFullOrbit ? 0 : -Math.PI * (5 / 6);
+      const fEnd   = showFullOrbit ? 2 * Math.PI : Math.PI * (5 / 6);
+
+      for (let idx = 0; idx <= segments; idx++) {
+        const f = fStart + (fEnd - fStart) * idx / segments;
+
+        // 真近点角 f から極座標 r を計算
+        const denom = 1 + e * Math.cos(f);
+        if (Math.abs(denom) < 1e-10) continue;
+        const r = a * (1 - e * e) / denom;
+        if (!isFinite(r) || r < 0) continue;
+
+        const x = r * Math.cos(f);
+        const y = r * Math.sin(f);
+        const z = 0;
+
+        const pos = new THREE.Vector3(x, y, z);
+        const rot = new THREE.Matrix4()
+          .makeRotationZ(THREE.MathUtils.degToRad(Omega))
+          .multiply(new THREE.Matrix4().makeRotationX(THREE.MathUtils.degToRad(i)))
+          .multiply(new THREE.Matrix4().makeRotationZ(THREE.MathUtils.degToRad(omega)));
+        pos.applyMatrix4(rot);
+
+        // 惑星と同じ座標変換: XY基準 → XZ基準
+        const converted = new THREE.Vector3(pos.x, pos.z, -pos.y);
+        positions.push(converted.x * scale, converted.y * scale, converted.z * scale);
+      }
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+
+      const material = new THREE.LineBasicMaterial({
+        color: 0x6699bb,
+        transparent: true,
+        opacity: 0.5,
+      });
+
+      // 低離心率は閉じたループ、高離心率は開いた弧
+      return showFullOrbit
+        ? new THREE.LineLoop(geometry, material)
+        : new THREE.Line(geometry, material);
+    };
+
     render = (planets, renderElement) => {
       let world = new THREE.Group();
       this.labels = [];

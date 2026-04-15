@@ -105,10 +105,11 @@ let updateLink = (target) => {
   let worldRotateZ = document.querySelector("select[name=worldRotateZ]").value;
   let orbit =  document.querySelector("input[name=param-orbit]").checked ? 1 : 0;
   let asteroidBelt =  document.querySelector("input[name=param-asteroid-belt]").checked ? 1 : 0;
+  let showComets = document.querySelector("input[name=param-showComets]").checked ? 1 : 0;
   let showStarInfoOnTap =  document.querySelector("input[name=param-showStarInfoOnTap]").checked ? 1 : 0;
   let cons = [];
   document.querySelectorAll("input.constellation-link:checked").forEach(v => cons.push(v.value))
-  return `index.html?constellations=${cons.join("+")}&focalLength=${focalLength}&rotateX=${rotateX}&rotateY=${rotateY}&rotateZ=${rotateZ}&showLine=${showLine}&showConstellationName=${showConstellationName}&showGuideConstellations=${showGuideConstellations}&showStarName=${showStarName}&autoLoad=${autoLoad}&showEarth=${showEarth}&grid=${grid}&autoRotate=${autoRotate}&distance=${distance}&distanceMultiplyScalar=${distanceMultiplyScalar}&nav=${nav}&twincle=${twincle}&worldRotateX=${worldRotateX}&worldRotateY=${worldRotateY}&worldRotateZ=${worldRotateZ}&orbit=${orbit}&asteroidBelt=${asteroidBelt}&showStarInfoOnTap=${showStarInfoOnTap}&lang=${params.lang || "ja"}`;
+  return `index.html?constellations=${cons.join("+")}&focalLength=${focalLength}&rotateX=${rotateX}&rotateY=${rotateY}&rotateZ=${rotateZ}&showLine=${showLine}&showConstellationName=${showConstellationName}&showGuideConstellations=${showGuideConstellations}&showStarName=${showStarName}&autoLoad=${autoLoad}&showEarth=${showEarth}&grid=${grid}&autoRotate=${autoRotate}&distance=${distance}&distanceMultiplyScalar=${distanceMultiplyScalar}&nav=${nav}&twincle=${twincle}&worldRotateX=${worldRotateX}&worldRotateY=${worldRotateY}&worldRotateZ=${worldRotateZ}&orbit=${orbit}&asteroidBelt=${asteroidBelt}&showComets=${showComets}&showStarInfoOnTap=${showStarInfoOnTap}&lang=${params.lang || "ja"}`;
 };
 
 let setFilter = (e) => {
@@ -139,6 +140,32 @@ let setFilter = (e) => {
 let showStartButton = () => {document.querySelector("#draw-constellation").setAttribute("class", (document.querySelectorAll("input.constellation-link:checked").length) ? "bn632-hover bn26" : "hide");}
 
 let init = () => {
+  // URLパラメータからチェックボックスの初期状態を復元
+  // (設定画面でURLを共有・ブックマークから戻ったときに値が引き継がれる)
+  const paramCheckboxMap = {
+    showLine            : "param-showLine",
+    showConstellationName: "param-showConstellationName",
+    showGuideConstellations: "param-showGuideConstellations",
+    showStarName        : "param-showStarName",
+    showStarInfoOnTap   : "param-showStarInfoOnTap",
+    showEarth           : "param-showEarth",
+    orbit               : "param-orbit",
+    asteroidBelt        : "param-asteroid-belt",
+    showComets          : "param-showComets",
+    grid                : "param-grid",
+    distance            : "param-distance",
+    nav                 : "param-nav",
+    autoRotate          : "param-autoRotate",
+    autoLoad            : "param-autoLoad",
+    twincle             : "param-twincle",
+  };
+  Object.entries(paramCheckboxMap).forEach(([param, name]) => {
+    if (params[param] !== undefined) {
+      const el = document.querySelector(`input[name=${name}]`);
+      if (el) el.checked = params[param] === "1";
+    }
+  });
+
   //lang
   switch (params.lang) {
     case "en": 

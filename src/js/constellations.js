@@ -613,6 +613,7 @@ class Constellations {
       twincle     : renderParams.twincle == '1',
       orbit       : renderParams.orbit == "1",
       asteroidBelt: renderParams.asteroidBelt == "1",
+      showComets  : renderParams.showComets == "1",
       showStarInfoOnTap: renderParams.showStarInfoOnTap == "1",
       lang        : renderParams.lang || "ja"
     };
@@ -1298,7 +1299,26 @@ class Constellations {
       });
       const ambientLight = new THREE.AmbientLight(0xaaaaaa);
       world.add(ambientLight);
-      
+
+    }
+
+    let comets = [];
+    if (this.options.showComets) {
+      if (!solar) solar = new Solar();
+      const cd = solar.COMET_DATA;
+      comets = Object.values(cd).map(data =>
+        solar.getComet(data, baseRadius, 1)
+      );
+      window.comets = comets;
+      comets.forEach(c => {
+        c.updateOrbit(1, orbitScale);
+        world.add(c);
+        if (options.orbit) world.add(c.getOrbitLine(orbitScale));
+      });
+      if (!this.options.showEarth) {
+        const ambientLight = new THREE.AmbientLight(0xaaaaaa);
+        world.add(ambientLight);
+      }
     }
 
     world.rotation.x = options.worldRotateX;
@@ -1366,6 +1386,9 @@ class Constellations {
     renderer.setAnimationLoop((time) => {
       if (planets.length !== 0 && options.orbit === true && options.animateOrbit === true) {
         planets.forEach((p,i) => p.updateOrbit(time/100, orbitScale, (i === 3) ? callback : undefined))
+      }
+      if (comets.length !== 0 && options.animateOrbit === true) {
+        comets.forEach(c => c.updateOrbit(time/100, orbitScale));
       }
 
       if (highlightRing) {
