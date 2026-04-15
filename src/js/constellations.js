@@ -1780,11 +1780,21 @@ class Constellations {
     this.getNewMatrix = (x,y,z,q,s) => new THREE.Matrix4(new THREE.Vector3(x,y,z),q,s);
 
     // initial lookat and target
-    if (options.earthView || this.symbol.length >= 48) {
-      this.command.run(`set duration=100; lookat (${this.initialDirection.x},${this.initialDirection.y},${this.initialDirection.z}); set duration=${this.command.options.duration}`);
-    } else {
-      this.command.run(`set duration=100; targetto (${this.initialDirection.x},${this.initialDirection.y},${this.initialDirection.z}); set duration=${this.command.options.duration}`);
-    }
+    //if (options.earthView || this.symbol.length >= 48) {
+    //  this.command.run(`set duration=100; lookat (${this.initialDirection.x},${this.initialDirection.y},${this.initialDirection.z}); set duration=${this.command.options.duration}`);
+    //} else {
+    //  this.command.run(`set duration=100; targetto (${this.initialDirection.x},${this.initialDirection.y},${this.initialDirection.z}); set duration=${this.command.options.duration}`);
+    //}
+    let initial = Math.log(this.options.distanceMultiplyScalar) * Math.pow(Math.abs(Math.log(this.options.distanceMultiplyScalar)),2)//999 * Math.log(this.options.distanceMultiplyScalar) + 2310;
+    let offset = {
+      x: -0.01 * Math.log(this.options.distanceMultiplyScalar) / 2,
+      y: +0.01 * Math.log(this.options.distanceMultiplyScalar) / 2,
+      z: -0.005 * Math.log(this.options.distanceMultiplyScalar) / 2
+    };
+    let planetNum = 3;
+    let planetPos = `(${planets[planetNum].position.x},${planets[planetNum].position.y},${planets[planetNum].position.z})`;
+    options.animateOrbit = false;
+    this.command.run(`set duration=1; set mode=sync; goto (${initial},${initial/2},${initial/-2}); lookat ${planetPos};set mode=async;set easing=power4.inOut;set duration = 10000; polarto (0,1,0);lookat ${planetPos}; targetto ${planetPos};goto (${planets[planetNum].position.x + offset.x},${planets[planetNum].position.y + offset.y},${planets[planetNum].position.z + offset.z});set easing=none; set duration = 5000`)
   }
   
   createLabel = (text, color, size = 16, opacity = 0.4, scaleFactor = 1/25) => {

@@ -777,10 +777,10 @@ class Solar {
           break;
         }
         case "kuiper": {
-          let meshList = (new Array(20)).fill().map((v,i) => (42000 + i * 1500) * scale);
+          let meshList = (new Array(30)).fill().map((v,i) => (42000 + i * 1500) * scale);
           meshList.forEach(s => {
             const mesh = new THREE.Mesh(
-              new THREE.SphereGeometry(s, 32, 32),
+              new THREE.SphereGeometry(s, 16, 16),
               createBeltMaterial("kuiper")
             );
             group.add(mesh);
