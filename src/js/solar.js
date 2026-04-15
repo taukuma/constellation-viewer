@@ -1016,9 +1016,9 @@ class Solar {
       const material = new THREE.LineDashedMaterial({
         color: 0x6699bb,
         transparent: true,
-        opacity: 0.6,
-        dashSize: oneAU * 0.12,
-        gapSize:  oneAU * 0.08,
+        opacity: 0.4,
+        dashSize: oneAU * 0.001,
+        gapSize:  oneAU * 0.001,
       });
 
       const line = isClosedLoop

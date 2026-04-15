@@ -107,9 +107,10 @@ let updateLink = (target) => {
   let asteroidBelt =  document.querySelector("input[name=param-asteroid-belt]").checked ? 1 : 0;
   let showComets = document.querySelector("input[name=param-showComets]").checked ? 1 : 0;
   let showStarInfoOnTap =  document.querySelector("input[name=param-showStarInfoOnTap]").checked ? 1 : 0;
+  let animateOrbit = document.querySelector("input[name=param-animateOrbit]").checked ? 1 : 0;
   let cons = [];
   document.querySelectorAll("input.constellation-link:checked").forEach(v => cons.push(v.value))
-  return `index.html?constellations=${cons.join("+")}&focalLength=${focalLength}&rotateX=${rotateX}&rotateY=${rotateY}&rotateZ=${rotateZ}&showLine=${showLine}&showConstellationName=${showConstellationName}&showGuideConstellations=${showGuideConstellations}&showStarName=${showStarName}&autoLoad=${autoLoad}&showEarth=${showEarth}&grid=${grid}&autoRotate=${autoRotate}&distance=${distance}&distanceMultiplyScalar=${distanceMultiplyScalar}&nav=${nav}&twincle=${twincle}&worldRotateX=${worldRotateX}&worldRotateY=${worldRotateY}&worldRotateZ=${worldRotateZ}&orbit=${orbit}&asteroidBelt=${asteroidBelt}&showComets=${showComets}&showStarInfoOnTap=${showStarInfoOnTap}&lang=${params.lang || "ja"}`;
+  return `index.html?constellations=${cons.join("+")}&focalLength=${focalLength}&rotateX=${rotateX}&rotateY=${rotateY}&rotateZ=${rotateZ}&showLine=${showLine}&showConstellationName=${showConstellationName}&showGuideConstellations=${showGuideConstellations}&showStarName=${showStarName}&autoLoad=${autoLoad}&showEarth=${showEarth}&grid=${grid}&autoRotate=${autoRotate}&distance=${distance}&distanceMultiplyScalar=${distanceMultiplyScalar}&nav=${nav}&twincle=${twincle}&worldRotateX=${worldRotateX}&worldRotateY=${worldRotateY}&worldRotateZ=${worldRotateZ}&orbit=${orbit}&animateOrbit=${animateOrbit}&asteroidBelt=${asteroidBelt}&showComets=${showComets}&showStarInfoOnTap=${showStarInfoOnTap}&lang=${params.lang || "ja"}`;
 };
 
 let setFilter = (e) => {
