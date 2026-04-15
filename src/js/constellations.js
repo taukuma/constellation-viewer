@@ -612,6 +612,7 @@ class Constellations {
       renderMode  : renderParams.renderMode,
       twincle     : renderParams.twincle == '1',
       orbit       : renderParams.orbit == "1",
+      animateOrbit: renderParams.animateOrbit == "1",
       asteroidBelt: renderParams.asteroidBelt == "1",
       showComets  : renderParams.showComets == "1",
       showStarInfoOnTap: renderParams.showStarInfoOnTap == "1",
@@ -679,7 +680,18 @@ class Constellations {
     align-items: center;
     overflow: hidden;">${svg}<span style="position:absolute;">${label}</span></div>`
     const constellationList = this.symbol.map(s => {return {label: `${getConstellationListItem(constants.symbols[s].svg, constants.symbols[s][this.options.lang == "en" ? "label_en" : "label"])}`, value: s, labelForSort: constants.symbols[s][this.options.lang == "en" ? "label_en" : "label"]}}).sort((a,b) => (this.toKatakana(a.labelForSort) <= this.toKatakana(b.labelForSort)) ? -1 : 1);
-    const lookAtControl = UI.Component.horizontalscroll.get(constellationList);
+    // 特別アイテム（太陽系・彗星）をリスト先頭に追加
+    const solarSystemSvg = `<svg width="36" height="36" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg"><circle cx="18" cy="18" r="2.5" fill="#ffdd44"/><circle cx="18" cy="18" r="6" fill="none" stroke="#ffffff" stroke-width="0.7" opacity="0.6"/><circle cx="18" cy="18" r="10" fill="none" stroke="#ffffff" stroke-width="0.7" opacity="0.5"/><circle cx="18" cy="18" r="14" fill="none" stroke="#ffffff" stroke-width="0.7" opacity="0.4"/><circle cx="18" cy="18" r="17.5" fill="none" stroke="#ffffff" stroke-width="0.7" opacity="0.3"/></svg>`;
+    const cometSvg = `<svg width="36" height="36" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg"><line x1="13" y1="26" x2="3" y2="9" stroke="#aaddff" stroke-width="1.2" stroke-linecap="round" opacity="0.55"/><line x1="13" y1="26" x2="0" y2="13" stroke="#aaddff" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/><line x1="13" y1="26" x2="0" y2="18" stroke="#aaddff" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/><circle cx="13" cy="26" r="3" fill="#ddeeff"/><circle cx="13" cy="26" r="5" fill="none" stroke="#aaddff" stroke-width="0.6" opacity="0.5"/></svg>`;
+    const specialItems = [];
+    if (this.options.showEarth) {
+      specialItems.push({ label: getConstellationListItem(solarSystemSvg, this.options.lang == "en" ? "Solar Sys." : "太陽系"), value: "__solar__" });
+    }
+    if (this.options.showComets) {
+      specialItems.push({ label: getConstellationListItem(cometSvg, this.options.lang == "en" ? "Comets" : "彗星"), value: "__comets__" });
+    }
+    const allItems = [...specialItems, ...constellationList];
+    const lookAtControl = UI.Component.horizontalscroll.get(allItems);
     lookAtControl.style.fontFamily = "Klee One";
     navMenu.append(lookAtControl);
     UI.Component.horizontalscroll.activate(lookAtControl, ((ev,v) => {
@@ -724,34 +736,97 @@ class Constellations {
           }
         } break;
         case "list": {
-          switch (v.get("command")) {
-            case 'goto': {
-              const prevStopOffset = `${this.command.options.stopoffset}`;
-              const stopOffset = 20;
-              this.command.run(`set stopoffset=${stopOffset}; set mode=async; targetto ${v.get("list")}; ${v.get("command")} ${v.get("list")}; set stopoffset=${prevStopOffset}`);
-              focusConstellationLine(v.get("list"));
-            } break;
-            case 'lookat':{
-              this.command.run(`${v.get("command")} ${v.get("list")}`);
-              focusConstellationLine(v.get("list"));
+          const listValue = v.get("list");
+          const cmd = v.get("command");
 
-            } break;
-            default: {
-              this.command.run(`${v.get("command")} ${v.get("list")}`);
-              focusConstellationLine(v.get("list"));
-            } break;;
-          }
-          ev.target.closest("form").setAttribute("data-previous-camera-lookat", v.get("list"));
+          if (listValue === "__solar__") {
+            // 太陽系アイテム選択
+            const planetNames = [
+              { nameJa: "太陽",   nameEn: "Sun"     },
+              { nameJa: "水星",   nameEn: "Mercury"  },
+              { nameJa: "金星",   nameEn: "Venus"    },
+              { nameJa: "地球",   nameEn: "Earth"    },
+              { nameJa: "火星",   nameEn: "Mars"     },
+              { nameJa: "木星",   nameEn: "Jupiter"  },
+              { nameJa: "土星",   nameEn: "Saturn"   },
+              { nameJa: "天王星", nameEn: "Uranus"   },
+              { nameJa: "冥王星", nameEn: "Pluto"    },
+              { nameJa: "海王星", nameEn: "Neptune"  },
+            ];
+            if (cmd === "goto") {
+              const r = (window.planets && window.planets[9]) ? (window.planets[9].position.length() * 1.5).toFixed(2) : "50";
+              this.command.run(`set stopoffset=${r}; set mode=async; targetto (0,0,0); goto (0,0,0); set mode=sync; set stopoffset=${this.command.options.stopoffset}`);
+            } else {
+              this.command.run(`${cmd} (0,0,0)`);
+            }
+            const planetListHtml = planetNames.map((planet, idx) => {
+              if (!window.planets || !window.planets[idx]) return "";
+              const p = window.planets[idx];
+              const pos = `(${p.position.x},${p.position.y},${p.position.z})`;
+              const label = this.options.lang == "en" ? planet.nameEn : planet.nameJa;
+              return `<label class="horizontalscroll-switch" style="cursor: pointer;"><input name="custom-command" type="checkbox" data-exec-callback="true" value="set stopoffset=5; set mode=async; ##_COMMAND_## ${pos}; targetto ${pos}; set mode=sync; set stopoffset=${this.command.options.stopoffset}" onclick="setTimeout(()=>{this.checked=false;},500)">${label}</label>`;
+            }).join("");
+            document.querySelector("#ui-component-star-lists").innerHTML = planetListHtml;
+
+          } else if (listValue === "__comets__") {
+            // 彗星アイテム選択
+            const computePerihelionPos = (data) => {
+              const AU_to_units = (this._orbitBaseRadius ?? 0.05) * 23481.07;
+              const scale = this._orbitScale ?? 1;
+              const r = data.a_AU * (1 - data.e) * AU_to_units;
+              const pos = new THREE.Vector3(r, 0, 0);
+              const rot = new THREE.Matrix4()
+                .makeRotationZ(THREE.MathUtils.degToRad(data.Omega))
+                .multiply(new THREE.Matrix4().makeRotationX(THREE.MathUtils.degToRad(data.i)))
+                .multiply(new THREE.Matrix4().makeRotationZ(THREE.MathUtils.degToRad(data.omega)));
+              pos.applyMatrix4(rot);
+              return new THREE.Vector3(pos.x * scale, pos.z * scale, -pos.y * scale);
+            };
+            if (cmd === "goto") {
+              this.command.run(`set stopoffset=5; set mode=async; goto (0,0,0); targetto (0,0,0); set mode=sync; set stopoffset=${this.command.options.stopoffset}`);
+            } else {
+              this.command.run(`${cmd} (0,0,0)`);
+            }
+            const cometSource = (this._solar && this._solar.COMET_DATA) ? this._solar.COMET_DATA : {};
+            const cometListHtml = Object.entries(cometSource).map(([key, data]) => {
+              const perihelion = computePerihelionPos(data);
+              const pos = `(${perihelion.x},${perihelion.y},${perihelion.z})`;
+              const label = this.options.lang == "en" ? data.nameEn : data.nameJa;
+              const shower = data.meteorShower ? `<br><small style="opacity:0.7">${data.meteorShower}</small>` : "";
+              return `<label class="horizontalscroll-switch" style="cursor: pointer;"><input name="custom-command" type="checkbox" data-comet-key="${key}" data-exec-callback="true" value="set stopoffset=2; set mode=async; ##_COMMAND_## ${pos}; targetto ${pos}; set mode=sync; set stopoffset=${this.command.options.stopoffset}" onclick="setTimeout(()=>{this.checked=false;},500)">${label}${shower}</label>`;
+            }).join("");
+            document.querySelector("#ui-component-star-lists").innerHTML = cometListHtml;
+
+          } else {
+            // 星座アイテム選択（既存処理）
+            switch (cmd) {
+              case 'goto': {
+                const prevStopOffset = `${this.command.options.stopoffset}`;
+                const stopOffset = 20;
+                this.command.run(`set stopoffset=${stopOffset}; set mode=async; targetto ${listValue}; ${cmd} ${listValue}; set stopoffset=${prevStopOffset}`);
+                focusConstellationLine(listValue);
+              } break;
+              case 'lookat': {
+                this.command.run(`${cmd} ${listValue}`);
+                focusConstellationLine(listValue);
+              } break;
+              default: {
+                this.command.run(`${cmd} ${listValue}`);
+                focusConstellationLine(listValue);
+              } break;
+            }
+            ev.target.closest("form").setAttribute("data-previous-camera-lookat", listValue);
 /* ********************************************************/
-          console.log(v.get("list"), this.data.stars.filter(s => s.symbol === v.get("list") && s.name !== ""));
-          let starListHtml = this.data.stars.filter(s => s.symbol === v.get("list") && s.name !== "").map(s => `
-              <label class="horizontalscroll-switch" style="cursor: pointer;">
-                <input name="custom-command" type="checkbox" data-exec-callback="true" value="set stopoffset=5; set mode=async; ##_COMMAND_## (${s.coordinates.x},${s.coordinates.y},${s.coordinates.z}); targetto (${s.coordinates.x},${s.coordinates.y},${s.coordinates.z}); set mode=sync; set stopoffset=${this.command.options.stopoffset}" onclick="setTimeout(()=>{this.checked=false;},500)">${(this.options.lang == "en") ? `${s.name_en}${s.aka.en ? `<br>(${s.aka.en})`: ""}` : `${s.name}${s.aka.ja ? `<br>(${s.aka.ja})`: ""}`}
-              </label>  
-          `).join("")
-          document.querySelector("#ui-component-star-lists").innerHTML = starListHtml;
+            console.log(listValue, this.data.stars.filter(s => s.symbol === listValue && s.name !== ""));
+            let starListHtml = this.data.stars.filter(s => s.symbol === listValue && s.name !== "").map(s => `
+                <label class="horizontalscroll-switch" style="cursor: pointer;">
+                  <input name="custom-command" type="checkbox" data-exec-callback="true" value="set stopoffset=5; set mode=async; ##_COMMAND_## (${s.coordinates.x},${s.coordinates.y},${s.coordinates.z}); targetto (${s.coordinates.x},${s.coordinates.y},${s.coordinates.z}); set mode=sync; set stopoffset=${this.command.options.stopoffset}" onclick="setTimeout(()=>{this.checked=false;},500)">${(this.options.lang == "en") ? `${s.name_en}${s.aka.en ? `<br>(${s.aka.en})`: ""}` : `${s.name}${s.aka.ja ? `<br>(${s.aka.ja})`: ""}`}
+                </label>
+            `).join("")
+            document.querySelector("#ui-component-star-lists").innerHTML = starListHtml;
 /* *********************************************************/
-          } break;
+          }
+        } break;
         case "custom-command":
           console.log(v.get("custom-command"), ev)
           switch (v.get("custom-command")) {
@@ -767,6 +842,24 @@ class Constellations {
               this.command.run(`set duration=1000; set easing=linear; polarto (0,1,0); set easing=${prevEasing}; set duration=${prevDuration}`);
             } break;
             default: {
+              // 彗星軌道ハイライト
+              const cometKey = ev.target.dataset && ev.target.dataset.cometKey;
+              if (cometKey && this.cometOrbitLines) {
+                Object.values(this.cometOrbitLines).forEach(({ line }) => {
+                  line.material.color.set(0x6699bb);
+                  line.material.opacity = 0.6;
+                  line.material.needsUpdate = true;
+                });
+                const { line } = this.cometOrbitLines[cometKey];
+                line.material.color.set(0xffffff);
+                line.material.opacity = 1.0;
+                line.material.needsUpdate = true;
+                setTimeout(() => {
+                  line.material.color.set(0x6699bb);
+                  line.material.opacity = 0.6;
+                  line.material.needsUpdate = true;
+                }, 5000);
+              }
               this.command.run(`${v.get("custom-command").replace(/##_COMMAND_##/g, v.get("command"))}`);
             } break;
           }
@@ -1258,6 +1351,8 @@ class Constellations {
     const scalar = (options.distance) ? options.distanceMultiplyScalar : 2;
     const orbitScale = this.logScale(scalar, minMultiplyScalar, maxMultiplyScalar, 0.000075, 1);
     const baseRadius = 0.05;
+    this._orbitScale = orbitScale;
+    this._orbitBaseRadius = baseRadius;
 
     if (this.options.showEarth) {
       if (!solar) solar = new Solar();
@@ -1304,10 +1399,14 @@ class Constellations {
 
     if (this.options.showComets) {
       if (!solar) solar = new Solar();
+      this._solar = solar;
       // 彗星は軌道線のみ表示 (orbit オプションの有無に関わらず常に描画)
       // 軌道スケールは惑星と共通の orbitScale (distanceMultiplyScalar 連動)
-      Object.values(solar.COMET_DATA).forEach(data => {
-        world.add(solar.getCometOrbitLine(data, baseRadius, orbitScale));
+      this.cometOrbitLines = {};
+      Object.entries(solar.COMET_DATA).forEach(([key, data]) => {
+        const line = solar.getCometOrbitLine(data, baseRadius, orbitScale);
+        this.cometOrbitLines[key] = { line, data };
+        world.add(line);
       });
       if (!this.options.showEarth) {
         const ambientLight = new THREE.AmbientLight(0xaaaaaa);
@@ -1808,7 +1907,7 @@ class Constellations {
     };
     let planetNum = 3;
     let planetPos = `(${planets[planetNum].position.x},${planets[planetNum].position.y},${planets[planetNum].position.z})`;
-    options.animateOrbit = false;
+    //options.animateOrbit = false;
     this.command.run(`set duration=1; set mode=sync; goto (${initial},${initial/2},${initial/-2}); lookat ${planetPos};set mode=async;set easing=power4.inOut;set duration = 10000; polarto (0,1,0);lookat ${planetPos}; targetto ${planetPos};goto (${planets[planetNum].position.x + offset.x},${planets[planetNum].position.y + offset.y},${planets[planetNum].position.z + offset.z});set easing=none; set duration = 5000`)
   }
   
