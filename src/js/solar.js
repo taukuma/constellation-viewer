@@ -930,186 +930,104 @@ class Solar {
       },
     };
 
-    // ===== 彗星オブジェクト生成 =====
-    // 核 (nucleus)、コマ (coma)、イオン尾 (tail) を持つグループを返す
-    getComet = (cometData, baseRadius = 0.05, radiusScale = 1) => {
-      const group = new THREE.Group();
-
-      // AU → シーン単位系変換係数 (Earth の a 計算に合わせる)
+    // ===== 彗星軌道線生成 (真近点角ベース) =====
+    // cometData + baseRadius + orbitScale から直接軌道線を生成するラッパー
+    getCometOrbitLine = (cometData, baseRadius = 0.05, scale = 1) => {
       const AU_to_units = baseRadius * 23481.07;
-
-      const orbitParam = {
-        a: cometData.a_AU * AU_to_units,
-        e: cometData.e,
-        i: cometData.i,
+      const orbit = {
+        a:     cometData.a_AU * AU_to_units,
+        a_AU:  cometData.a_AU,
+        e:     cometData.e,
+        i:     cometData.i,
         Omega: cometData.Omega,
         omega: cometData.omega,
-        T: cometData.T,
       };
-
-      // --- 核 ---
-      const nucleusRadius = baseRadius * 0.12 * radiusScale;
-      const nucleusGeo = new THREE.SphereGeometry(nucleusRadius, 8, 8);
-      const nucleusMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-      const nucleus = new THREE.Mesh(nucleusGeo, nucleusMat);
-
-      // --- コマ (edge-glow halo) ---
-      const comaRadius = nucleusRadius * 8;
-      const comaGeo = new THREE.SphereGeometry(comaRadius, 16, 16);
-      const comaMat = new THREE.ShaderMaterial({
-        uniforms: {
-          color: { value: new THREE.Color(cometData.color) },
-        },
-        vertexShader: `
-          varying vec3 vNormal;
-          varying vec3 vViewPosition;
-          void main() {
-            vNormal = normalize(normalMatrix * normal);
-            vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
-            vViewPosition = -mvPos.xyz;
-            gl_Position = projectionMatrix * mvPos;
-          }
-        `,
-        fragmentShader: `
-          uniform vec3 color;
-          varying vec3 vNormal;
-          varying vec3 vViewPosition;
-          void main() {
-            vec3 viewDir = normalize(vViewPosition);
-            float intensity = 1.0 - abs(dot(vNormal, viewDir));
-            intensity = pow(intensity, 1.8);
-            gl_FragColor = vec4(color, intensity * 0.75);
-          }
-        `,
-        transparent: true,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-        side: THREE.FrontSide,
-      });
-      const coma = new THREE.Mesh(comaGeo, comaMat);
-
-      // --- 尾 (イオンテール: 太陽と反対方向に伸びる円錐) ---
-      const tailLength = comaRadius * 60;
-      const tailBaseRadius = comaRadius * 2.5;
-      const tailGeo = new THREE.ConeGeometry(tailBaseRadius, tailLength, 8, 1, true);
-      const tailMat = new THREE.ShaderMaterial({
-        uniforms: {
-          color: { value: new THREE.Color(cometData.color) },
-          uTailLength: { value: tailLength },
-        },
-        vertexShader: `
-          uniform float uTailLength;
-          varying float vFade;
-          void main() {
-            // ConeGeometry: 先端 +tailLength/2, 底面 -tailLength/2
-            // tail.position.y = -tailLength/2 でオフセット → 先端がグループ原点
-            // したがって position.y は 0(先端)〜-tailLength(底面)
-            vFade = clamp(-position.y / uTailLength, 0.0, 1.0);
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-          }
-        `,
-        fragmentShader: `
-          uniform vec3 color;
-          varying float vFade;
-          void main() {
-            float alpha = vFade * 0.45;
-            if (alpha < 0.005) discard;
-            gl_FragColor = vec4(color, alpha);
-          }
-        `,
-        transparent: true,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-        side: THREE.DoubleSide,
-      });
-      const tail = new THREE.Mesh(tailGeo, tailMat);
-      // 円錐の先端をグループ原点 (彗星核の位置) に合わせる
-      tail.position.y = -tailLength / 2;
-
-      // tailGroup を回転させて尾の方向を制御する
-      const tailGroup = new THREE.Group();
-      tailGroup.add(tail);
-
-      group.add(nucleus);
-      group.add(coma);
-      group.add(tailGroup);
-
-      const _up = new THREE.Vector3(0, 1, 0);
-
-      group.updateOrbit = (tDays, scale = 1, callback = (pos) => {}) => {
-        const pos = this.getOrbitPosition(tDays, orbitParam, scale);
-        group.position.copy(pos);
-
-        // 尾を太陽と反対方向に向ける
-        // ConeGeometry: +Y が先端 → +Y を太陽方向 (-pos) に向けると
-        // -Y (底面) が太陽の逆方向 = 尾が太陽から離れる方向に伸びる
-        if (pos.lengthSq() > 1e-10) {
-          const towardSun = pos.clone().negate().normalize();
-          const dot = _up.dot(towardSun);
-          if (Math.abs(dot + 1) < 1e-6) {
-            // ほぼ逆平行: 任意軸で 180° 回転
-            tailGroup.quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI);
-          } else {
-            tailGroup.quaternion.setFromUnitVectors(_up, towardSun);
-          }
-        }
-
-        callback(pos, group);
-      };
-
-      group.getOrbitLine = (scale = 1) => this.createCometOrbitLine(orbitParam, scale);
-
-      return group;
+      return this.createCometOrbitLine(orbit, scale);
     };
 
-    // ===== 彗星軌道線生成 (真近点角ベース・高離心率軌道は弧のみ表示) =====
-    createCometOrbitLine = (orbit, segments = 256, scale = 1) => {
-      const { a, e, i, omega, Omega } = orbit;
-      const positions = [];
-      const showFullOrbit = e < 0.7;
+    // 軌道線の実体:
+    //   ・真近点角ベースで楕円を計算し、実際の軌道形状を忠実に再現
+    //   ・近日点距離 50 AU (カイパーベルト外縁) でクリップ
+    //     → 遠日点が 50 AU 以内なら閉じた楕円ループ
+    //     → 超える場合は r = 50 AU になる真近点角まで弧を描く
+    //   ・LineDashedMaterial で点線表示
+    //   ・スケールは惑星と共通の orbitScale を使用 (distanceMultiplyScalar 連動)
+    createCometOrbitLine = (orbit, scale = 1) => {
+      const { a, a_AU, e, i, omega, Omega } = orbit;
 
-      // e >= 0.7 の高離心率彗星は近日点付近 ±150° の弧のみ表示
-      const fStart = showFullOrbit ? 0 : -Math.PI * (5 / 6);
-      const fEnd   = showFullOrbit ? 2 * Math.PI : Math.PI * (5 / 6);
+      // AU → シーン単位系 (Earth の a = baseRadius * 23481.07 と同じ比率)
+      const AU_to_units = a / a_AU;
+
+      // カイパーベルト外縁 ≈ 50 AU でクリップ
+      const CLIP_AU = 50;
+      const clipInOrbitUnits = CLIP_AU * AU_to_units;  // scale 乗算前の軌道単位
+
+      // 半通径 p = a(1 - e²)
+      const p = a * (1 - e * e);
+
+      // 遠日点距離 (軌道単位)
+      const aphelion = a * (1 + e);
+
+      let fStart, fEnd, isClosedLoop;
+
+      if (aphelion <= clipInOrbitUnits) {
+        // 遠日点がクリップ圏内 → 完全な楕円ループ
+        fStart = 0;
+        fEnd = 2 * Math.PI;
+        isClosedLoop = true;
+      } else {
+        // r(f) = p / (1 + e・cos f) = clipInOrbitUnits となる f を求める
+        //   cos(fMax) = (p / clipInOrbitUnits - 1) / e
+        const cosF = (p / clipInOrbitUnits - 1) / e;
+        const fMax = Math.acos(Math.max(-1, Math.min(1, cosF)));
+        fStart = -fMax;
+        fEnd   =  fMax;
+        isClosedLoop = false;
+      }
+
+      const segments = 256;
+      const positions = [];
 
       for (let idx = 0; idx <= segments; idx++) {
         const f = fStart + (fEnd - fStart) * idx / segments;
-
-        // 真近点角 f から極座標 r を計算
         const denom = 1 + e * Math.cos(f);
         if (Math.abs(denom) < 1e-10) continue;
-        const r = a * (1 - e * e) / denom;
+        const r = p / denom;
         if (!isFinite(r) || r < 0) continue;
 
-        const x = r * Math.cos(f);
-        const y = r * Math.sin(f);
-        const z = 0;
+        const pos = new THREE.Vector3(r * Math.cos(f), r * Math.sin(f), 0);
 
-        const pos = new THREE.Vector3(x, y, z);
+        // 軌道傾斜・昇交点・近日点引数の回転行列
         const rot = new THREE.Matrix4()
           .makeRotationZ(THREE.MathUtils.degToRad(Omega))
           .multiply(new THREE.Matrix4().makeRotationX(THREE.MathUtils.degToRad(i)))
           .multiply(new THREE.Matrix4().makeRotationZ(THREE.MathUtils.degToRad(omega)));
         pos.applyMatrix4(rot);
 
-        // 惑星と同じ座標変換: XY基準 → XZ基準
-        const converted = new THREE.Vector3(pos.x, pos.z, -pos.y);
-        positions.push(converted.x * scale, converted.y * scale, converted.z * scale);
+        // 惑星と同一の座標変換: XY 基準 → XZ 基準 (Y が高さ軸)
+        positions.push(pos.x * scale, pos.z * scale, -pos.y * scale);
       }
 
       const geometry = new THREE.BufferGeometry();
       geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
 
-      const material = new THREE.LineBasicMaterial({
+      // 点線: ダッシュ幅は 1 AU の 12%、ギャップは 8% (inorbitScale に連動)
+      const oneAU = AU_to_units * scale;
+      const material = new THREE.LineDashedMaterial({
         color: 0x6699bb,
         transparent: true,
-        opacity: 0.5,
+        opacity: 0.6,
+        dashSize: oneAU * 0.12,
+        gapSize:  oneAU * 0.08,
       });
 
-      // 低離心率は閉じたループ、高離心率は開いた弧
-      return showFullOrbit
+      const line = isClosedLoop
         ? new THREE.LineLoop(geometry, material)
         : new THREE.Line(geometry, material);
+
+      // LineDashedMaterial には computeLineDistances() が必須
+      line.computeLineDistances();
+      return line;
     };
 
     render = (planets, renderElement) => {

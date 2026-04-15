@@ -1302,18 +1302,12 @@ class Constellations {
 
     }
 
-    let comets = [];
     if (this.options.showComets) {
       if (!solar) solar = new Solar();
-      const cd = solar.COMET_DATA;
-      comets = Object.values(cd).map(data =>
-        solar.getComet(data, baseRadius, 1)
-      );
-      window.comets = comets;
-      comets.forEach(c => {
-        c.updateOrbit(1, orbitScale);
-        world.add(c);
-        if (options.orbit) world.add(c.getOrbitLine(orbitScale));
+      // 彗星は軌道線のみ表示 (orbit オプションの有無に関わらず常に描画)
+      // 軌道スケールは惑星と共通の orbitScale (distanceMultiplyScalar 連動)
+      Object.values(solar.COMET_DATA).forEach(data => {
+        world.add(solar.getCometOrbitLine(data, baseRadius, orbitScale));
       });
       if (!this.options.showEarth) {
         const ambientLight = new THREE.AmbientLight(0xaaaaaa);
@@ -1387,9 +1381,7 @@ class Constellations {
       if (planets.length !== 0 && options.orbit === true && options.animateOrbit === true) {
         planets.forEach((p,i) => p.updateOrbit(time/100, orbitScale, (i === 3) ? callback : undefined))
       }
-      if (comets.length !== 0 && options.animateOrbit === true) {
-        comets.forEach(c => c.updateOrbit(time/100, orbitScale));
-      }
+
 
       if (highlightRing) {
         highlightRing.lookAt(this.perspectiveCamera.position);
